@@ -1,13 +1,22 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Building2, Target, TrendingUp, CheckCircle2 } from "lucide-react";
+import { Building2, Target, TrendingUp, CheckCircle2, Database } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const Index = () => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-secondary/30">
-      <div className="container mx-auto px-4 py-16">
-        <div className="text-center mb-16">
+      <div className="container mx-auto px-4 py-8">
+        <div className="flex justify-end mb-4 gap-2">
+          <Link to="/ingest">
+            <Button variant="outline" size="sm">
+              <Database className="w-4 h-4 mr-2" />
+              Data Ingestion
+            </Button>
+          </Link>
+        </div>
+        
+        <div className="text-center mb-16 mt-8">
           <div className="flex justify-center mb-6">
             <Building2 className="h-20 w-20 text-primary" />
           </div>
