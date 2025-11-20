@@ -112,7 +112,7 @@ export default function DataIngestion() {
                 className="w-full"
               >
                 <Upload className="w-4 h-4 mr-2" />
-                Upload CSV
+                {isLoading ? "Uploading..." : "Upload CSV"}
               </Button>
             </CardContent>
           </Card>
@@ -167,7 +167,7 @@ export default function DataIngestion() {
                 className="w-full"
               >
                 <Database className="w-4 h-4 mr-2" />
-                Fetch & Ingest
+                {isLoading ? "Ingesting..." : "Fetch & Ingest"}
               </Button>
             </CardContent>
           </Card>
