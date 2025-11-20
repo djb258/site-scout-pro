@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import StorageWizard from "./pages/StorageWizard";
 import DataIngestion from "./pages/DataIngestion";
+import ZipCodeMap from "./pages/ZipCodeMap";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -20,6 +21,7 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/wizard" element={<StorageWizard />} />
           <Route path="/ingest" element={<DataIngestion />} />
+          <Route path="/map" element={<ZipCodeMap />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
