@@ -14,6 +14,24 @@ export type Database = {
   }
   public: {
     Tables: {
+      generic_ingest_log: {
+        Row: {
+          created_at: string
+          id: string
+          payload: Json
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          payload: Json
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          payload?: Json
+        }
+        Relationships: []
+      }
       rent_band_staging: {
         Row: {
           created_at: string
