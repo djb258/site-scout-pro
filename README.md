@@ -10,6 +10,7 @@ Fully asynchronous FastAPI + asyncpg backend for Storage Site Scouting & Process
 - **Database**: Neon PostgreSQL via asyncpg
 - **Architecture**: CTB (Christmas Tree Backbone) + Altitude model
 - **Pattern**: Fully asynchronous throughout
+- **Frontend**: Lovable.dev (React/TypeScript) - see frontend files in `src/`
 
 ## Setup
 
@@ -20,7 +21,7 @@ pip install -r requirements.txt
 
 2. Configure environment:
 ```bash
-cp .env.example .env
+cp env.example .env
 # Edit .env with your Neon database connection string
 ```
 
@@ -55,6 +56,17 @@ pytest tests/
 ## Project Structure
 
 - `/ctb` - CTB documentation and Altitude files
-- `/backend` - Main application code
+- `/backend` - Main application code (FastAPI)
+- `/src` - Frontend code (React/TypeScript via Lovable.dev)
 - `/tests` - Test files
+- `/config` - Global configuration (IMO-Creator)
+- `/imo_creator` - IMO-Creator integration
 
+## Frontend
+
+The frontend is built with Lovable.dev using React, TypeScript, and Tailwind CSS. To run the frontend:
+
+```bash
+npm install
+npm run dev
+```
