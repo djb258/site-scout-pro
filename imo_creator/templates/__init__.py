@@ -1,0 +1,4 @@
+"""
+IMO-Creator templates module.
+"""
+

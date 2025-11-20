@@ -1,0 +1,110 @@
+# Global Configuration File
+# IMO-Creator + Storage Site Scouting Backend
+
+# Doctrine Flags
+doctrine:
+  STAMPED: true
+  SPVPET: true
+  STACKED: true
+  BARTON_DOCTRINE: true
+
+# Scoring Weights
+scoring:
+  weights:
+    saturation: 0.25
+    parcel: 0.25
+    county: 0.20
+    financial: 0.30
+
+# Saturation Constants
+saturation:
+  sqft_per_person: 6
+  undersupplied_threshold: 0.7
+  oversupplied_threshold: 1.1
+  elimination_threshold: 1.1
+
+# Financial Constants
+financial:
+  units: 116
+  vacancy_rate: 0.20
+  rented_units: 92
+  build_cost: 400000
+  loan_payment: 2577
+  rent_low: 80
+  rent_high: 120
+  min_dscr: 1.0
+
+# Parcel Scoring Thresholds
+parcel:
+  shape_threshold: 50
+  slope_threshold: 50
+  access_threshold: 50
+  floodplain_elimination: true
+
+# Elimination Thresholds
+elimination:
+  min_population: 5000
+  min_households: 2000
+  min_traffic_count: 5000
+  max_county_difficulty: 50
+  min_final_score: 60
+
+# State-Level Rules
+states:
+  supported:
+    - WV
+    - PA
+    - MD
+    - VA
+  rules:
+    WV:
+      default_county_difficulty: 50
+      rent_multiplier: 1.0
+    PA:
+      default_county_difficulty: 45
+      rent_multiplier: 1.1
+    MD:
+      default_county_difficulty: 40
+      rent_multiplier: 1.2
+    VA:
+      default_county_difficulty: 50
+      rent_multiplier: 1.1
+
+# County Difficulty Defaults
+county:
+  default_difficulty: 50
+  fast_permitting_score: 80
+  slow_permitting_score: 20
+
+# API Configuration
+api:
+  prefix: "/api"
+  version: "1.0.0"
+  title: "Storage Site Scouting API"
+
+# Database Configuration
+database:
+  pool_min_size: 2
+  pool_max_size: 10
+  command_timeout: 60
+  table_prefix: ""
+
+# Logging Configuration
+logging:
+  level: "INFO"
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  datefmt: "%Y-%m-%d %H:%M:%S"
+
+# Process Registry
+process_registry:
+  enabled: true
+  auto_load: true
+  registry_file: "ctb/process_registry.yaml"
+
+# IMO-Creator Settings
+imo_creator:
+  enabled: true
+  template_dir: "imo_creator/templates"
+  processor_dir: "imo_creator/processors"
+  pipeline_dir: "imo_creator/pipeline"
+

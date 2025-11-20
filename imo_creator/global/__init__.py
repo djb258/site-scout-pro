@@ -1,0 +1,4 @@
+"""
+IMO-Creator global module.
+"""
+
