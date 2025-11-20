@@ -2,3 +2,6 @@ project_id = "vxjidpggoemouqrjtkpt"
 
 [functions.genericRelay]
 verify_jwt = false
+
+[functions.uploadZipCodes]
+verify_jwt = false

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -27,15 +28,33 @@ export default function DataIngestion() {
       const rows = text.split("\n").map(row => row.split(","));
       
       try {
-        await send({
-          type: "csv_ingestion",
-          filename: csvFile.name,
-          rows: rows,
-          timestamp: new Date().toISOString()
-        });
-        toast.success("CSV data sent to database");
+        // Check if this is ZIP code data by looking at headers
+        const headers = rows[0]?.join(",").toLowerCase() || "";
+        const isZipCodeData = headers.includes("zip") && headers.includes("lat") && headers.includes("lng");
+
+        if (isZipCodeData) {
+          // Use specialized ZIP code upload
+          const { data, error } = await supabase.functions.invoke('uploadZipCodes', {
+            body: { rows }
+          });
+          
+          if (error) throw error;
+          
+          toast.success(`Successfully uploaded ${data.count} ZIP codes to database`);
+        } else {
+          // Use generic ingestion for other CSV types
+          await send({
+            type: "csv_ingestion",
+            filename: csvFile.name,
+            rows: rows,
+            timestamp: new Date().toISOString()
+          });
+          toast.success("CSV data sent to database");
+        }
+        
         setCsvFile(null);
       } catch (error) {
+        console.error("CSV upload error:", error);
         toast.error("Failed to ingest CSV");
       }
     };

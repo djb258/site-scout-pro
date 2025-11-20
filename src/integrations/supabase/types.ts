@@ -242,6 +242,135 @@ export type Database = {
           },
         ]
       }
+      us_zip_codes: {
+        Row: {
+          age_median: number | null
+          city: string | null
+          county_fips: string | null
+          county_fips_all: string | null
+          county_name: string | null
+          county_names_all: string | null
+          county_weights: Json | null
+          created_at: string
+          density: number | null
+          education_college_or_above: number | null
+          family_size: number | null
+          female: number | null
+          home_ownership: number | null
+          home_value: number | null
+          id: string
+          imprecise: boolean | null
+          income_household_median: number | null
+          income_household_six_figure: number | null
+          labor_force_participation: number | null
+          lat: number | null
+          lng: number | null
+          male: number | null
+          married: number | null
+          military: boolean | null
+          parent_zcta: string | null
+          population: number | null
+          race_asian: number | null
+          race_black: number | null
+          race_multiple: number | null
+          race_native: number | null
+          race_other: number | null
+          race_pacific: number | null
+          race_white: number | null
+          rent_median: number | null
+          state_id: string | null
+          state_name: string | null
+          timezone: string | null
+          unemployment_rate: number | null
+          zcta: boolean | null
+          zip: string
+        }
+        Insert: {
+          age_median?: number | null
+          city?: string | null
+          county_fips?: string | null
+          county_fips_all?: string | null
+          county_name?: string | null
+          county_names_all?: string | null
+          county_weights?: Json | null
+          created_at?: string
+          density?: number | null
+          education_college_or_above?: number | null
+          family_size?: number | null
+          female?: number | null
+          home_ownership?: number | null
+          home_value?: number | null
+          id?: string
+          imprecise?: boolean | null
+          income_household_median?: number | null
+          income_household_six_figure?: number | null
+          labor_force_participation?: number | null
+          lat?: number | null
+          lng?: number | null
+          male?: number | null
+          married?: number | null
+          military?: boolean | null
+          parent_zcta?: string | null
+          population?: number | null
+          race_asian?: number | null
+          race_black?: number | null
+          race_multiple?: number | null
+          race_native?: number | null
+          race_other?: number | null
+          race_pacific?: number | null
+          race_white?: number | null
+          rent_median?: number | null
+          state_id?: string | null
+          state_name?: string | null
+          timezone?: string | null
+          unemployment_rate?: number | null
+          zcta?: boolean | null
+          zip: string
+        }
+        Update: {
+          age_median?: number | null
+          city?: string | null
+          county_fips?: string | null
+          county_fips_all?: string | null
+          county_name?: string | null
+          county_names_all?: string | null
+          county_weights?: Json | null
+          created_at?: string
+          density?: number | null
+          education_college_or_above?: number | null
+          family_size?: number | null
+          female?: number | null
+          home_ownership?: number | null
+          home_value?: number | null
+          id?: string
+          imprecise?: boolean | null
+          income_household_median?: number | null
+          income_household_six_figure?: number | null
+          labor_force_participation?: number | null
+          lat?: number | null
+          lng?: number | null
+          male?: number | null
+          married?: number | null
+          military?: boolean | null
+          parent_zcta?: string | null
+          population?: number | null
+          race_asian?: number | null
+          race_black?: number | null
+          race_multiple?: number | null
+          race_native?: number | null
+          race_other?: number | null
+          race_pacific?: number | null
+          race_white?: number | null
+          rent_median?: number | null
+          state_id?: string | null
+          state_name?: string | null
+          timezone?: string | null
+          unemployment_rate?: number | null
+          zcta?: boolean | null
+          zip?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
