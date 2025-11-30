@@ -1,0 +1,143 @@
+# Global Cursor Rules - AI Agents & Obsidian Integration
+
+This file should be placed in your home directory (`~/.cursorrules.global`) or referenced in each repository's `.cursorrules` file.
+
+## Available AI Agents
+
+The following AI agents are configured globally and available in this workspace:
+
+### 🤖 Claude (Anthropic)
+- **Provider:** Anthropic
+- **Authentication:** Sign-in account and password (configured in Cursor Settings)
+- **Models:** claude-3-opus, claude-3-sonnet, claude-3-haiku
+- **Best for:** Complex reasoning, long-form content, analysis, nuanced understanding
+- **Access:** Use `/claude` command or select Claude from agent menu
+
+### 🧠 Gemini (Google)
+- **Provider:** Google AI
+- **Authentication:** Sign-in account and password (configured in Cursor Settings)
+- **Models:** gemini-pro, gemini-ultra
+- **Best for:** Code generation, technical documentation, research, multimodal tasks
+- **Access:** Use `/gemini` command or select Gemini from agent menu
+
+### 💻 Codex (OpenAI)
+- **Provider:** OpenAI
+- **Authentication:** API Key (configured in Cursor Settings or environment variable)
+- **Models:** gpt-4, gpt-3.5-turbo, code-davinci-002
+- **Best for:** Code completion, debugging, refactoring, quick iterations
+- **Access:** Use `/codex` command or select Codex from agent menu
+
+### 📚 Obsidian (Knowledge Base)
+- **Type:** Knowledge Management System
+- **Purpose:** Store and retrieve project knowledge, notes, documentation
+- **Access:** Use `/obsidian` command or reference in conversations
+- **Vault Path:** Configured globally (check Cursor settings)
+
+## Agent Selection Guidelines
+
+When working on tasks, consider which agent to use:
+
+1. **Complex Problem Solving** → Claude
+   - Multi-step reasoning
+   - Architectural decisions
+   - Long-form writing
+
+2. **Code & Technical Tasks** → Gemini or Codex
+   - Code generation
+   - Debugging
+   - Technical documentation
+
+3. **Knowledge Retrieval** → Obsidian
+   - Project history
+   - Previous solutions
+   - Team knowledge
+
+4. **Auto Selection** → Let Cursor choose
+   - Use `/auto` or default behavior
+   - Cursor will select the best agent
+
+## Obsidian Integration
+
+### Accessing Obsidian
+- **Search:** "Search Obsidian for [topic]"
+- **Create Note:** "Create Obsidian note about [topic]"
+- **Update Note:** "Update Obsidian note [name] with [content]"
+- **Link Notes:** "Link this to Obsidian note [name]"
+
+### Obsidian Vault Structure
+Your Obsidian vault should be organized as:
+```
+vault/
+├── projects/
+│   └── [project-name]/
+│       ├── notes.md
+│       └── decisions.md
+├── knowledge/
+│   ├── code-patterns.md
+│   └── solutions.md
+└── meetings/
+    └── [date]-meeting.md
+```
+
+## Global Configuration
+
+These settings apply across all repositories:
+
+- **Claude & Gemini:** Sign-in accounts configured in Cursor Settings → Features → AI
+- **Codex API Key:** Configured in Cursor Settings → Features → AI or via `OPENAI_API_KEY` environment variable
+- **Obsidian Vault:** Set via `OBSIDIAN_VAULT_PATH` environment variable
+- **Default Agent:** Can be set in Cursor Settings
+
+## Usage Examples
+
+### Switching Agents
+```
+User: /claude How should I architect this feature?
+User: /gemini Generate the implementation code
+User: /codex Review and optimize this function
+```
+
+### Using Obsidian
+```
+User: /obsidian Search for previous solutions to authentication
+User: Create a note in Obsidian about this architecture decision
+User: Link this code change to Obsidian note "api-design"
+```
+
+### Multi-Agent Workflow
+```
+1. Use Claude to design the solution
+2. Use Gemini/Codex to implement
+3. Use Obsidian to document and store knowledge
+4. Use Claude to review and refine
+```
+
+## Best Practices
+
+1. **Start with the right agent** - Choose based on task complexity
+2. **Document in Obsidian** - Save important decisions and solutions
+3. **Iterate across agents** - Use different agents for different phases
+4. **Maintain knowledge base** - Keep Obsidian updated with learnings
+
+## Troubleshooting
+
+If an agent is not available:
+1. **Claude/Gemini:** Check sign-in credentials in Cursor Settings → Features → AI
+2. **Codex:** Check API key in Cursor Settings or `OPENAI_API_KEY` environment variable
+3. Verify billing/quota for the provider
+4. Check network connectivity
+5. Review Cursor logs for errors
+
+If Obsidian is not accessible:
+1. Verify `OBSIDIAN_VAULT_PATH` is set correctly
+2. Ensure Obsidian vault exists and is accessible
+3. Check file permissions
+4. Verify Obsidian URI protocol is enabled (if using)
+
+## Notes
+
+- This is a global configuration file
+- Repository-specific rules can override or extend these
+- All agents respect the repository's `.cursorrules` file
+- Obsidian integration requires the vault to be accessible
+

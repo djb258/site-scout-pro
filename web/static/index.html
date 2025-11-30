@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Storage Facility Site Screener</title>
+
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css" />
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: #1a1a2e;
+            color: #eee;
+        }
+
+        #app {
+            display: flex;
+            height: 100vh;
+        }
+
+        /* Sidebar */
+        #sidebar {
+            width: 320px;
+            background: #16213e;
+            padding: 20px;
+            overflow-y: auto;
+            border-right: 1px solid #0f3460;
+        }
+
+        #sidebar h1 {
+            font-size: 1.2rem;
+            color: #e94560;
+            margin-bottom: 5px;
+        }
+
+        #sidebar .subtitle {
+            font-size: 0.8rem;
+            color: #888;
+            margin-bottom: 20px;
+        }
+
+        /* Stats */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: #0f3460;
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #e94560;
+        }
+
+        .stat-label {
+            font-size: 0.7rem;
+            color: #888;
+            text-transform: uppercase;
+        }
+
+        /* Layer Controls */
+        .layer-section {
+            margin-bottom: 20px;
+        }
+
+        .layer-section h3 {
+            font-size: 0.85rem;
+            color: #aaa;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .layer-toggle {
+            display: flex;
+            align-items: center;
+            padding: 8px 12px;
+            background: #0f3460;
+            border-radius: 6px;
+            margin-bottom: 6px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .layer-toggle:hover {
+            background: #1a4a7a;
+        }
+
+        .layer-toggle input {
+            margin-right: 10px;
+        }
+
+        .layer-toggle .dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+
+        .layer-toggle label {
+            flex: 1;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        .layer-toggle .count {
+            font-size: 0.75rem;
+            color: #888;
+        }
+
+        /* County List */
+        .county-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .county-item {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            background: #0f3460;
+            border-radius: 6px;
+            margin-bottom: 6px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .county-item:hover {
+            background: #1a4a7a;
+        }
+
+        .county-item .rank {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+
+        .county-item .tier-1 { background: #22c55e; color: #000; }
+        .county-item .tier-2 { background: #eab308; color: #000; }
+        .county-item .tier-3 { background: #9ca3af; color: #000; }
+
+        .county-item .info {
+            flex: 1;
+        }
+
+        .county-item .name {
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+
+        .county-item .details {
+            font-size: 0.75rem;
+            color: #888;
+        }
+
+        /* Map Container */
+        #map-container {
+            flex: 1;
+            position: relative;
+        }
+
+        #map {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Info Panel */
+        #info-panel {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 300px;
+            background: rgba(22, 33, 62, 0.95);
+            border-radius: 8px;
+            padding: 15px;
+            display: none;
+            z-index: 1000;
+            border: 1px solid #0f3460;
+        }
+
+        #info-panel.visible {
+            display: block;
+        }
+
+        #info-panel h3 {
+            color: #e94560;
+            margin-bottom: 10px;
+            font-size: 1rem;
+        }
+
+        #info-panel .close {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            cursor: pointer;
+            font-size: 1.2rem;
+            color: #888;
+        }
+
+        #info-panel .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px 0;
+            border-bottom: 1px solid #0f3460;
+            font-size: 0.85rem;
+        }
+
+        #info-panel .info-label {
+            color: #888;
+        }
+
+        #info-panel .info-value {
+            font-weight: 500;
+        }
+
+        /* Zoom indicator */
+        #zoom-level {
+            position: absolute;
+            bottom: 30px;
+            left: 20px;
+            background: rgba(22, 33, 62, 0.9);
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            z-index: 1000;
+        }
+
+        /* Legend */
+        #legend {
+            position: absolute;
+            bottom: 30px;
+            right: 20px;
+            background: rgba(22, 33, 62, 0.95);
+            padding: 15px;
+            border-radius: 8px;
+            z-index: 1000;
+        }
+
+        #legend h4 {
+            font-size: 0.8rem;
+            color: #888;
+            margin-bottom: 10px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 5px;
+            font-size: 0.8rem;
+        }
+
+        .legend-item .dot {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        /* Loading overlay */
+        #loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(26, 26, 46, 0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+
+        #loading.hidden {
+            display: none;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid #0f3460;
+            border-top-color: #e94560;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div id="loading">
+        <div class="spinner"></div>
+    </div>
+
+    <div id="app">
+        <div id="sidebar">
+            <h1>Storage Site Screener</h1>
+            <p class="subtitle">Bedford, PA - 120mi Radius</p>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value" id="stat-counties">--</div>
+                    <div class="stat-label">Counties</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="stat-facilities">--</div>
+                    <div class="stat-label">Facilities</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="stat-housing">--</div>
+                    <div class="stat-label">Housing</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="stat-anchors">--</div>
+                    <div class="stat-label">Anchors</div>
+                </div>
+            </div>
+
+            <div class="layer-section">
+                <h3>Map Layers</h3>
+
+                <div class="layer-toggle">
+                    <input type="checkbox" id="layer-zone" checked>
+                    <div class="dot" style="background: #3b82f6; border: 2px dashed #60a5fa;"></div>
+                    <label for="layer-zone">120mi Radius</label>
+                </div>
+
+                <div class="layer-toggle">
+                    <input type="checkbox" id="layer-counties" checked>
+                    <div class="dot" style="background: #22c55e;"></div>
+                    <label for="layer-counties">Counties</label>
+                    <span class="count" id="count-counties">--</span>
+                </div>
+
+                <div class="layer-toggle">
+                    <input type="checkbox" id="layer-facilities">
+                    <div class="dot" style="background: #ef4444;"></div>
+                    <label for="layer-facilities">Storage Facilities</label>
+                    <span class="count" id="count-facilities">--</span>
+                </div>
+
+                <div class="layer-toggle">
+                    <input type="checkbox" id="layer-housing">
+                    <div class="dot" style="background: #3b82f6;"></div>
+                    <label for="layer-housing">Housing</label>
+                    <span class="count" id="count-housing">--</span>
+                </div>
+
+                <div class="layer-toggle">
+                    <input type="checkbox" id="layer-anchors">
+                    <div class="dot" style="background: #f59e0b;"></div>
+                    <label for="layer-anchors">Demand Anchors</label>
+                    <span class="count" id="count-anchors">--</span>
+                </div>
+            </div>
+
+            <div class="layer-section">
+                <h3>Top Counties by Demand</h3>
+                <div class="county-list" id="county-list">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+        </div>
+
+        <div id="map-container">
+            <div id="map"></div>
+
+            <div id="zoom-level">Zoom: <span id="current-zoom">8</span></div>
+
+            <div id="legend">
+                <h4>County Tiers</h4>
+                <div class="legend-item">
+                    <div class="dot" style="background: #22c55e;"></div>
+                    <span>Tier 1 (Top 33%)</span>
+                </div>
+                <div class="legend-item">
+                    <div class="dot" style="background: #eab308;"></div>
+                    <span>Tier 2 (Middle)</span>
+                </div>
+                <div class="legend-item">
+                    <div class="dot" style="background: #9ca3af;"></div>
+                    <span>Tier 3 (Lower)</span>
+                </div>
+            </div>
+
+            <div id="info-panel">
+                <span class="close" onclick="closeInfoPanel()">&times;</span>
+                <h3 id="info-title">--</h3>
+                <div id="info-content"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
+
+    <script>
+        // =================================================================
+        // CONFIGURATION
+        // =================================================================
+        const API_BASE = '';  // Same origin
+        const BEDFORD = [40.0186, -78.5039];
+        const DEFAULT_ZOOM = 8;
+
+        // =================================================================
+        // STATE
+        // =================================================================
+        let map;
+        let layers = {
+            zone: null,
+            counties: null,
+            facilities: null,
+            housing: null,
+            anchors: null,
+        };
+        let data = {
+            counties: [],
+            facilities: [],
+            housing: [],
+            anchors: [],
+        };
+
+        // =================================================================
+        // INITIALIZATION
+        // =================================================================
+        async function init() {
+            // Initialize map
+            map = L.map('map', {
+                center: BEDFORD,
+                zoom: DEFAULT_ZOOM,
+                zoomControl: true,
+            });
+
+            // Add tile layer (CartoDB Positron for dark theme)
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+                attribution: '&copy; OpenStreetMap, &copy; CARTO',
+                maxZoom: 19,
+            }).addTo(map);
+
+            // Update zoom display
+            map.on('zoomend', () => {
+                document.getElementById('current-zoom').textContent = map.getZoom();
+            });
+
+            // Load data
+            await loadStats();
+            await loadZoneBoundary();
+            await loadCounties();
+
+            // Set up layer toggles
+            setupLayerToggles();
+
+            // Hide loading
+            document.getElementById('loading').classList.add('hidden');
+        }
+
+        // =================================================================
+        // DATA LOADING
+        // =================================================================
+        async function loadStats() {
+            try {
+                const res = await fetch(`${API_BASE}/api/stats`);
+                const stats = await res.json();
+
+                document.getElementById('stat-counties').textContent = stats.counties;
+                document.getElementById('stat-facilities').textContent = stats.facilities.toLocaleString();
+                document.getElementById('stat-housing').textContent = stats.housing.toLocaleString();
+                document.getElementById('stat-anchors').textContent = stats.anchors.toLocaleString();
+
+                document.getElementById('count-counties').textContent = stats.counties;
+                document.getElementById('count-facilities').textContent = stats.facilities.toLocaleString();
+                document.getElementById('count-housing').textContent = stats.housing.toLocaleString();
+                document.getElementById('count-anchors').textContent = stats.anchors.toLocaleString();
+            } catch (err) {
+                console.error('Failed to load stats:', err);
+            }
+        }
+
+        async function loadZoneBoundary() {
+            try {
+                const res = await fetch(`${API_BASE}/api/zone/1/boundary`);
+                const geojson = await res.json();
+
+                layers.zone = L.geoJSON(geojson, {
+                    style: {
+                        color: '#3b82f6',
+                        weight: 2,
+                        dashArray: '10, 5',
+                        fillColor: '#3b82f6',
+                        fillOpacity: 0.05,
+                    }
+                }).addTo(map);
+            } catch (err) {
+                console.error('Failed to load zone boundary:', err);
+            }
+        }
+
+        async function loadCounties() {
+            try {
+                const res = await fetch(`${API_BASE}/api/counties`);
+                const result = await res.json();
+                data.counties = result.counties;
+
+                // Create county markers
+                layers.counties = L.layerGroup();
+
+                data.counties.forEach(county => {
+                    // We'll use the centroid from the GeoJSON endpoint
+                });
+
+                // Load GeoJSON for actual points
+                const geoRes = await fetch(`${API_BASE}/api/counties/geojson`);
+                const geojson = await geoRes.json();
+
+                layers.counties = L.geoJSON(geojson, {
+                    pointToLayer: (feature, latlng) => {
+                        return L.circleMarker(latlng, {
+                            radius: 12,
+                            fillColor: feature.properties.color,
+                            color: '#fff',
+                            weight: 2,
+                            opacity: 1,
+                            fillOpacity: 0.8,
+                        });
+                    },
+                    onEachFeature: (feature, layer) => {
+                        layer.on('click', () => showCountyInfo(feature.properties));
+
+                        // Tooltip
+                        layer.bindTooltip(`
+                            <strong>${feature.properties.name}, ${feature.properties.state}</strong><br>
+                            Rank: #${feature.properties.rank}<br>
+                            Demand: ${feature.properties.demand_sqft?.toLocaleString()} sqft
+                        `, { direction: 'top' });
+                    }
+                }).addTo(map);
+
+                // Populate county list
+                populateCountyList();
+            } catch (err) {
+                console.error('Failed to load counties:', err);
+            }
+        }
+
+        async function loadFacilities() {
+            if (data.facilities.length > 0) return;
+
+            try {
+                const res = await fetch(`${API_BASE}/api/facilities/geojson`);
+                const geojson = await res.json();
+                data.facilities = geojson.features;
+
+                const cluster = L.markerClusterGroup({
+                    maxClusterRadius: 50,
+                    iconCreateFunction: (cluster) => {
+                        const count = cluster.getChildCount();
+                        return L.divIcon({
+                            html: `<div style="background:#ef4444;color:#fff;border-radius:50%;width:30px;height:30px;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:12px;">${count}</div>`,
+                            className: '',
+                            iconSize: [30, 30]
+                        });
+                    }
+                });
+
+                L.geoJSON(geojson, {
+                    pointToLayer: (feature, latlng) => {
+                        return L.circleMarker(latlng, {
+                            radius: 6,
+                            fillColor: '#ef4444',
+                            color: '#fff',
+                            weight: 1,
+                            opacity: 1,
+                            fillOpacity: 0.8,
+                        });
+                    },
+                    onEachFeature: (feature, layer) => {
+                        layer.bindTooltip(feature.properties.name);
+                        layer.on('click', () => showFacilityInfo(feature.properties));
+                    }
+                }).addTo(cluster);
+
+                layers.facilities = cluster;
+            } catch (err) {
+                console.error('Failed to load facilities:', err);
+            }
+        }
+
+        async function loadHousing() {
+            if (data.housing.length > 0) return;
+
+            try {
+                const res = await fetch(`${API_BASE}/api/housing/geojson`);
+                const geojson = await res.json();
+                data.housing = geojson.features;
+
+                const cluster = L.markerClusterGroup({
+                    maxClusterRadius: 50,
+                    iconCreateFunction: (cluster) => {
+                        const count = cluster.getChildCount();
+                        return L.divIcon({
+                            html: `<div style="background:#3b82f6;color:#fff;border-radius:50%;width:30px;height:30px;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:12px;">${count}</div>`,
+                            className: '',
+                            iconSize: [30, 30]
+                        });
+                    }
+                });
+
+                L.geoJSON(geojson, {
+                    pointToLayer: (feature, latlng) => {
+                        return L.circleMarker(latlng, {
+                            radius: 5,
+                            fillColor: feature.properties.color,
+                            color: '#fff',
+                            weight: 1,
+                            opacity: 1,
+                            fillOpacity: 0.7,
+                        });
+                    },
+                    onEachFeature: (feature, layer) => {
+                        layer.bindTooltip(`${feature.properties.name}<br>${feature.properties.community_type}`);
+                    }
+                }).addTo(cluster);
+
+                layers.housing = cluster;
+            } catch (err) {
+                console.error('Failed to load housing:', err);
+            }
+        }
+
+        async function loadAnchors() {
+            if (data.anchors.length > 0) return;
+
+            try {
+                const res = await fetch(`${API_BASE}/api/anchors/geojson`);
+                const geojson = await res.json();
+                data.anchors = geojson.features;
+
+                const cluster = L.markerClusterGroup({
+                    maxClusterRadius: 40,
+                    iconCreateFunction: (cluster) => {
+                        const count = cluster.getChildCount();
+                        return L.divIcon({
+                            html: `<div style="background:#f59e0b;color:#000;border-radius:50%;width:30px;height:30px;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:12px;">${count}</div>`,
+                            className: '',
+                            iconSize: [30, 30]
+                        });
+                    }
+                });
+
+                L.geoJSON(geojson, {
+                    pointToLayer: (feature, latlng) => {
+                        return L.circleMarker(latlng, {
+                            radius: 6,
+                            fillColor: feature.properties.color,
+                            color: '#fff',
+                            weight: 1,
+                            opacity: 1,
+                            fillOpacity: 0.8,
+                        });
+                    },
+                    onEachFeature: (feature, layer) => {
+                        layer.bindTooltip(`${feature.properties.name}<br>${feature.properties.anchor_type}`);
+                    }
+                }).addTo(cluster);
+
+                layers.anchors = cluster;
+            } catch (err) {
+                console.error('Failed to load anchors:', err);
+            }
+        }
+
+        // =================================================================
+        // UI FUNCTIONS
+        // =================================================================
+        function populateCountyList() {
+            const container = document.getElementById('county-list');
+            container.innerHTML = '';
+
+            data.counties.slice(0, 15).forEach(county => {
+                const div = document.createElement('div');
+                div.className = 'county-item';
+                div.onclick = () => zoomToCounty(county);
+                div.innerHTML = `
+                    <div class="rank tier-${county.tier}">${county.rank}</div>
+                    <div class="info">
+                        <div class="name">${county.county_name}, ${county.state}</div>
+                        <div class="details">${county.demand_sqft?.toLocaleString()} sqft demand</div>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function setupLayerToggles() {
+            document.getElementById('layer-zone').addEventListener('change', (e) => {
+                if (e.target.checked && layers.zone) {
+                    layers.zone.addTo(map);
+                } else if (layers.zone) {
+                    map.removeLayer(layers.zone);
+                }
+            });
+
+            document.getElementById('layer-counties').addEventListener('change', (e) => {
+                if (e.target.checked && layers.counties) {
+                    layers.counties.addTo(map);
+                } else if (layers.counties) {
+                    map.removeLayer(layers.counties);
+                }
+            });
+
+            document.getElementById('layer-facilities').addEventListener('change', async (e) => {
+                if (e.target.checked) {
+                    await loadFacilities();
+                    if (layers.facilities) layers.facilities.addTo(map);
+                } else if (layers.facilities) {
+                    map.removeLayer(layers.facilities);
+                }
+            });
+
+            document.getElementById('layer-housing').addEventListener('change', async (e) => {
+                if (e.target.checked) {
+                    await loadHousing();
+                    if (layers.housing) layers.housing.addTo(map);
+                } else if (layers.housing) {
+                    map.removeLayer(layers.housing);
+                }
+            });
+
+            document.getElementById('layer-anchors').addEventListener('change', async (e) => {
+                if (e.target.checked) {
+                    await loadAnchors();
+                    if (layers.anchors) layers.anchors.addTo(map);
+                } else if (layers.anchors) {
+                    map.removeLayer(layers.anchors);
+                }
+            });
+        }
+
+        function zoomToCounty(county) {
+            // Find the county feature
+            if (layers.counties) {
+                layers.counties.eachLayer(layer => {
+                    if (layer.feature?.properties?.fips === county.county_fips) {
+                        map.setView(layer.getLatLng(), 10);
+                        showCountyInfo(layer.feature.properties);
+                    }
+                });
+            }
+        }
+
+        function showCountyInfo(props) {
+            const panel = document.getElementById('info-panel');
+            document.getElementById('info-title').textContent = `${props.name}, ${props.state}`;
+
+            const content = document.getElementById('info-content');
+            content.innerHTML = `
+                <div class="info-row">
+                    <span class="info-label">Rank</span>
+                    <span class="info-value">#${props.rank}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Tier</span>
+                    <span class="info-value" style="color:${props.color}">Tier ${props.tier}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Demand</span>
+                    <span class="info-value">${props.demand_sqft?.toLocaleString()} sqft</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Population</span>
+                    <span class="info-value">${props.population?.toLocaleString()}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Avg Income</span>
+                    <span class="info-value">$${props.avg_income?.toLocaleString()}</span>
+                </div>
+            `;
+
+            panel.classList.add('visible');
+        }
+
+        function showFacilityInfo(props) {
+            const panel = document.getElementById('info-panel');
+            document.getElementById('info-title').textContent = props.name;
+
+            const content = document.getElementById('info-content');
+            content.innerHTML = `
+                <div class="info-row">
+                    <span class="info-label">Address</span>
+                    <span class="info-value">${props.address || 'N/A'}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">City</span>
+                    <span class="info-value">${props.city}, ${props.state}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Rating</span>
+                    <span class="info-value">${props.rating ? props.rating.toFixed(1) + ' stars' : 'N/A'}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Reviews</span>
+                    <span class="info-value">${props.review_count || 0}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">10x10 Rent</span>
+                    <span class="info-value">${props.rent_10x10 ? '$' + props.rent_10x10 + '/mo' : 'N/A'}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">No Competition 5mi</span>
+                    <span class="info-value">${props.no_competition ? 'Yes' : 'No'}</span>
+                </div>
+            `;
+
+            panel.classList.add('visible');
+        }
+
+        function closeInfoPanel() {
+            document.getElementById('info-panel').classList.remove('visible');
+        }
+
+        // =================================================================
+        // INIT
+        // =================================================================
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>

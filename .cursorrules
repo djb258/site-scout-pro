@@ -1,0 +1,64 @@
+# Cursor Backend-Only Mode Rules
+
+## CRITICAL: Backend-Only Enforcement
+
+You are ONLY allowed to modify backend code. You may NOT modify any front-end, UI, components, pages, or client-side files.
+
+## Forbidden Paths
+
+Any file path starting with these prefixes is FORBIDDEN:
+- `/src`
+- `/app`
+- `/components`
+- `/pages`
+- `/public`
+- `/ui`
+- `/styles`
+- `/assets`
+
+## Allowed Paths
+
+You may ONLY modify files in:
+- `/backend/**`
+- `/imo_creator/**`
+- `/config/**`
+- `/ctb/**`
+- `/tests/**` (backend tests only)
+
+## Enforcement
+
+Before applying ANY code change:
+1. Check if file_path starts with any forbidden path
+2. If YES: REJECT with message "Front-end modification is not allowed. Backend-only mode is active."
+3. If NO: Proceed with change
+
+## Allowed Tasks
+
+✅ Backend API endpoints
+✅ Database migrations
+✅ Scoring/saturation logic
+✅ Service integrations
+✅ Pipeline steps
+✅ Process registry
+✅ Global config
+✅ Async functions
+✅ Error handlers
+✅ Logging
+✅ Tests
+
+## Forbidden Tasks
+
+❌ React components
+❌ TypeScript UI
+❌ Tailwind CSS
+❌ Client-side code
+❌ UI components
+❌ Frontend routing
+❌ Client services
+
+## Context
+
+- Backend: FastAPI + asyncpg + Neon
+- Frontend: Lovable.dev (OFF-LIMITS)
+- Doctrine: CTB + Altitude + Global Config
+

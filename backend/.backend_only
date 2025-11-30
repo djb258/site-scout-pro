@@ -1,0 +1,4 @@
+BACKEND_ONLY_MODE=ENABLED
+FRONTEND_PATHS_FORBIDDEN=/src,/app,/components,/pages,/public,/ui,/styles,/assets
+ALLOWED_PATHS=/backend,/imo_creator,/config,/ctb,/tests
+

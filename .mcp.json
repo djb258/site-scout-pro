@@ -1,0 +1,22 @@
+{
+  "mcpServers": {
+    "linear": {
+      "command": "npx",
+      "args": ["-y", "mcp-remote", "https://mcp.linear.app/sse"]
+    },
+    "composio": {
+      "command": "npx",
+      "args": ["-y", "@composio/mcp@latest"],
+      "env": {
+        "COMPOSIO_API_KEY": "ak_t-F0AbvfZHUZSUrqAGNn"
+      }
+    },
+    "neon": {
+      "command": "npx",
+      "args": ["-y", "@neondatabase/mcp-server-neon"],
+      "env": {
+        "NEON_DATABASE_URL": "postgresql://neondb_owner:npg_ToBJraVD83YX@ep-rapid-dream-aelbcqxw-pooler.c-2.us-east-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
+      }
+    }
+  }
+}
