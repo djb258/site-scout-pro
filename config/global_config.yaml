@@ -108,3 +108,31 @@ imo_creator:
   processor_dir: "imo_creator/processors"
   pipeline_dir: "imo_creator/pipeline"
 
+# n8n Integration Configuration
+n8n:
+  enabled: true
+  base_url: "${N8N_BASE_URL}"
+  api_key: "${N8N_API_KEY}"
+  timeout: 30
+  webhooks:
+    screening: "${N8N_WEBHOOK_SCREENING}"
+    saturation: "${N8N_WEBHOOK_SATURATION}"
+    scoring: "${N8N_WEBHOOK_SCORING}"
+    parcel: "${N8N_WEBHOOK_PARCEL}"
+
+# Composio Integration Configuration
+composio:
+  enabled: true
+  base_url: "${COMPOSIO_BASE_URL}"
+  api_key: "${COMPOSIO_API_KEY}"
+  workspace_id: "${COMPOSIO_WORKSPACE_ID}"
+  timeout: 30
+  max_retries: 3
+  retry_delay: 1
+  apps:
+    census: "${COMPOSIO_APP_CENSUS}"
+    uhaul: "${COMPOSIO_APP_UHAUL}"
+    dot: "${COMPOSIO_APP_DOT}"
+    rent: "${COMPOSIO_APP_RENT}"
+    geospatial: "${COMPOSIO_APP_GEOSPATIAL}"
+

@@ -56,11 +56,20 @@ pytest tests/
 ## Project Structure
 
 - `/ctb` - CTB documentation and Altitude files
-- `/backend` - Main application code (FastAPI)
-- `/src` - Frontend code (React/TypeScript via Lovable.dev)
+- `/backend` - Main application code (FastAPI) - **BACKEND-ONLY MODE**
+- `/src` - Frontend code (React/TypeScript via Lovable.dev) - **OFF-LIMITS**
 - `/tests` - Test files
 - `/config` - Global configuration (IMO-Creator)
 - `/imo_creator` - IMO-Creator integration
+
+## ⚠️ Backend-Only Mode
+
+This repository operates in **BACKEND-ONLY MODE** for AI-assisted development.
+
+**Allowed**: All modifications to `/backend`, `/config`, `/ctb`, `/imo_creator`, `/tests`
+**Forbidden**: Any modifications to `/src`, `/components`, `/pages`, `/public`, or any frontend files
+
+See `backend/BACKEND_ONLY_MODE.md` for complete rules.
 
 ## Frontend
 

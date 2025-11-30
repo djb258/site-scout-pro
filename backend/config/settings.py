@@ -152,6 +152,21 @@ def get_default_config() -> Dict[str, Any]:
             "template_dir": "imo_creator/templates",
             "processor_dir": "imo_creator/processors",
             "pipeline_dir": "imo_creator/pipeline"
+        },
+        "n8n": {
+            "enabled": True,
+            "base_url": "http://localhost:5678",
+            "api_key": "",
+            "timeout": 30
+        },
+        "composio": {
+            "enabled": True,
+            "base_url": "https://api.composio.dev",
+            "api_key": "",
+            "workspace_id": "",
+            "timeout": 30,
+            "max_retries": 3,
+            "retry_delay": 1
         }
     }
 

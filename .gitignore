@@ -37,6 +37,11 @@ ENV/
 .env
 .env.local
 
+# IMO-Creator Credentials
+imo_creator/config/credentials.yaml
+imo_creator/global/credentials.yaml
+credentials.yaml
+
 # Testing
 .pytest_cache/
 .coverage
