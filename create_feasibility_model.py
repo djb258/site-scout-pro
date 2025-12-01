@@ -255,9 +255,15 @@ def create_functions(cur):
             v_market_rent DECIMAL;
 
             -- Revenue/NOI
-            v_y1_occupancy DECIMAL := 0.50;
-            v_y2_occupancy DECIMAL := 0.80;
-            v_y3_occupancy DECIMAL := 0.90;
+            -- LEASE-UP MODELING: Dynamic occupancy based on market saturation and trajectory
+            -- Replaces static 50%/80%/90% with market-conditioned lease-up periods
+            -- Logic: Lower saturation + improving trajectory = faster lease-up = higher early occupancy
+            v_lease_up_months INT;
+            v_saturation_sqft_per_capita DECIMAL;
+            v_trajectory VARCHAR(20);
+            v_y1_occupancy DECIMAL;
+            v_y2_occupancy DECIMAL;
+            v_y3_occupancy DECIMAL;
             v_rent_growth DECIMAL := 0.03;
             v_expense_ratio DECIMAL := 0.35;
 
@@ -330,6 +336,40 @@ def create_functions(cur):
 
             -- Get base model
             SELECT * INTO v_model FROM build_model_defaults WHERE is_active = TRUE LIMIT 1;
+
+            -- LEASE-UP CALCULATION: Get saturation (sqft per capita) and trajectory from market data
+            v_saturation_sqft_per_capita := COALESCE(v_ma.sqft_per_capita, 7.0);
+            v_trajectory := COALESCE(v_mp.trajectory, 'stable');
+            
+            -- Calculate lease-up months based on market conditions
+            -- <5 sqft/capita + improving = 18 months (hot market)
+            -- <7 sqft/capita = 24 months (undersupplied)
+            -- <9 sqft/capita = 36 months (balanced)
+            -- >=9 sqft/capita = 48 months (oversupplied, slower lease-up)
+            v_lease_up_months := CASE
+                WHEN v_saturation_sqft_per_capita < 5 AND v_trajectory = 'improving' THEN 18
+                WHEN v_saturation_sqft_per_capita < 7 THEN 24
+                WHEN v_saturation_sqft_per_capita < 9 THEN 36
+                ELSE 48
+            END;
+            
+            -- Calculate Y1/Y2/Y3 occupancy based on lease-up period
+            -- Longer lease-up = lower early occupancy (S-curve approximation)
+            v_y1_occupancy := CASE
+                WHEN v_lease_up_months <= 18 THEN 0.65  -- Fast lease-up: 65% Y1 avg
+                WHEN v_lease_up_months <= 24 THEN 0.55  -- Moderate: 55% Y1 avg
+                WHEN v_lease_up_months <= 36 THEN 0.45  -- Slower: 45% Y1 avg
+                ELSE 0.40  -- Slow lease-up: 40% Y1 avg
+            END;
+            
+            v_y2_occupancy := CASE
+                WHEN v_lease_up_months <= 18 THEN 0.85  -- Fast: 85% Y2
+                WHEN v_lease_up_months <= 24 THEN 0.80  -- Moderate: 80% Y2
+                WHEN v_lease_up_months <= 36 THEN 0.75  -- Slower: 75% Y2
+                ELSE 0.70  -- Slow: 70% Y2
+            END;
+            
+            v_y3_occupancy := 0.90;  -- Stabilized occupancy (regardless of lease-up speed)
 
             -- INVESTMENT CALCULATION
             v_lot_cost := (p_lot_acres * p_lot_cost_per_acre)::INT;
