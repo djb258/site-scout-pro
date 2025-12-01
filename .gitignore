@@ -71,3 +71,6 @@ Thumbs.db
 *.sln
 *.sw?
 nul
+obsidian-cli.exe
+obsidian/
+obsidian_flat/
