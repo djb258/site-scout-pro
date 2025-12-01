@@ -1,0 +1,361 @@
+facility_id,name,phone_number,address,city,state,county
+1796,Frostburg Self Storage,(301) 268-7804,"11046 New Georges Creek Rd SW, Frostburg, MD 21532, United States",Frostburg,MD,Allegany
+1798,Legacy Moving & Storage,(301) 777-7266,"19 E Clement St, Cumberland, MD 21502, United States",Cumberland,MD,Allegany
+1793,Piney Mountain Self Storage,(301) 689-5005,"16111 Mears Dr SW, Frostburg, MD 21532, United States",Frostburg,MD,Allegany
+1800,Stash-A-Way Self Storage,(301) 759-4422,"116 Euclid Pl, Cumberland, MD 21502, United States",Cumberland,MD,Allegany
+209,CubeSmart Self Storage,(410) 687-9900,"8432 Pulaski Hwy, Baltimore, MD 21237, United States",Baltimore,MD,
+230,Extra Space Storage,(410) 276-8300,"3800 Pulaski Hwy, Baltimore, MD 21224, United States",Baltimore,MD,
+220,Extra Space Storage,(410) 230-7188,"5425 O'Donnell St, Baltimore, MD 21224, United States",Baltimore,MD,
+215,Extra Space Storage,(410) 662-6464,"3634 Falls Rd, Baltimore, MD 21211, United States",Baltimore,MD,
+207,Extra Space Storage,(410) 633-4331,"6821 Eastern Ave, Baltimore, MD 21224, United States",Baltimore,MD,
+232,Extra Space Storage,(410) 828-4511,"1 E Joppa Rd Ste 200, Towson, MD 21286, United States",Towson,MD,
+212,Extra Space Storage,(410) 775-8941,"707 S Caton Ave, Baltimore, MD 21229, United States",Baltimore,MD,
+208,Public Storage,(443) 380-1456,"1701 Whitehead Rd, Baltimore, MD 21207, United States",Baltimore,MD,
+236,Public Storage,(443) 687-7160,"842 Hillen St, Baltimore, MD 21202, United States",Baltimore,MD,
+237,Public Storage,(410) 870-5759,"1717 E Joppa Rd, Parkville, MD 21234, United States",Parkville,MD,
+201,Self StorageOne Eastpoint,(443) 998-2151,"6815 Rolling Mill Rd, Baltimore, MD 21224, United States",Baltimore,MD,
+217,Self StorageOne White Marsh,(415) 360-1463,"9913 Philadelphia Rd, Rosedale, MD 21237, United States",Rosedale,MD,
+231,YourSpace Storage @ Nottingham,(410) 497-7909,"8121 Belair Rd, Nottingham, MD 21236, United States",Nottingham,MD,
+135,495 Self Storage - Rockville,(301) 230-1263,"12330 Parklawn Dr, Rockville, MD 20852, United States",Rockville,MD,
+151,Acorn Self Storage,(301) 933-8838,"11015 West Ave, Kensington, MD 20895, United States",Kensington,MD,
+122,Acorn Self Storage,(301) 460-0055,"13813 Connecticut Ave, Silver Spring, MD 20906, United States",Silver Spring,MD,
+146,CubeSmart Self Storage,(301) 527-9763,"4 Research Pl, Rockville, MD 20850, United States",Rockville,MD,
+130,CubeSmart Self Storage,(301) 527-0777,"300 Old Game Preserve Rd, Gaithersburg, MD 20879, United States",Gaithersburg,MD,
+169,CubeSmart Self Storage,(301) 527-9763,"44 Research Pl, Rockville, MD 20850, United States",Rockville,MD,
+162,CubeSmart Self Storage,(301) 202-1030,"7110 Woodmont Ave, Bethesda, MD 20815, United States",Bethesda,MD,
+159,CubeSmart Self Storage,(240) 720-3111,"3500 East-West Hwy Ste 0000, Hyattsville, MD 20782, United States",Hyattsville,MD,
+145,CubeSmart Self Storage,(301) 990-9101,"8001 Snouffer School Rd, Gaithersburg, MD 20879, United States",Gaithersburg,MD,
+141,Extra Space Storage,(301) 949-0362,"10590 Metropolitan Ave, Kensington, MD 20895, United States",Kensington,MD,
+125,Extra Space Storage,(301) 963-7500,"18830 Woodfield Rd, Gaithersburg, MD 20879, United States",Gaithersburg,MD,
+158,Extra Space Storage,(301) 984-2500,"12030 Parklawn Dr, Rockville, MD 20852, United States",Rockville,MD,
+133,Extra Space Storage,(301) 825-9720,"1249 W Montgomery Ave, Rockville, MD 20850, United States",Rockville,MD,
+163,Extra Space Storage,(301) 798-4154,"9604 Baltimore Ave, College Park, MD 20740, United States",College Park,MD,
+174,Extra Space Storage,(301) 977-0101,"18920 Earhart Ct, Gaithersburg, MD 20879, United States",Gaithersburg,MD,
+176,Extra Space Storage,(301) 652-6565,"5140 River Rd, Bethesda, MD 20816, United States",Bethesda,MD,
+157,Extra Space Storage,(301) 761-3200,"204 N Stonestreet Ave, Rockville, MD 20850, United States",Rockville,MD,
+179,Extra Space Storage,(240) 292-7140,"4950 Nicholson Ct, Kensington, MD 20895, United States",Kensington,MD,
+152,Extra Space Storage,(301) 984-0090,"11850 Parklawn Dr, Rockville, MD 20852, United States",Rockville,MD,
+148,Extra Space Storage,(301) 330-2233,"26 W Diamond Ave, Gaithersburg, MD 20877, United States",Gaithersburg,MD,
+147,Extra Space Storage,(301) 588-8163,"7722 Fenton St, Silver Spring, MD 20910, United States",Silver Spring,MD,
+143,Extra Space Storage,(301) 933-4434,"10839 Georgia Ave, Silver Spring, MD 20902, United States",Silver Spring,MD,
+144,Gude Self Storage,(301) 762-1956,"851 E Gude Dr, Rockville, MD 20850, United States",Rockville,MD,
+172,Public Storage,(301) 850-7441,"1352 Holton Ln, Takoma Park, MD 20912, United States",Takoma Park,MD,
+156,Public Storage,(301) 960-5373,"370 Christopher Ave, Gaithersburg, MD 20879, United States",Gaithersburg,MD,
+150,Public Storage,(301) 960-5402,"455 W Gude Dr, Rockville, MD 20850, United States",Rockville,MD,
+149,Public Storage,(240) 459-3610,"5423 Butler Rd, Bethesda, MD 20816, United States",Bethesda,MD,
+142,Public Storage,(240) 552-6814,"501 E Diamond Ave, Gaithersburg, MD 20877, United States",Gaithersburg,MD,
+138,Public Storage,(240) 283-4347,"5420 Randolph Rd, Rockville, MD 20852, United States",Rockville,MD,
+137,Public Storage,(301) 960-5357,"12355 Prosperity Dr, Silver Spring, MD 20904, United States",Silver Spring,MD,
+136,Public Storage,(301) 965-0530,"16001 Frederick Rd, Rockville, MD 20855, United States",Rockville,MD,
+134,Public Storage,(301) 850-4610,"12311 Parklawn Dr, Rockville, MD 20852, United States",Rockville,MD,
+132,Public Storage,(240) 454-3804,"19900 Goshen Rd, Gaithersburg, MD 20879, United States",Gaithersburg,MD,
+155,Public Storage,(301) 945-9024,"5329 Westbard Ave, Bethesda, MD 20816, United States",Bethesda,MD,
+126,Public Storage,(240) 465-9478,"807 S Frederick Ave, Gaithersburg, MD 20877, United States",Gaithersburg,MD,
+154,Public Storage,(301) 960-5356,"10717 Hillwood Dr, Silver Spring, MD 20901, United States",Silver Spring,MD,
+175,Public Storage,(301) 960-5354,"7800 Fenton St, Silver Spring, MD 20910, United States",Silver Spring,MD,
+171,Public Storage,(301) 679-0461,"3351 Briggs Chaney Rd, Silver Spring, MD 20904, United States",Silver Spring,MD,
+167,Public Storage,(240) 670-0468,"11315 Lockwood Dr, Silver Spring, MD 20904, United States",Silver Spring,MD,
+173,Self Storage,(240) 331-5159,"2415 Musgrove Rd, Silver Spring, MD 20904, United States",Silver Spring,MD,
+123,Self Storage Plus,(301) 337-8791,"9107 Gaither Rd, Gaithersburg, MD 20877, United States",Gaithersburg,MD,
+140,Self Storage Plus,(855) 644-7587,"15750 Paramount Dr, Rockville, MD 20855, United States",Rockville,MD,
+121,Self Storage Plus,(240) 560-3300,"4900 Nicholson Ct, Kensington, MD 20895, United States",Kensington,MD,
+127,Self Storage Plus,(301) 933-3300,"3700 Plyers Mill Rd, Kensington, MD 20895, United States",Kensington,MD,
+124,Self Storage Plus,(301) 610-0009,"14690 Southlawn Ln, Rockville, MD 20850, United States",Rockville,MD,
+160,Self-Storage at U-Haul,(301) 977-4130,"8501 Snouffer School Rd, Gaithersburg, MD 20879, United States",Gaithersburg,MD,
+170,Self-Storage at U-Haul,(301) 231-9469,"12025 Parklawn Dr, Rockville, MD 20852, United States",Rockville,MD,
+139,Shady Grove Self Storage,(301) 963-6000,"15942 Shady Grove Rd, Gaithersburg, MD 20877, United States",Gaithersburg,MD,
+128,Storage Sense - Rockville,(301) 592-3341,"1350 E Gude Dr, Rockville, MD 20850, United States",Rockville,MD,
+177,Store It All Storage,(301) 230-3158,"6001 Montrose Rd, North Bethesda, MD 20852, United States",North Bethesda,MD,
+257,CubeSmart Self Storage,(240) 695-6890,"6104 Allentown Rd, Camp Springs, MD 20746, United States",Camp Springs,MD,
+258,CubeSmart Self Storage,(240) 304-3760,"2121 Brooks Dr, Capitol Heights, MD 20747, United States",Capitol Heights,MD,
+272,CubeSmart Self Storage,(301) 420-9212,"8410 Westphalia Rd, Upper Marlboro, MD 20774, United States",Upper Marlboro,MD,
+247,CubeSmart Self Storage,(240) 801-7721,"2529 Kenilworth Ave, Hyattsville, MD 20781, United States",Hyattsville,MD,
+276,CubeSmart Self Storage,(301) 350-1818,"1501 Ritchie Station Ct, Capitol Heights, MD 20743, United States",Capitol Heights,MD,
+274,CubeSmart Self Storage,(301) 316-4242,"5335 Beech Rd, Temple Hills, MD 20748, United States",Temple Hills,MD,
+264,CubeSmart Self Storage,(301) 736-7867,"3750 Donnell Dr, District Heights, MD 20747, United States",District Heights,MD,
+261,CubeSmart Self Storage,(301) 699-7669,"3215 52nd Ave, Hyattsville, MD 20781, United States",Hyattsville,MD,
+254,Extra Space Storage,(240) 847-6150,"7618 Marlboro Pike, District Heights, MD 20747, United States",District Heights,MD,
+260,Extra Space Storage,(301) 918-9000,"10101 Martin Luther King Jr Hwy, Lanham, MD 20706, United States",Lanham,MD,
+255,Fort Knox Self Storage,(301) 627-7500,"15400 Depot Ln, Upper Marlboro, MD 20772, United States",Upper Marlboro,MD,
+270,Public Storage,(240) 949-4431,"7975 Branch Ave, Clinton, MD 20735, United States",Clinton,MD,
+262,Public Storage,(301) 778-2509,"4350 Forestville Rd, Forestville, MD 20747, United States",Forestville,MD,
+271,Public Storage,(301) 750-9984,"4301 Rhode Island Ave, Brentwood, MD 20722, United States",Brentwood,MD,
+275,Public Storage,(301) 965-0491,"8701 Central Ave, Capitol Heights, MD 20743, United States",Capitol Heights,MD,
+268,Public Storage,(301) 960-5403,"4318 Kenilworth Ave, Hyattsville, MD 20781, United States",Hyattsville,MD,
+267,Public Storage,(301) 841-8438,"5201 Forbes Blvd, Lanham, MD 20706, United States",Lanham,MD,
+251,Public Storage,(301) 960-5368,"3005 Kenilworth Ave, Hyattsville, MD 20781, United States",Hyattsville,MD,
+259,Public Storage,(240) 696-4291,"5556 Tuxedo Rd, Hyattsville, MD 20781, United States",Hyattsville,MD,
+243,Self Storage Plus,(240) 673-2822,"8310 Dangerfield Rd, Clinton, MD 20735, United States",Clinton,MD,
+250,Self Storage Plus,(240) 349-7186,"901 Southern Ave SE, Oxon Hill, MD 20745, United States",Oxon Hill,MD,
+252,Self Storage Plus,(202) 499-4407,"1325 Kenilworth Avenue Northeast, Washington, DC 20019, United States",Washington,DC,
+245,Self Storage Plus,(240) 443-3301,"4210 Parliament Pl, Lanham, MD 20706, United States",Lanham,MD,
+248,Self-Storage at U-Haul,(301) 735-6988,"8000 Penn Randall Pl, Upper Marlboro, MD 20772, United States",Upper Marlboro,MD,
+266,Self-Storage at U-Haul,(240) 696-4542,"9800 Martin Luther King Jr Hwy, Lanham, MD 20706, United States",Lanham,MD,
+249,SmartStop Self Storage,(301) 641-3546,"4100 Forestville Rd, Forestville, MD 20747, United States",Forestville,MD,
+265,Storage Rentals of America,(301) 835-2091,"5061 Beech Pl, Temple Hills, MD 20748, United States",Temple Hills,MD,
+246,Store Space Self Storage,(301) 478-9375,"8201 Woodyard Rd, Clinton, MD 20735, United States",Clinton,MD,
+256,U-Store,(301) 567-3340,"6120 Livingston Rd, Oxon Hill, MD 20745, United States",Oxon Hill,MD,
+348,Public Storage,(443) 420-7840,"234 S Haven St, Baltimore, MD 21224, United States",Baltimore,MD,
+1726,Carlisle St Mini Storage,(717) 624-9357,"In the rear, 229 Carlisle St, New Oxford, PA 17350, United States",New Oxford,PA,Adams
+1729,Carlisle St Mini Storage,(717) 465-5405,"370 Tape Worm Rd, New Oxford, PA 17350, United States",New Oxford,PA,Adams
+1727,Dillsburg Rent-A-Space,(717) 432-5659,"107 N 2nd St, Dillsburg, PA 17019, United States",Dillsburg,PA,Adams
+40,Atlas Self Storage,(412) 821-2333,"1909 Babcock Blvd, Pittsburgh, PA 15209, United States",Pittsburgh,PA,
+53,Bolt Storage,(412) 305-7595,"1261 Streets Run Rd, Pittsburgh, PA 15236, United States",Pittsburgh,PA,
+48,Carnegie Self Storage,(412) 429-1790,"2794 Idlewood Ave, Carnegie, PA 15106, United States",Carnegie,PA,
+51,City Center Self Storage,(412) 709-6159,"80 S 4th St, Pittsburgh, PA 15219, United States",Pittsburgh,PA,
+46,Compass Self Storage,(412) 424-6779,"422 Elfinwild Rd, Allison Park, PA 15101, United States",Allison Park,PA,
+42,Compass Self Storage,(412) 228-4401,"6921 Fifth Ave, Pittsburgh, PA 15206, United States",Pittsburgh,PA,
+37,Defender Self Storage - Pittsburgh - Greentree,(412) 206-1852,"Building Eight, 875 Greentree Rd, Pittsburgh, PA 15220, United States",Pittsburgh,PA,
+4,"Devon Self Storage Pittsburgh, Pennsylvania",(412) 761-1335,"180 Camp Horne Rd, Pittsburgh, PA 15202, United States",Pittsburgh,PA,
+10,"Devon Self Storage Pittsburgh, Pennsylvania",(412) 367-7715,"150 Arndt Rd, Pittsburgh, PA 15237, United States",Pittsburgh,PA,
+12,ECONOMY SELF STORAGE,(412) 761-9330,"311 Camp Horne Rd, Pittsburgh, PA 15202, United States",Pittsburgh,PA,
+19,EZ Storage Green Tree,(412) 276-6080,"810 Trumbull Dr, Pittsburgh, PA 15205, United States",Pittsburgh,PA,
+31,EZ Storage Ross Township,(412) 366-6080,"1003 Ross Park Mall Dr, Pittsburgh, PA 15237, United States",Pittsburgh,PA,
+35,Extra Space Storage,(412) 567-7050,"6400 Hamilton Ave, Pittsburgh, PA 15206, United States",Pittsburgh,PA,
+59,Extra Space Storage,(412) 653-3610,"2016 Lebanon Rd, West Mifflin, PA 15122, United States",West Mifflin,PA,
+33,Extra Space Storage,(412) 347-4160,"902 Brinton Rd, Pittsburgh, PA 15221, United States",Pittsburgh,PA,
+13,Extra Space Storage,(412) 785-3350,"880 Saw Mill Run Blvd, Pittsburgh, PA 15226, United States",Pittsburgh,PA,
+49,Extra Space Storage,(412) 344-3700,"1005 E Entry Dr, Pittsburgh, PA 15216, United States",Pittsburgh,PA,
+22,Extra Space Storage,(412) 241-1100,"141 N Braddock Ave, Pittsburgh, PA 15208, United States",Pittsburgh,PA,
+50,Extra Space Storage,(412) 828-5685,"15 Landings Dr, Pittsburgh, PA 15238, United States",Pittsburgh,PA,
+39,Extra Space Storage,(412) 218-1052,"3200 Park Manor Blvd, Pittsburgh, PA 15205, United States",Pittsburgh,PA,
+58,Extra Space Storage,(412) 921-6060,"110 Kisow Dr, Pittsburgh, PA 15205, United States",Pittsburgh,PA,
+26,Extra Space Storage,(412) 676-7333,"1212 Madison Ave, Pittsburgh, PA 15212, United States",Pittsburgh,PA,
+6,Guardian Storage Bloomfield,(412) 387-4272,"750 S Millvale Ave, Pittsburgh, PA 15213, United States",Pittsburgh,PA,
+44,Guardian Storage Fox Chapel,(412) 455-7870,"1390 Old Freeport Rd, Pittsburgh, PA 15238, United States",Pittsburgh,PA,
+17,Guardian Storage Parkway East,(412) 387-4885,"915 Brinton Rd, Pittsburgh, PA 15221, United States",Pittsburgh,PA,
+24,Guardian Storage Ross Township,(412) 455-7228,"7452 McKnight Rd, Pittsburgh, PA 15237, United States",Pittsburgh,PA,
+15,Guardian Storage Shadyside,(412) 407-4391,"5873 Centre Ave, Pittsburgh, PA 15206, United States",Pittsburgh,PA,
+27,Guardian Storage Strip District,(412) 536-7648,"2839 Liberty Ave, Pittsburgh, PA 15222, United States",Pittsburgh,PA,
+25,Guardian Storage Waterfront,(412) 265-2547,"1002 E Waterfront Dr, Homestead, PA 15120, United States",Homestead,PA,
+52,Lincoln Self Storage,(412) 761-9510,"616 Lincoln Ave, Bellevue, PA 15202, United States",Bellevue,PA,
+29,Pittsburgh Self Storage,(412) 337-5777,"828 Thompson Run Rd, West Mifflin, PA 15122, United States",West Mifflin,PA,
+41,Pittsburgh Self-Storage,(412) 337-5777,"6100 Mifflin Rd, Pittsburgh, PA 15207, United States",Pittsburgh,PA,
+43,Public Storage,(215) 642-0402,"512 Castle Shannon Blvd, Pittsburgh, PA 15234, United States",Pittsburgh,PA,
+32,Public Storage,(215) 642-8773,"100 Cedar Ridge Dr, Pittsburgh, PA 15205, United States",Pittsburgh,PA,
+47,Public Storage,(724) 330-4715,"805 PA-910, Cheswick, PA 15024, United States",Cheswick,PA,
+18,Public Storage,(215) 944-5994,"7204 Old McKnight Rd, Pittsburgh, PA 15237, United States",Pittsburgh,PA,
+55,Robinson Storage,(412) 809-0900,"5480 Campbells Run Rd, Pittsburgh, PA 15205, United States",Pittsburgh,PA,
+11,STORExpress Etna,(412) 899-1800,"100 Hafner Ave, Etna, PA 15223, United States",Etna,PA,
+9,STORExpress Mckees Rocks,(412) 900-2096,"24 Furnace Street Extension, McKees Rocks, PA 15136, United States",McKees Rocks,PA,
+36,STORExpress New Kensington,(724) 262-5878,"196 Coxcomb Hill Rd, New Kensington, PA 15068, United States",New Kensington,PA,
+16,STORExpress Robinson,(412) 516-3335,"4317 Campbells Run Rd, Pittsburgh, PA 15205, United States",Pittsburgh,PA,
+7,STORExpress South Hills,(412) 536-7625,"2100 Saw Mill Run Blvd, Pittsburgh, PA 15210, United States",Pittsburgh,PA,
+20,STORExpress South Side,(412) 386-0078,"200 S 22nd St, Pittsburgh, PA 15203, United States",Pittsburgh,PA,
+54,Self-Storage at U-Haul,(412) 567-0720,"3000 Liberty Ave, Pittsburgh, PA 15201, United States",Pittsburgh,PA,
+2,iStorage,(412) 998-8523,"10 Allegheny River Blvd, Verona, PA 15147, United States",Verona,PA,
+1,iStorage,(412) 998-8575,"1134 Universal Rd, Pittsburgh, PA 15235, United States",Pittsburgh,PA,
+1357,AAA Self-Storage Units,(814) 937-4741,"N 20th St, Altoona, PA 16601, United States",Altoona,PA,Blair
+1371,B & D Properties Self Storage,(814) 941-7355,"1833 E Pleasant Valley Blvd, Altoona, PA 16602, United States",Altoona,PA,Blair
+1351,DIVELY INDOOR SELF STORAGE,(814) 696-4000,"2121 Beale Ave, Altoona, PA 16601, United States",Altoona,PA,Blair
+1367,Hillside self storage,(814) 793-4301,"114 9th St, Duncansville, PA 16635, United States",Duncansville,PA,Blair
+1358,"Lakemont Self Storage, LLC",(814) 941-3989,"107 Leslie Ave, Altoona, PA 16602, United States",Altoona,PA,Blair
+1374,M & M Storage,(814) 431-9644,"718 Powell Ave, Cresson, PA 16630, United States",Cresson,PA,Blair
+1382,Mountain Lake Outdoor Boat and Camper Storage,(814) 696-7056,"2590 Old Rte 22, Duncansville, PA 16635, United States",Duncansville,PA,Blair
+1363,Mountain Lake Storage,(814) 696-7056,"2695 Old Rte 22, Duncansville, PA 16635, United States",Duncansville,PA,Blair
+1350,Sugar Run Self Storage,(814) 554-0828,"718 Sugar Run Rd, Altoona, PA 16601, United States",Altoona,PA,Blair
+1947,A & B Storage,(814) 934-7163,"6490 Admiral Peary Hwy, Loretto, PA 15940, United States",Loretto,PA,Cambria
+1942,Ace Hardware Indoor Storage,(814) 255-4752,"1765 Goucher St, Johnstown, PA 15905, United States",Johnstown,PA,Cambria
+1957,Amsite Storage LLC,(814) 495-4888,"110 Amsite Rd, South Fork, PA 15956, United States",South Fork,PA,Cambria
+1946,B&K Rentals Inc.,(814) 886-8135,"7465, 7447 Admiral Peary Hwy, Cresson, PA 16630, United States",Cresson,PA,Cambria
+1950,Beaver Run Storage,(814) 243-0734,"458 Beaver Run Ave, Sidman, PA 15955, United States",Sidman,PA,Cambria
+1933,Bens Creek Self Storage,(814) 288-6088,"145 Wilshire Blvd, Johnstown, PA 15905, United States",Johnstown,PA,Cambria
+1937,E.Z. Lease Self Storage,(814) 749-1745,"198 Pennzoil Dr, Johnstown, PA 15909, United States",Johnstown,PA,Cambria
+1921,Ebensburg Storage,(814) 931-3505,"519 Municipal Rd, Ebensburg, PA 15931, United States",Ebensburg,PA,Cambria
+1931,Freedom Storage Rentals,(814) 472-2222,"800 E Ogle St, Ebensburg, PA 15931, United States",Ebensburg,PA,Cambria
+1944,"Git-R-Stored, LLC",(814) 672-5362,"624 Frailey Rd, Irvona, PA 16656, United States",Irvona,PA,Cambria
+1929,Hideaway Storage,(814) 200-0272,"1229 N Center St Buildings 1-5, Ebensburg, PA 15931, United States",Ebensburg,PA,Cambria
+1927,Industrial Park Self Storage,(814) 659-6627,"374 Industrial Park Rd, Ebensburg, PA 15931, United States",Ebensburg,PA,Cambria
+1909,Loaded & Locked Self Storage,(814) 381-9920,"Baywood Street Baywood St, Johnstown, PA 15901, United States",Johnstown,PA,Cambria
+1918,LocalStorage,(877) 905-6225,"555 Goucher St, Johnstown, PA 15905, United States",Johnstown,PA,Cambria
+1912,LocalStorage,(877) 905-6225,"673 Oakridge Dr, Johnstown, PA 15904, United States",Johnstown,PA,Cambria
+1956,Loretto Storage,(814) 330-8762,"505 Metz Rd, Loretto, PA 15940, United States",Loretto,PA,Cambria
+1922,Rock Solid Self Storage,(814) 241-7379,"1646 Pirgrim St, Nanty-Glo, PA 15943, United States",Nanty-Glo,PA,Cambria
+1925,Rock Solid Self Storage,(814) 241-7379,"3823 Admiral Peary Hwy, Ebensburg, PA 15931, United States",Ebensburg,PA,Cambria
+1938,Self Service Storage,(814) 535-1054,"219 Fairfield Ave, Johnstown, PA 15906, United States",Johnstown,PA,Cambria
+1915,Self-Storage at U-Haul,(814) 536-8973,"101 Broad St, Johnstown, PA 15906, United States",Johnstown,PA,Cambria
+1919,South Side Storage LLC.,(814) 243-2929,"499 S Center St, Ebensburg, PA 15931, United States",Ebensburg,PA,Cambria
+1923,Spare Storage,(814) 266-2020,"1150 Rachel St, Johnstown, PA 15904, United States",Johnstown,PA,Cambria
+1965,Storage Sheds,(814) 687-3295,"1548-1500 PA-253, Glasgow, PA 16644, United States",Glasgow,PA,Cambria
+1913,Stowaway Self Storage,(814) 266-7246,"3341, 1360 Eisenhower Blvd # 701, Johnstown, PA 15904, United States",Johnstown,PA,Cambria
+1930,The Attic,(814) 255-4999,"555 Goucher St, Johnstown, PA 15905, United States",Johnstown,PA,Cambria
+1940,U-Haul Moving & Storage of Johnstown,(814) 536-8973,"101 Broad St, Johnstown, PA 15906, United States",Johnstown,PA,Cambria
+1943,Vinco Storage,(814) 322-1718,"327 Courter Ave, Johnstown, PA 15909, United States",Johnstown,PA,Cambria
+1936,Ye Olde Storage,(814) 525-0046,"942 Pinegrove Ln suite 2, Johnstown, PA 15905, United States",Johnstown,PA,Cambria
+2072,Brickwork Self Storage,(814) 204-3303,"222 Science Park Rd, State College, PA 16803, United States",State College,PA,Centre
+2074,Continental-Storage,(814) 924-0679,"2197 High Tech Rd Suite-C, State College, PA 16803, United States",State College,PA,Centre
+2076,Extra Space Storage,(814) 954-1250,"757 Science Park Rd, State College, PA 16803, United States",State College,PA,Centre
+2082,Houtz Self Storage,(814) 692-8232,"26 Tld Cir, Port Matilda, PA 16870, United States",Port Matilda,PA,Centre
+2096,Midway Storage,(814) 355-2009,"Route 144 Between Bellefonte and Milesburg, 1138 Pleasantview Blvd, Bellefonte, PA 16823, United States",Bellefonte,PA,Centre
+2102,Old Fort Mini Storage LLC,(814) 364-1669,"2781 Earlystown Rd, Centre Hall, PA 16828, United States",Centre Hall,PA,Centre
+2081,Port Storage,(814) 857-8201,"8021 S Eagle Valley Rd, Port Matilda, PA 16870, United States",Port Matilda,PA,Centre
+2079,Prime Storage,(814) 426-2229,"2411 N Atherton St, State College, PA 16803, United States",State College,PA,Centre
+2083,Quarry Hill Self Storage,(814) 280-0150,"132 Canyon Ln, Port Matilda, PA 16870, United States",Port Matilda,PA,Centre
+2071,Stowaway - State College,(814) 234-2900,"2600 Clyde Ave, State College, PA 16801, United States",State College,PA,Centre
+2095,Toy Box of State College,(814) 280-0158,"495 E Rolling Ridge Dr, Bellefonte, PA 16823, United States",Bellefonte,PA,Centre
+2720,Best Self Storage,(570) 323-7300,"2887 S Reach Rd, Williamsport, PA 17701, United States",Williamsport,PA,Clinton
+2716,Lycoming Creek Self Storage LLC,(570) 447-4065,"1830 Liberty Dr, Williamsport, PA 17701, United States",Williamsport,PA,Clinton
+2735,More Space Self Storage,(570) 998-2508,"324 Laurel Ln, Trout Run, PA 17771, United States",Trout Run,PA,Clinton
+2729,South Williamsport Self Storage,(272) 230-8765,"207 Fleming St, South Williamsport, PA 17702, United States",South Williamsport,PA,Clinton
+2719,Southern Tioga Self Storage,(570) 550-6301,"7407 State Rte 414, Liberty, PA 16930, United States",Liberty,PA,Clinton
+2705,Stor Mor Self Storage,(570) 398-2401,"2833 Woodward Ave, Lock Haven, PA 17745, United States",Lock Haven,PA,Clinton
+1834,51 Self Storage,(724) 434-9231,"2664 Pittsburgh St, Perryopolis, PA 15473, United States",Perryopolis,PA,Fayette
+1828,Autumn Ridge South Self Storage,(724) 628-0330,"1707 Morrell Ave, Connellsville, PA 15425, United States",Connellsville,PA,Fayette
+1822,"Big 6 Storage LLC. - Smithfield, PA",(304) 483-1593,"198 Dry Knob Rd, Smithfield, PA 15478, United States",Smithfield,PA,Fayette
+1849,Brooks Auto Wreckers Storage Units,(724) 628-5120,"1500 E Crawford Ave, Connellsville, PA 15425, United States",Connellsville,PA,Fayette
+1820,Campbell Storage,(724) 583-9867,"559 Smithfield-Masontown Rd, Smithfield, PA 15478, United States",Smithfield,PA,Fayette
+1857,Convenient Mini Storage,(724) 771-7826,"4032 PA-31, Donegal, PA 15628, United States",Donegal,PA,Fayette
+1852,Dewey Services - Containers,(724) 317-5795,"701 W Main St, Mt Pleasant, PA 15666, United States",Mt Pleasant,PA,Fayette
+1847,FAYETTE COUNTY RECOVERY & STORAGE,(724) 323-3833,"2406 Memorial Blvd, Connellsville, PA 15425, United States",Connellsville,PA,Fayette
+1802,Fayette Storage,(724) 438-0562,"31 Monroe Ave, Uniontown, PA 15401, United States",Uniontown,PA,Fayette
+1836,Franklin Commercial Park Storage,(724) 437-5100,"1020 Franklin Dr, Smock, PA 15480, United States",Smock,PA,Fayette
+1825,GB Self Storage,(724) 366-2440,"740 Wynn rd, Uniontown, PA 15401, United States",Uniontown,PA,Fayette
+1803,Hi-Way Self Storage,(724) 437-3855,"55 Atlas Rd, Uniontown, PA 15401, United States",Uniontown,PA,Fayette
+1826,Hitters Self Storage,(724) 961-0489,"2925 Morgantown Rd, Smithfield, PA 15478, United States",Smithfield,PA,Fayette
+1818,Holiday Park Storage,(724) 439-9085,"1402 Gun Club Rd, Uniontown, PA 15401, United States",Uniontown,PA,Fayette
+1821,Hopwood Self Storage,(724) 438-1000,"372 Hopwood Coolspring Rd, Hopwood, PA 15445, United States",Hopwood,PA,Fayette
+1819,Hopwood Storage Units,(724) 984-5238,"1250 National Pike, Hopwood, PA 15445, United States",Hopwood,PA,Fayette
+1838,JJ's Corner Storage,(724) 978-3217,"875 Vanderbilt Rd, Connellsville, PA 15425, United States",Connellsville,PA,Fayette
+1824,Karnuts Self Storage,(724) 437-4471,"61 Farragut St, Uniontown, PA 15401, United States",Uniontown,PA,Fayette
+1810,LBS STORAGE,(724) 640-8888,"715 Braddock View Dr, Mt Braddock, PA 15465, United States",Mt Braddock,PA,Fayette
+1813,LBS STORAGE,(724) 640-8888,"31 J K Rd, Uniontown, PA 15401, United States",Uniontown,PA,Fayette
+1848,Meo's Storage,(724) 684-4349,"111 Donner Ave, Monessen, PA 15062, United States",Monessen,PA,Fayette
+1808,National Pike Self Storage,(724) 439-3161,"1058 National Pike, Uniontown, PA 15401, United States",Uniontown,PA,Fayette
+1809,New Salem Storage,(724) 201-9192,"25 W Main St, New Salem, PA 15468, United States",New Salem,PA,Fayette
+1804,Oliver Self Storage,(724) 562-6420,"104 Keighley, Oliver, PA 15472, United States",Oliver,PA,Fayette
+1806,Oliver Self Storage,(724) 562-6420,"383 Collier Rd, Uniontown, PA 15401, United States",Uniontown,PA,Fayette
+1840,R-John,(724) 366-1020,"4877 National Pike, Markleysburg, PA 15459, United States",Markleysburg,PA,Fayette
+1844,Redwood Self Storage & Outdoor Storage,(724) 531-1280,"1305 Broad Ave, Belle Vernon, PA 15012, United States",Belle Vernon,PA,Fayette
+1812,STORAGE CENTRAL LLC,(724) 691-7228,"2351 Memorial Blvd, Connellsville, PA 15425, United States",Connellsville,PA,Fayette
+1855,SamWis Self Storage,(724) 208-3425,"903 Narrows Rd Building S, East Millsboro, PA 15433, United States",East Millsboro,PA,Fayette
+1814,Shaffer's Mini Storage,(724) 329-7867,"37 Marker Rd, Farmington, PA 15437, United States",Farmington,PA,Fayette
+1815,Smithfield Storage,(724) 557-8352,"1 Wise Aly, Smithfield, PA 15478, United States",Smithfield,PA,Fayette
+1807,Steel City Storage,(866) 437-2525,"1020 Franklin Dr Ste 1, Smock, PA 15480, United States",Smock,PA,Fayette
+1805,Steel City Storage,(724) 437-5100,"942 McClellandtown Rd, McClellandtown, PA 15458, United States",McClellandtown,PA,Fayette
+1817,U-Store Inc.,(724) 437-8292,"157 N View Ln, Uniontown, PA 15401, United States",Uniontown,PA,Fayette
+1856,VersaVault Mobile Storage and Containers,(724) 209-4242,"3600 PA-981, Mt Pleasant, PA 15666, United States",Mt Pleasant,PA,Fayette
+1858,"Wilson Auto Sales, dba Flat Rock Storage",(877) 329-8840,"4877 National Pike, Markleysburg, PA 15459, United States",Markleysburg,PA,Fayette
+2049,All In Storage Units,(724) 599-0778,"5345 PA-56, Indiana, PA 15701, United States",Indiana,PA,Indiana
+2046,Cousins Indiana Storage,(724) 463-0866,"5160 PA-286, Indiana, PA 15701, United States",Indiana,PA,Indiana
+2051,D&D Mini Storage,(724) 459-6060,"2463 Thompson Rd, Blairsville, PA 15717, United States",Blairsville,PA,Indiana
+2060,"DMS Rentals, LLC",(724) 254-3033,"1567 Chestnut Ridge Rd, Penn Run, PA 15765, United States",Penn Run,PA,Indiana
+2047,Golden Storage,(878) 888-6701,"340 N Main St, Homer City, PA 15748, United States",Homer City,PA,Indiana
+2042,Indiana Self Storage Center,(724) 840-3687,"1749 Wilson Ave, Indiana, PA 15701, United States",Indiana,PA,Indiana
+2043,Indiana Self Storage Center,(724) 840-3687,"Windy Ridge Location, 4211 PA-286, Indiana, PA 15701, United States",Indiana,PA,Indiana
+2048,Lug-It To Larch's Self Storage,(724) 463-3110,"4346 PA-286 E, Indiana, PA 15701, United States",Indiana,PA,Indiana
+2052,Lug-It To Larch's Self Storage,(724) 463-3110,"4664 Rt. 119 S, Homer City, PA 15748, United States",Homer City,PA,Indiana
+2057,Lug-It To Larch's Self Storage,(724) 463-3110,"9944 PA-403, Clymer, PA 15728, United States",Clymer,PA,Indiana
+2062,Premier Quality Rentals Storage Units,(727) 415-6027,"878 N 5th Ave, Indiana, PA 15701, United States",Indiana,PA,Indiana
+2045,Regency Self Storage,(888) 864-3200,"35 North St, Indiana, PA 15701, United States",Indiana,PA,Indiana
+2059,Rick's Self Storage,(724) 961-2967,"321 Euclid Ln, Blairsville, PA 15717, United States",Blairsville,PA,Indiana
+2053,Self Storage By Blair Realty,(724) 230-4159,"399 Serrell Dr, Blairsville, PA 15717, United States",Blairsville,PA,Indiana
+2044,Storage Rentals of America,(724) 536-6884,"2125 Shelly Dr, Indiana, PA 15701, United States",Indiana,PA,Indiana
+2054,Tonkins mini storage,(724) 388-0390,"5465 Rte 85 Hwy, Home, PA 15747, United States",Home,PA,Indiana
+2063,Tunnelton Self Storage,(724) 875-6130,"5404 Tunnelton Rd, Saltsburg, PA 15681, United States",Saltsburg,PA,Indiana
+2748,A A Self Storage,(570) 494-1020,"2480 Lycoming Creek Rd, Williamsport, PA 17701, United States",Williamsport,PA,Lycoming
+2752,AA Self Storage,(570) 368-1208,"5265 Lycoming Mall Dr, Montoursville, PA 17754, United States",Montoursville,PA,Lycoming
+2764,Halls Station Self Storage,(570) 546-2353,"265 Lycoming Mall Dr, Muncy, PA 17756, United States",Muncy,PA,Lycoming
+2762,Hughesville Raceway Self Storage LLC,(570) 447-4436,"92 Green Valley Rd, Hughesville, PA 17737, United States",Hughesville,PA,Lycoming
+2774,KNS Storage,(570) 326-5363,"2355 E 3rd St, Williamsport, PA 17701, United States",Williamsport,PA,Lycoming
+2757,Secure Storage - Williamsport,(570) 322-2996,"540 Lycoming St, Williamsport, PA 17701, United States",Williamsport,PA,Lycoming
+2759,Self-Storage at U-Haul,(570) 326-5161,"238 Penn St, Williamsport, PA 17701, United States",Williamsport,PA,Lycoming
+2758,Self-Storage at U-Haul,(570) 279-4052,"1304 Commerce Park Dr, Williamsport, PA 17701, United States",Williamsport,PA,Lycoming
+1871,"""U"" Stor-It of Watsontown",(570) 490-1229,"12650 PA-405, Watsontown, PA 17777, United States",Watsontown,PA,Northumberland
+1874,AAA Storage,(570) 648-6389,"1244 Chemung St, Coal Township, PA 17866, United States",Coal Township,PA,Northumberland
+1901,Centre Storage,(570) 916-8527,"155 McNett Rd #9446, Montgomery, PA 17752, United States",Montgomery,PA,Northumberland
+1899,CubeSmart Self Storage,(570) 433-2001,"300 Lycoming Mall Cir Suite 320, Pennsdale, PA 17756, United States",Pennsdale,PA,Northumberland
+1903,Fort Knox Storage,(570) 339-1630,"254 W Railroad Ave, Mt Carmel, PA 17851, United States",Mt Carmel,PA,Northumberland
+1887,Muncy Self Storage,(570) 546-5300,"1603 John Brady Dr, Muncy, PA 17756, United States",Muncy,PA,Northumberland
+1884,RDJ Self Storage,(570) 916-5049,"29 Riddell Rd, Montgomery, PA 17752, United States",Montgomery,PA,Northumberland
+1895,Susquehanna Storage,(570) 584-4321,"749 PA-405 Rear, Hughesville, PA 17737, United States",Hughesville,PA,Northumberland
+1890,Weigh Scales Mini Storage,(570) 648-5464,"RR 2, Shamokin, PA 17872, United States",Shamokin,PA,Northumberland
+2598,My Self Storage Place,(570) 322-1112,"50 US-15, South Williamsport, PA 17702, United States",South Williamsport,PA,Union
+1104,Stor-Park Self Storage,(724) 785-8335,"412 Old National Pike, Brownsville, PA 15417, United States",Brownsville,PA,Washington
+1109,U-Store Inc.,(724) 929-8363,"312 Finley Rd, Belle Vernon, PA 15012, United States",Belle Vernon,PA,Washington
+69,CubeSmart Self Storage,(703) 352-7795,"3179 Draper Dr, Fairfax, VA 22031, United States",Fairfax,VA,
+79,CubeSmart Self Storage,(571) 279-8353,"223 Mill St NE, Vienna, VA 22180, United States",Vienna,VA,
+119,CubeSmart Self Storage,(703) 451-3200,"7331 Steel Mill Dr, Springfield, VA 22150, United States",Springfield,VA,
+115,CubeSmart Self Storage,(703) 361-3501,"8621 Sunnygate Dr, Manassas, VA 20109, United States",Manassas,VA,
+83,Extra Space Storage,(703) 239-1512,"6102 Freds Oak Rd, Burke, VA 22015, United States",Burke,VA,
+61,Fairfax City Self Storage,(703) 978-1200,"3980 Pickett Road, Fairfax, VA 22031, United States",Fairfax,VA,
+64,Fairfax Storage,(703) 591-8822,"3137 Draper Dr, Fairfax, VA 22031, United States",Fairfax,VA,
+106,Fairfax Transfer and Storage,(703) 550-7974,"3065 Nutley St, Fairfax, VA 22031, United States",Fairfax,VA,
+76,Mini U Storage,(703) 323-1600,"10930 Clara Barton Dr, Fairfax Station, VA 22039, United States",Fairfax Station,VA,
+87,Public Storage,(571) 281-0009,"5797 Burke Centre Pkwy, Burke, VA 22015, United States",Burke,VA,
+90,Public Storage,(571) 814-5268,"8514 Telegraph Rd, Lorton, VA 22079, United States",Lorton,VA,
+86,Public Storage,(571) 356-9863,"4312 Ravensworth Rd, Annandale, VA 22003, United States",Annandale,VA,
+73,Public Storage,(703) 988-3690,"5609 Guinea Rd, Fairfax, VA 22032, United States",Fairfax,VA,
+68,Public Storage,(571) 933-8052,"11199 Waples Mill Rd, Fairfax, VA 22030, United States",Fairfax,VA,
+67,Public Storage,(434) 922-5896,"3180 Draper Dr, Fairfax, VA 22031, United States",Fairfax,VA,
+66,Public Storage,(703) 537-5873,"8523 Lee Hwy, Fairfax, VA 22031, United States",Fairfax,VA,
+65,Public Storage,(703) 972-6162,"3849 Pickett Road, Fairfax, VA 22031, United States",Fairfax,VA,
+62,Public Storage,(703) 537-5628,"11334 Lee Hwy, Fairfax, VA 22030, United States",Fairfax,VA,
+72,StorageMart,(571) 495-1865,"11325 US-29, Fairfax, VA 22030, United States",Fairfax,VA,
+94,Telegraph Self Storage,(703) 339-9070,"8935 Telegraph Rd, Lorton, VA 22079, United States",Lorton,VA,
+81,Tysons Self Storage,(703) 759-5400,"1200 Downey Dr, Vienna, VA 22182, United States",Vienna,VA,
+564,Dominion Self Storage,(703) 361-3501,"10609 Dumfries Rd, Manassas, VA 20112, United States",Manassas,VA,
+582,Extra Space Storage,(703) 257-7575,"10490 Colonel Ct, Manassas, VA 20110, United States",Manassas,VA,
+574,Extra Space Storage,(571) 229-9898,"8130 Oak St, Manassas, VA 20111, United States",Manassas,VA,
+588,Public Storage,(703) 831-6104,"7909 Sudley Rd, Manassas, VA 20109, United States",Manassas,VA,
+579,Public Storage,(571) 393-3152,"10305 Balls Ford Rd, Manassas, VA 20109, United States",Manassas,VA,
+577,Public Storage,(571) 358-9981,"7901 Centreville Rd, Manassas, VA 20111, United States",Manassas,VA,
+584,Public Storage,(571) 762-0774,"8499 Euclid Ave, Manassas Park, VA 20111, United States",Manassas Park,VA,
+549,Public Storage,(571) 946-9517,"10411 Dumfries Rd, Manassas, VA 20110, United States",Manassas,VA,
+578,Public Storage,(571) 762-4007,"8550 Sudley Rd, Manassas, VA 20110, United States",Manassas,VA,
+566,Public Storage,(571) 762-0954,"8625 Centreville Rd, Manassas, VA 20110, United States",Manassas,VA,
+589,Self Storage Plus,(855) 644-7587,"8840 Mathis Ave, Manassas, VA 20110, United States",Manassas,VA,
+545,Self Storage Plus,(703) 552-4087,"5285 Dale Blvd, Dale City, VA 22193, United States",Dale City,VA,
+546,Self-Storage at U-Haul,(703) 369-4619,"10480 Dumfries Rd, Manassas, VA 20110, United States",Manassas,VA,
+572,Self-Storage at U-Haul,(703) 369-6080,"8537 Centreville Rd, Manassas Park, VA 20111, United States",Manassas Park,VA,
+1585,Quick Lock Storage - New Market,(540) 590-5454,"128 Stonewall St, New Market, VA 22844, United States",New Market,VA,Rockingham
+2476,Hills and Valley Storage,(540) 244-2261,"5385 US Hwy Bsn 340, Stanley, VA 22851, United States",Stanley,VA,Shenandoah
+1989,1-800-PACK-RAT,(800) 722-5728,"8422 Wellington Rd, Manassas, VA 20109, United States",Manassas,VA,
+1991,Bayshore Moving & Storage,(703) 492-8900,"10904 Carolina Dr, Manassas, VA 20110, United States",Manassas,VA,
+1994,FLYT Moving & Storage,(571) 619-2687,"8422 Wellington Rd, Manassas, VA 20109, United States",Manassas,VA,
+1992,MI-BOX of Northern Virginia,(571) 382-6900,"7425 Merritt Pk Dr STE 135, Manassas, VA 20109, United States",Manassas,VA,
+1997,Manassas Storage Units,(571) 532-6763,"9104 Manassas Dr, Manassas Park, VA 20111, United States",Manassas Park,VA,
+1976,Public Storage,(571) 358-9935,"8046 Sudley Rd, Manassas, VA 20109, United States",Manassas,VA,
+1996,Self Storage Plus,(571) 428-2483,"9517 Technology Dr, Manassas, VA 20110, United States",Manassas,VA,
+1981,Storage Sense - Manassas,(703) 368-7808,"7240 New Market Ct, Manassas, VA 20109, United States",Manassas,VA,
+1987,U-Haul Moving & Storage of Manassas,(703) 369-4619,"10480 Dumfries Rd, Manassas, VA 20110, United States",Manassas,VA,
+1986,U-Haul Moving & Storage of Manassas Park,(703) 369-6080,"8537 Centreville Rd, Manassas Park, VA 20111, United States",Manassas Park,VA,
+1990,UNITS Moving and Portable Storage Northern Virginia,(540) 369-4595,"7425 Merritt Pk Dr, Manassas, VA 20109, United States",Manassas,VA,
+2013,213 Hart Storage,(386) 405-9639,"213 Hart St, Clarksburg, WV 26301, United States",Clarksburg,WV,Harrison
+2024,Acts 9 RV Park and Self-Storage,(304) 695-9010,"10352 Cost Ave, Stonewood, WV 26301, United States",Stonewood,WV,Harrison
+2012,Angela's Attic Self Storage,(304) 838-3531,"815 N Ohio Ave, Clarksburg, WV 26301, United States",Clarksburg,WV,Harrison
+2038,Commercial Warehouse & Storage,(304) 624-9648,"929 W Pike St, Clarksburg, WV 26301, United States",Clarksburg,WV,Harrison
+2018,MAS Storage Units,(304) 677-2715,"5668 Good Hope Pike, Clarksburg, WV 26301, United States",Clarksburg,WV,Harrison
+2021,Pratt Mascio Storage - Meadowbrook,(304) 627-8218,"2386 Meadowbrook Rd, Bridgeport, WV 26330, United States",Bridgeport,WV,Harrison
+2022,Radio Park Storage,(304) 476-5821,"1070 Radio, Arbutus Park Dr, Mt Clare, WV 26408, United States",Mt Clare,WV,Harrison
+2001,Rosebud Self Storage,(304) 623-2020,"54 Rosebud Ave, Clarksburg, WV 26301, United States",Clarksburg,WV,Harrison
+2032,Snap Storage,(304) 625-1967,"3045 E Main St, Bridgeport, WV 26330, United States",Bridgeport,WV,Harrison
+2041,U-Box at U-Haul,(304) 623-9045,"1119 Anmoore Rd, Bridgeport, WV 26330, United States",Bridgeport,WV,Harrison
+2026,U-Haul Moving & Storage of Clarksburg,(304) 623-9045,"1119 Anmoore Rd, Bridgeport, WV 26330, United States",Bridgeport,WV,Harrison
+2009,U-Store Inc,(304) 622-8292,"100 WV-98, Clarksburg, WV 26301, United States",Clarksburg,WV,Harrison
+1771,Affordable Storage,(304) 205-9389,"Green Bag Road, Morgantown, WV 26501, United States",Morgantown,WV,Monongalia
+1769,All Star Storage,(304) 322-0046,"1101 Green Bag Road, Morgantown, WV 26501, United States",Morgantown,WV,Monongalia
+1761,Bakers Ridge Storage,(304) 516-1584,"299 Bakers Ridge Rd, Morgantown, WV 26508, United States",Morgantown,WV,Monongalia
+1759,Bakers Ridge Storage,(304) 581-6380,"325 Bakers Ridge Rd, Morgantown, WV 26508, United States",Morgantown,WV,Monongalia
+1739,"Big 6 Storage Morgantown, WV",(304) 483-1593,"683 Industrial Park Rd, Morgantown, WV 26501, United States",Morgantown,WV,Monongalia
+1763,Bitonti Street Rentals LLC,(304) 599-0241,"1341 Bitonti St, Morgantown, WV 26505, United States",Morgantown,WV,Monongalia
+1749,D & D Storage,(304) 296-5931,"235 High St, Morgantown, WV 26505, United States",Morgantown,WV,Monongalia
+1746,EZ STORAGE,(304) 296-3685,"1724 Mileground Rd, Morgantown, WV 26505, United States",Morgantown,WV,Monongalia
+1770,Fieldcrest Storage,(304) 599-3369,"301 W Run Rd, Morgantown, WV 26505, United States",Morgantown,WV,Monongalia
+1774,Interstate Storage,(304) 692-7883,"105 Goshen Rd, Morgantown, WV 26508, United States",Morgantown,WV,Monongalia
+1780,Leo's Storage Units,(304) 292-0479,"3172 Point Marion Rd, Morgantown, WV 26505, United States",Morgantown,WV,Monongalia
+1768,Mercury Storage,(304) 594-9138,"37 Easton Mill Rd, Morgantown, WV 26508, United States",Morgantown,WV,Monongalia
+1766,Mercury Storage,(304) 594-9138,"423 W Run Rd, Morgantown, WV 26508, United States",Morgantown,WV,Monongalia
+1730,Metro Storage WV,(304) 500-9237,"328 Generation Dr, Morgantown, WV 26505, United States",Morgantown,WV,Monongalia
+1738,Mountaineer Self Storage,(304) 290-9774,"3545 Collins Ferry Rd, Morgantown, WV 26505, United States",Morgantown,WV,Monongalia
+1744,Parkway Self Storage,(304) 241-5056,"940 Parkway Dr, Morgantown, WV 26501, United States",Morgantown,WV,Monongalia
+1743,Rhino Self Storage - Morgantown Chaplin Rd,(304) 777-8511,"340 Chaplin Hl Rd, Morgantown, WV 26501, United States",Morgantown,WV,Monongalia
+1760,Richard Self Storage LLC,(304) 212-8900,"3498 Earl L Core Rd, Morgantown, WV 26508, United States",Morgantown,WV,Monongalia
+1772,Shorand Storage,(304) 225-2317,"908 Stewart St, Morgantown, WV 26505, United States",Morgantown,WV,Monongalia
+1757,Simply Storage,(304) 292-3007,"109 W Run Rd, Morgantown, WV 26508, United States",Morgantown,WV,Monongalia
+1742,Storage On Canyon,(304) 244-2060,"1150 Canyon Rd, Morgantown, WV 26508, United States",Morgantown,WV,Monongalia
+1758,Storage Rentals of America,(304) 659-6608,"1221 Canyon Rd, Morgantown, WV 26508, United States",Morgantown,WV,Monongalia
+1764,Storage Solutions (Crystal Storage Solutions),(304) 777-2144,"973 Canyon Rd, Morgantown, WV 26508, United States",Morgantown,WV,Monongalia
+1748,Store More Storage,(304) 292-1232,"1753 Mileground Rd a2, Morgantown, WV 26505, United States",Morgantown,WV,Monongalia
+1773,Store-More,(304) 292-1232,"601 Hartman Run Rd, Morgantown, WV 26505, United States",Morgantown,WV,Monongalia
+1737,Strongbox Storage,(304) 244-0525,"88 Old Cheat Rd, Morgantown, WV 26508, United States",Morgantown,WV,Monongalia
+1741,West Run Storage,(304) 288-4435,"95 Ackerman Rd, Morgantown, WV 26508, United States",Morgantown,WV,Monongalia
