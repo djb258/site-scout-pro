@@ -429,45 +429,106 @@ erDiagram
 
     jurisdiction_cards {
         int id PK
-        varchar state
         varchar county_fips FK
         varchar county_name
+        varchar state
         varchar jurisdiction
         varchar jurisdiction_type
-        boolean has_zoning
-        varchar storage_allowed
-        varchar storage_zones
-        int min_aisle_width_ft
-        int min_lot_size_acres
-        int max_lot_coverage_pct
-        int max_building_height_ft
+        text_array zoning_districts_allowed
+        varchar zoning_code_section
+        text storage_use_definition
+        varchar storage_use_category
+        boolean by_right
+        boolean sup_required
+        boolean cup_required
+        boolean public_hearing_required
+        boolean planning_commission_review
+        boolean board_of_zoning_appeals
+        varchar approval_code_section
         int setback_front_ft
         int setback_side_ft
         int setback_rear_ft
-        int landscape_buffer_front_ft
-        boolean fence_required
-        varchar fence_type
-        boolean masonry_required
-        int masonry_pct
+        varchar setback_code_section
+        int max_height_ft
+        int max_lot_coverage_pct
+        decimal min_lot_size_acres
+        int max_building_size_sqft
+        boolean landscaping_required
+        boolean buffer_required
+        int buffer_width_ft
+        boolean screening_required
+        varchar screening_type
+        boolean fencing_required
+        int fencing_height_ft
         boolean stormwater_required
-        varchar stormwater_method
-        varchar permit_office_name
-        varchar permit_office_phone
-        varchar permit_portal_url
-        varchar permit_portal_type
-        boolean permit_online_available
-        boolean permit_data_available
-        varchar permit_data_method
-        boolean inspection_data_available
-        varchar approval_process
-        boolean public_hearing_required
-        int approval_timeline_days
+        varchar stormwater_authority
+        boolean architectural_standards
+        int parking_spaces_required
+        varchar parking_ratio
+        boolean signage_restrictions
+        int max_sign_sqft
+        boolean lighting_restrictions
+        decimal permit_fee_zoning
+        decimal permit_fee_building
+        decimal permit_fee_site_plan
+        decimal permit_fees_total
+        decimal impact_fee
+        varchar impact_fee_type
+        int timeline_estimate_days
+        varchar zoning_ordinance_url
+        varchar zoning_map_url
+        varchar fee_schedule_url
+        varchar application_url
+        varchar gis_portal_url
+        varchar planning_contact_name
+        varchar planning_contact_phone
+        varchar planning_contact_email
+        varchar building_contact_name
+        varchar building_contact_phone
+        varchar engineering_contact_name
+        varchar engineering_contact_phone
         int difficulty_score
         varchar difficulty_rating
-        varchar confidence
-        text research_gaps
+        text gotchas
+        text tips
+        text general_notes
+        date call_date
+        varchar collected_by
+        boolean verified
+        date verified_date
         timestamp created_at
         timestamp updated_at
+    }
+
+    jurisdiction_documents {
+        int id PK
+        int jurisdiction_card_id FK
+        varchar county_fips
+        varchar state
+        varchar doc_type
+        varchar doc_type_display
+        varchar doc_name
+        varchar file_name
+        varchar file_path
+        int file_size_bytes
+        varchar mime_type
+        varchar source_url
+        date document_date
+        date collected_date
+        boolean is_current
+        boolean needs_update
+        int superseded_by FK
+        text notes
+        timestamp created_at
+    }
+
+    document_types {
+        int id PK
+        varchar doc_type UK
+        varchar doc_type_display
+        varchar category
+        int priority
+        text description
     }
 
     jurisdiction_research_checklist {
@@ -876,6 +937,86 @@ erDiagram
         varchar risk_level
         text rationale
         timestamp created_at
+    }
+
+    %% =====================================================
+    %% BUILD CONSTANTS & REVERSE FEASIBILITY
+    %% =====================================================
+
+    build_constants {
+        int id PK
+        varchar constant_type
+        varchar constant_name UK
+        decimal value
+        varchar unit
+        text description
+        boolean is_active
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    land_cost_benchmarks {
+        int id PK
+        varchar county_fips FK
+        varchar state
+        varchar county_name
+        decimal raw_land_per_acre
+        decimal improved_land_per_acre
+        decimal commercial_land_per_acre
+        varchar land_source
+        date land_date
+        decimal site_work_per_acre
+        varchar site_work_source
+        decimal impact_fees_per_unit
+        varchar impact_source
+        text notes
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    reverse_feasibility {
+        int id PK
+        varchar county_fips FK
+        varchar state
+        varchar county_name
+        decimal market_rent_10x10
+        varchar rent_source
+        int rent_observations
+        decimal rent_confidence
+        decimal monthly_revenue_per_unit GENERATED
+        decimal annual_revenue_per_unit GENERATED
+        decimal expense_ratio
+        decimal annual_noi_per_unit GENERATED
+        decimal target_payback_years
+        decimal max_investment_per_unit GENERATED
+        int units_per_acre
+        decimal max_investment_per_acre GENERATED
+        decimal building_cost_per_acre
+        decimal site_work_per_acre
+        decimal soft_costs_per_acre
+        decimal fixed_costs_per_acre GENERATED
+        decimal max_land_budget_per_acre GENERATED
+        decimal land_benchmark_per_acre
+        decimal land_surplus_per_acre GENERATED
+        varchar verdict
+        text verdict_reason
+        timestamp calculated_at
+    }
+
+    market_saturation {
+        int id PK
+        varchar county_fips FK
+        varchar state
+        varchar county_name
+        int population
+        int households
+        int existing_facilities
+        int total_supply_sqft
+        decimal sqft_per_capita
+        decimal sqft_per_household
+        varchar saturation_level
+        int saturation_score
+        timestamp calculated_at
     }
 
     %% =====================================================
@@ -1389,8 +1530,14 @@ erDiagram
     layer_3_counties ||--o| zoning_cache : "zoning"
 
     layer_3_counties ||--o{ jurisdiction_cards : "regulations"
+    jurisdiction_cards ||--o{ jurisdiction_documents : "documents"
+    document_types ||--o{ jurisdiction_documents : "doc type"
     jurisdiction_cards ||--o| jurisdiction_research_checklist : "checklist"
     jurisdiction_cards ||--o{ build_impact_analysis : "impact analysis"
+    layer_3_counties ||--o| land_cost_benchmarks : "land costs"
+    layer_3_counties ||--o| reverse_feasibility : "reverse feasibility"
+    layer_3_counties ||--o| market_saturation : "saturation"
+    build_constants ||--o{ reverse_feasibility : "constants"
     build_model_defaults ||--o{ build_impact_analysis : "model"
     layer_3_counties ||--o{ deep_dive_wv_eastern : "facilities"
     deep_dive_wv_eastern ||--o{ facility_call_results : "call results"
@@ -1503,6 +1650,10 @@ flowchart TB
     end
 
     subgraph Feasibility["Build Feasibility"]
+        BC[build_constants<br/>Model Parameters]
+        LCB[land_cost_benchmarks<br/>Land/Site Costs]
+        RF[reverse_feasibility<br/>Max Land Budget]
+        MSAT[market_saturation<br/>Supply/Demand Ratio]
         FA[feasibility_analysis<br/>Investment/Yield/Verdict]
         FS[feasibility_scenarios<br/>Upside/Downside/Stress]
     end
@@ -1565,11 +1716,18 @@ flowchart TB
     MP --> CS
 
     %% Feasibility connections
+    BC --> RF
+    LCB --> RF
+    SF --> MSAT
+    L3 --> MSAT
+    MSAT --> RF
+    RF --> FA
     JC --> FA
     MA --> FA
     MP --> FA
     FA --> FS
     FA --> CS
+    RF --> CS
 
     %% Monitoring connections
     L3 --> EC
@@ -1703,8 +1861,14 @@ flowchart TB
 | storage_facilities | 2,344 | Google Places |
 | housing_communities | 6,698 | Google Places |
 | demand_anchors | 2,666 | Google Places |
-| jurisdiction_cards | 3 | Manual Research |
-| jurisdiction_research_checklist | 3 | Auto-generated |
+| jurisdiction_cards | 7 | Manual Research |
+| jurisdiction_documents | 0 | Document Storage |
+| document_types | 15 | Configuration |
+| jurisdiction_research_checklist | 7 | Auto-generated |
+| build_constants | 15 | Configuration |
+| land_cost_benchmarks | 7 | Research |
+| reverse_feasibility | 74 | Calculated |
+| market_saturation | 74 | Calculated |
 | build_model_defaults | 1 | Configuration |
 | build_impact_analysis | 3 | Calculated |
 | deep_dive_wv_eastern | 155 | Google Places |
