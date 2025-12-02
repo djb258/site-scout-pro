@@ -193,30 +193,56 @@ def search_storage_facilities(county_name: str, state: str, lat: float, lon: flo
     return facilities
 
 def parse_address_components(address: str) -> Dict[str, str]:
-    """Parse city, state, zip from formatted address."""
+    """Parse city, state, zip from formatted address.
+
+    Google Places addresses are formatted as:
+    "Street Address, City, State ZIP, United States"
+
+    The ZIP code appears BEFORE 'United States' or 'USA', not at the start
+    of the address (which is often a 5-digit street number).
+    """
     result = {"city": None, "state": None, "zip": None}
 
     if not address:
         return result
 
-    # Try to extract ZIP (5 digits)
     import re
-    zip_match = re.search(r'\b(\d{5})(?:-\d{4})?\b', address)
-    if zip_match:
-        result["zip"] = zip_match.group(1)
 
-    # Split by comma and parse
+    # Strategy 1: Find ZIP code before "United States" or "USA" (most reliable)
+    # This handles: "16001 Frederick Rd, Rockville, MD 20855, United States"
+    zip_before_country = re.search(r'(\d{5})(?:-\d{4})?,?\s*(?:United States|USA)\s*$', address)
+    if zip_before_country:
+        result["zip"] = zip_before_country.group(1)
+    else:
+        # Strategy 2: Find ZIP in "State ZIP" pattern (e.g., "MD 20855")
+        state_zip_match = re.search(r'\b([A-Z]{2})\s+(\d{5})(?:-\d{4})?\b', address)
+        if state_zip_match:
+            result["zip"] = state_zip_match.group(2)
+            result["state"] = state_zip_match.group(1)
+        else:
+            # Strategy 3: Last resort - find the LAST 5-digit sequence in address
+            # This avoids grabbing street numbers at the beginning
+            all_zips = re.findall(r'\b(\d{5})(?:-\d{4})?\b', address)
+            if all_zips:
+                result["zip"] = all_zips[-1]  # Take the last one
+
+    # Split by comma and parse city/state
     parts = [p.strip() for p in address.split(",")]
 
     if len(parts) >= 3:
         # Usually: "Street, City, State ZIP, USA"
-        result["city"] = parts[-3] if len(parts) > 3 else parts[0]
+        # City is typically the second-to-last before "State ZIP" or third from end
+        if len(parts) >= 4:
+            result["city"] = parts[-3]  # "City" in "Street, City, State ZIP, USA"
+        else:
+            result["city"] = parts[-2].split()[0] if parts[-2] else None
 
-        # State is usually in the second-to-last part with ZIP
+        # State is in the second-to-last part with ZIP
         state_zip_part = parts[-2] if len(parts) >= 2 else ""
-        state_match = re.search(r'\b([A-Z]{2})\b', state_zip_part)
-        if state_match:
-            result["state"] = state_match.group(1)
+        if not result.get("state"):
+            state_match = re.search(r'\b([A-Z]{2})\b', state_zip_part)
+            if state_match:
+                result["state"] = state_match.group(1)
 
     return result
 
