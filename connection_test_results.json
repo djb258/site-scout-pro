@@ -1,0 +1,2080 @@
+[
+  {
+    "county_id": "PA-SOMERSET",
+    "county_name": "Somerset",
+    "state": "PA",
+    "tests": {
+      "county_website": {
+        "url": "https://www.co.somerset.pa.us/",
+        "status": 200,
+        "accessible": true,
+        "error": null,
+        "content_type": "text/html",
+        "is_pdf": false,
+        "response_time": 0.86,
+        "final_url": "https://www.co.somerset.pa.us/"
+      },
+      "gis_portal": {
+        "url": "https://somerset.maps.arcgis.com/",
+        "status": 200,
+        "accessible": true,
+        "error": null,
+        "content_type": "text/html",
+        "is_pdf": false,
+        "response_time": 0.3,
+        "final_url": "https://somerset.maps.arcgis.com/home/index.html"
+      }
+    },
+    "summary": {
+      "permit_portal": "UNKNOWN",
+      "gis_portal": "WORKING",
+      "documents": "UNKNOWN",
+      "recommended_method": "MANUAL"
+    }
+  },
+  {
+    "county_id": "PA-FRANKLIN",
+    "county_name": "Franklin",
+    "state": "PA",
+    "tests": {
+      "county_website": {
+        "url": "https://www.franklincountypa.gov/",
+        "status": 200,
+        "accessible": false,
+        "error": null,
+        "content_type": "text/html; charset=UTF-8",
+        "is_pdf": false,
+        "response_time": 0.32,
+        "final_url": "https://www.franklincountypa.gov/",
+        "blocked_by": "CAPTCHA/Cloudflare"
+      },
+      "gis_portal": {
+        "url": "https://gisportal.franklincountypa.gov/",
+        "status": 200,
+        "accessible": true,
+        "error": null,
+        "content_type": "text/html; charset=utf-8",
+        "is_pdf": false,
+        "response_time": 0.84,
+        "final_url": "https://gisportal.franklincountypa.gov/"
+      },
+      "permit_portal": {
+        "url": "https://pacodealliance.com/permit-applications/",
+        "status": 200,
+        "accessible": true,
+        "error": null,
+        "content_type": "text/html; charset=UTF-8",
+        "is_pdf": false,
+        "response_time": 0.33,
+        "final_url": "https://pacodealliance.com/permit-applications/"
+      }
+    },
+    "summary": {
+      "permit_portal": "WORKING",
+      "gis_portal": "WORKING",
+      "documents": "UNKNOWN",
+      "recommended_method": "SCRAPER"
+    }
+  },
+  {
+    "county_id": "PA-WESTMORELAND",
+    "county_name": "Westmoreland",
+    "state": "PA",
+    "tests": {
+      "county_website": {
+        "url": "https://www.westmorelandcountypa.gov/",
+        "status": 200,
+        "accessible": true,
+        "error": null,
+        "content_type": "text/html; charset=utf-8",
+        "is_pdf": false,
+        "response_time": 0.23,
+        "final_url": "https://www.westmorelandcountypa.gov/"
+      },
+      "gis_portal": {
+        "url": "https://gis.westmorelandcountypa.gov/apps/public/",
+        "status": 200,
+        "accessible": true,
+        "error": null,
+        "content_type": "text/html",
+        "is_pdf": false,
+        "response_time": 0.25,
+        "final_url": "https://gis.westmorelandcountypa.gov/apps/public/"
+      }
+    },
+    "summary": {
+      "permit_portal": "UNKNOWN",
+      "gis_portal": "WORKING",
+      "documents": "UNKNOWN",
+      "recommended_method": "MANUAL"
+    }
+  },
+  {
+    "county_id": "PA-FAYETTE",
+    "county_name": "Fayette",
+    "state": "PA",
+    "tests": {
+      "county_website": {
+        "url": "https://www.fayettecountypa.org/",
+        "status": 200,
+        "accessible": true,
+        "error": null,
+        "content_type": "text/html; charset=utf-8",
+        "is_pdf": false,
+        "response_time": 0.65,
+        "final_url": "https://www.fayettecountypa.org/"
+      },
+      "gis_portal": {
+        "url": "http://property.co.fayette.pa.us/map.aspx",
+        "status": 200,
+        "accessible": false,
+        "error": null,
+        "content_type": "text/html; charset=utf-8",
+        "is_pdf": false,
+        "response_time": 0.15,
+        "final_url": "http://property.co.fayette.pa.us/map.aspx",
+        "blocked_by": "CAPTCHA/Cloudflare"
+      },
+      "permit_portal": {
+        "url": "https://www.fayettecountypa.org/280/Uniform-Construction-Code-Administration",
+        "status": 200,
+        "accessible": true,
+        "error": null,
+        "content_type": "text/html; charset=utf-8",
+        "is_pdf": false,
+        "response_time": 0.24,
+        "final_url": "https://www.fayettecountypa.org/280/Uniform-Construction-Code-Administration"
+      }
+    },
+    "summary": {
+      "permit_portal": "WORKING",
+      "gis_portal": "FAILED",
+      "documents": "UNKNOWN",
+      "recommended_method": "SCRAPER"
+    }
+  },
+  {
+    "county_id": "PA-WASHINGTON",
+    "county_name": "Washington",
+    "state": "PA",
+    "tests": {
+      "county_website": {
+        "url": "https://www.washingtonpa.us/",
+        "status": 200,
+        "accessible": false,
+        "error": null,
+        "content_type": "text/html; charset=UTF-8",
+        "is_pdf": false,
+        "response_time": 2.12,
+        "final_url": "https://washingtonpa.us/",
+        "blocked_by": "CAPTCHA/Cloudflare"
+      },
+      "gis_portal": {
+        "url": "https://wcpagis-washcodps.hub.arcgis.com/",
+        "status": 200,
+        "accessible": true,
+        "error": null,
+        "content_type": "text/html; charset=utf-8",
+        "is_pdf": false,
+        "response_time": 0.24,
+        "final_url": "https://wcpagis-washcodps.hub.arcgis.com/"
+      },
+      "permit_portal": {
+        "url": "https://washingtonpa.us/codes-and-ordinances/",
+        "status": 200,
+        "accessible": false,
+        "error": null,
+        "content_type": "text/html; charset=UTF-8",
+        "is_pdf": false,
+        "response_time": 1.53,
+        "final_url": "https://washingtonpa.us/codes-and-ordinances/",
+        "blocked_by": "CAPTCHA/Cloudflare"
+      }
+    },
+    "summary": {
+      "permit_portal": "FAILED",
+      "gis_portal": "WORKING",
+      "documents": "UNKNOWN",
+      "recommended_method": "MANUAL"
+    }
+  },
+  {
+    "county_id": "PA-CENTRE",
+    "county_name": "Centre",
+    "state": "PA",
+    "tests": {
+      "county_website": {
+        "url": "https://centrecountypa.gov/",
+        "status": 200,
+        "accessible": true,
+        "error": null,
+        "content_type": "text/html; charset=utf-8",
+        "is_pdf": false,
+        "response_time": 0.7,
+        "final_url": "https://centrecountypa.gov/"
+      },
+      "gis_portal": {
+        "url": "https://gisdata-centrecountygov.opendata.arcgis.com/",
+        "status": 200,
+        "accessible": true,
+        "error": null,
+        "content_type": "text/html; charset=utf-8",
+        "is_pdf": false,
+        "response_time": 0.25,
+        "final_url": "https://gisdata-centrecountygov.opendata.arcgis.com/"
+      }
+    },
+    "summary": {
+      "permit_portal": "UNKNOWN",
+      "gis_portal": "WORKING",
+      "documents": "UNKNOWN",
+      "recommended_method": "MANUAL"
+    }
+  },
+  {
+    "county_id": "PA-CUMBERLAND",
+    "county_name": "Cumberland",
+    "state": "PA",
+    "tests": {
+      "county_website": {
+        "url": "https://www.ccpa.net/",
+        "status": 200,
+        "accessible": true,
+        "error": null,
+        "content_type": "text/html; charset=utf-8",
+        "is_pdf": false,
+        "response_time": 1.87,
+        "final_url": "https://www.cumberlandcountypa.gov/"
+      },
+      "gis_portal": {
+        "url": "https://gis.ccpa.net/propertymapper/",
+        "status": 200,
+        "accessible": true,
+        "error": null,
+        "content_type": "text/html",
+        "is_pdf": false,
+        "response_time": 0.22,
+        "final_url": "https://gis.ccpa.net/propertymapper/"
+      }
+    },
+    "summary": {
+      "permit_portal": "UNKNOWN",
+      "gis_portal": "WORKING",
+      "documents": "UNKNOWN",
+      "recommended_method": "MANUAL"
+    }
+  },
+  {
+    "county_id": "PA-ADAMS",
+    "county_name": "Adams",
+    "state": "PA",
+    "tests": {
+      "county_website": {
+        "url": "https://www.adamscountypa.gov/",
+        "status": 200,
+        "accessible": false,
+        "error": null,
+        "content_type": "text/html; charset=utf-8",
+        "is_pdf": false,
+        "response_time": 0.47,
+        "final_url": "https://www.adamscountypa.gov/",
+        "blocked_by": "CAPTCHA/Cloudflare"
+      },
+      "gis_portal": {
+        "url": "https://gis-hub-adamsgis.hub.arcgis.com/",
+        "status": 200,
+        "accessible": true,
+        "error": null,
+        "content_type": "text/html; charset=utf-8",
+        "is_pdf": false,
+        "response_time": 0.35,
+        "final_url": "https://gis-hub-adamsgis.hub.arcgis.com/"
+      },
+      "permit_portal": {
+        "url": "https://pacodealliance.com/permit-applications/",
+        "status": 200,
+        "accessible": true,
+        "error": null,
+        "content_type": "text/html; charset=UTF-8",
+        "is_pdf": false,
+        "response_time": 0.32,
+        "final_url": "https://pacodealliance.com/permit-applications/"
+      }
+    },
+    "summary": {
+      "permit_portal": "WORKING",
+      "gis_portal": "WORKING",
+      "documents": "UNKNOWN",
+      "recommended_method": "SCRAPER"
+    }
+  },
+  {
+    "county_id": "PA-YORK",
+    "county_name": "York",
+    "state": "PA",
+    "tests": {
+      "county_website": {
+        "url": "https://www.yorkcountypa.gov/",
+        "status": 200,
+        "accessible": true,
+        "error": null,
+        "content_type": "text/html; charset=utf-8",
+        "is_pdf": false,
+        "response_time": 0.68,
+        "final_url": "https://www.yorkcountypa.gov/"
+      },
+      "gis_portal": {
+        "url": "https://york-county-pa-gis-portal-yorkcountypa.hub.arcgis.com/",
+        "status": 200,
+        "accessible": true,
+        "error": null,
+        "content_type": "text/html; charset=utf-8",
+        "is_pdf": false,
+        "response_time": 0.29,
+        "final_url": "https://york-county-pa-gis-portal-yorkcountypa.hub.arcgis.com/"
+      }
+    },
+    "summary": {
+      "permit_portal": "UNKNOWN",
+      "gis_portal": "WORKING",
+      "documents": "UNKNOWN",
+      "recommended_method": "MANUAL"
+    }
+  },
+  {
+    "county_id": "PA-DAUPHIN",
+    "county_name": "Dauphin",
+    "state": "PA",
+    "tests": {
+      "county_website": {
+        "url": "https://www.dauphincounty.org/",
+        "status": 200,
+        "accessible": true,
+        "error": null,
+        "content_type": "text/html",
+        "is_pdf": false,
+        "response_time": 0.27,
+        "final_url": "https://www.dauphincounty.org/"
+      },
+      "gis_portal": {
+        "url": "https://gis.dauphincounty.org/",
+        "status": null,
+        "accessible": false,
+        "error": "CONNECTION_ERROR",
+        "content_type": null,
+        "is_pdf": false,
+        "response_time": null
+      }
+    },
+    "summary": {
+      "permit_portal": "UNKNOWN",
+      "gis_portal": "FAILED",
+      "documents": "UNKNOWN",
+      "recommended_method": "MANUAL"
+    }
+  },
+  {
+    "county_id": "PA-INDIANA",
+    "county_name": "Indiana",
+    "state": "PA",
+    "tests": {
+      "county_website": {
+        "url": "https://www.indianacountypa.gov/",
+        "status": 200,
+        "accessible": false,
+        "error": null,
+        "content_type": "text/html; charset=UTF-8",
+        "is_pdf": false,
+        "response_time": 0.27,
+        "final_url": "https://www.indianacountypa.gov/",
+        "blocked_by": "CAPTCHA/Cloudflare"
+      },
+      "gis_portal": {
+        "url": "https://www.indianacountypa.gov/departments/planning-and-development/",
+        "status": 200,
+        "accessible": false,
+        "error": null,
+        "content_type": "text/html; charset=UTF-8",
+        "is_pdf": false,
+        "response_time": 0.13,
+        "final_url": "https://www.indianacountypa.gov/departments/planning-and-development/",
+        "blocked_by": "CAPTCHA/Cloudflare"
+      },
+      "permit_portal": {
+        "url": "https://www.icopd.org/building-permits.html",
+        "status": 200,
+        "accessible": true,
+        "error": null,
+        "content_type": "text/html",
+        "is_pdf": false,
+        "response_time": 0.65,
+        "final_url": "https://www.icopd.org/building-permits.html"
+      }
+    },
+    "summary": {
+      "permit_portal": "WORKING",
+      "gis_portal": "FAILED",
+      "documents": "UNKNOWN",
+      "recommended_method": "SCRAPER"
+    }
+  },
+  {
+    "county_id": "PA-FULTON",
+    "county_name": "Fulton",
+    "state": "PA",
+    "tests": {
+      "county_website": {
+        "url": "https://www.co.fulton.pa.us/",
+        "status": 200,
+        "accessible": true,
+        "error": null,
+        "content_type": "text/html",
+        "is_pdf": false,
+        "response_time": 3.49,
+        "final_url": "https://www.co.fulton.pa.us/"
+      },
+      "gis_portal": {
+        "url": "https://www.co.fulton.pa.us/planning-commission.php",
+        "status": 200,
+        "accessible": true,
+        "error": null,
+        "content_type": "text/html",
+        "is_pdf": false,
+        "response_time": 0.07,
+        "final_url": "https://www.co.fulton.pa.us/planning-commission.php"
+      }
+    },
+    "summary": {
+      "permit_portal": "UNKNOWN",
+      "gis_portal": "WORKING",
+      "documents": "UNKNOWN",
+      "recommended_method": "MANUAL"
+    }
+  },
+  {
+    "county_id": "PA-HUNTINGDON",
+    "county_name": "Huntingdon",
+    "state": "PA",
+    "tests": {
+      "county_website": {
+        "url": "https://www.huntingdoncounty.net/",
+        "status": 200,
+        "accessible": false,
+        "error": null,
+        "content_type": "text/html; charset=utf-8",
+        "is_pdf": false,
+        "response_time": 0.8,
+        "final_url": "https://www.huntingdoncounty.net/",
+        "blocked_by": "CAPTCHA/Cloudflare"
+      },
+      "gis_portal": {
+        "url": "https://huntingdoncounty.maps.arcgis.com/",
+        "status": 200,
+        "accessible": true,
+        "error": null,
+        "content_type": "text/html",
+        "is_pdf": false,
+        "response_time": 0.31,
+        "final_url": "https://huntingdoncounty.maps.arcgis.com/home/index.html"
+      }
+    },
+    "summary": {
+      "permit_portal": "UNKNOWN",
+      "gis_portal": "WORKING",
+      "documents": "UNKNOWN",
+      "recommended_method": "MANUAL"
+    }
+  },
+  {
+    "county_id": "PA-GREENE",
+    "county_name": "Greene",
+    "state": "PA",
+    "tests": {
+      "county_website": {
+        "url": "https://greenecountypa.gov/",
+        "status": 200,
+        "accessible": false,
+        "error": null,
+        "content_type": "text/html; Charset=utf-8",
+        "is_pdf": false,
+        "response_time": 0.58,
+        "final_url": "https://greenecountypa.gov/",
+        "blocked_by": "CAPTCHA/Cloudflare"
+      },
+      "gis_portal": {
+        "url": "https://gis.vgsi.com/greenecountypa/",
+        "status": 200,
+        "accessible": true,
+        "error": null,
+        "content_type": "text/html; charset=utf-8",
+        "is_pdf": false,
+        "response_time": 0.36,
+        "final_url": "https://gis.vgsi.com/greenecountypa/"
+      }
+    },
+    "summary": {
+      "permit_portal": "UNKNOWN",
+      "gis_portal": "WORKING",
+      "documents": "UNKNOWN",
+      "recommended_method": "MANUAL"
+    }
+  },
+  {
+    "county_id": "PA-MIFFLIN",
+    "county_name": "Mifflin",
+    "state": "PA",
+    "tests": {
+      "county_website": {
+        "url": "https://www.mifflincountypa.gov/",
+        "status": 200,
+        "accessible": false,
+        "error": null,
+        "content_type": "text/html; charset=utf-8",
+        "is_pdf": false,
+        "response_time": 0.38,
+        "final_url": "https://www.mifflincountypa.gov/",
+        "blocked_by": "CAPTCHA/Cloudflare"
+      },
+      "gis_portal": {
+        "url": "https://gisportal.co.mifflin.pa.us/portal/apps/webappviewer/",
+        "status": 200,
+        "accessible": true,
+        "error": null,
+        "content_type": "text/html",
+        "is_pdf": false,
+        "response_time": 0.44,
+        "final_url": "https://gisportal.co.mifflin.pa.us/portal/apps/webappviewer/"
+      }
+    },
+    "summary": {
+      "permit_portal": "UNKNOWN",
+      "gis_portal": "WORKING",
+      "documents": "UNKNOWN",
+      "recommended_method": "MANUAL"
+    }
+  },
+  {
+    "county_id": "PA-PERRY",
+    "county_name": "Perry",
+    "state": "PA",
+    "tests": {
+      "county_website": {
+        "url": "https://perryco.org/",
+        "status": 200,
+        "accessible": false,
+        "error": null,
+        "content_type": "text/html; charset=UTF-8",
+        "is_pdf": false,
+        "response_time": 0.21,
+        "final_url": "https://perryco.org/",
+        "blocked_by": "CAPTCHA/Cloudflare"
+      },
+      "gis_portal": {
+        "url": "https://perryco.org/",
+        "status": 200,
+        "accessible": false,
+        "error": null,
+        "content_type": "text/html; charset=UTF-8",
+        "is_pdf": false,
+        "response_time": 0.05,
+        "final_url": "https://perryco.org/",
+        "blocked_by": "CAPTCHA/Cloudflare"
+      }
+    },
+    "summary": {
+      "permit_portal": "UNKNOWN",
+      "gis_portal": "FAILED",
+      "documents": "UNKNOWN",
+      "recommended_method": "MANUAL"
+    }
+  },
+  {
+    "county_id": "PA-CLEARFIELD",
+    "county_name": "Clearfield",
+    "state": "PA",
+    "tests": {
+      "county_website": {
+        "url": "https://clearfieldcountypa.gov/",
+        "status": 200,
+        "accessible": true,
+        "error": null,
+        "content_type": "text/html; charset=utf-8",
+        "is_pdf": false,
+        "response_time": 0.67,
+        "final_url": "https://clearfieldcountypa.gov/"
+      },
+      "gis_portal": {
+        "url": "https://arcgis.clearfieldco.org/ccportal/apps/webappviewer/",
+        "status": 200,
+        "accessible": true,
+        "error": null,
+        "content_type": "text/html",
+        "is_pdf": false,
+        "response_time": 0.24,
+        "final_url": "https://arcgis.clearfieldco.org/ccportal/apps/webappviewer/"
+      }
+    },
+    "summary": {
+      "permit_portal": "UNKNOWN",
+      "gis_portal": "WORKING",
+      "documents": "UNKNOWN",
+      "recommended_method": "MANUAL"
+    }
+  },
+  {
+    "county_id": "PA-JUNIATA",
+    "county_name": "Juniata",
+    "state": "PA",
+    "tests": {
+      "county_website": {
+        "url": "https://www.juniataco.org/",
+        "status": 403,
+        "accessible": false,
+        "error": null,
+        "content_type": "text/html",
+        "is_pdf": false,
+        "response_time": 0.46,
+        "final_url": "https://www.juniataco.org/"
+      },
+      "gis_portal": {
+        "url": "https://www.juniataco.org/departments/assessment-gis/",
+        "status": 403,
+        "accessible": false,
+        "error": null,
+        "content_type": "text/html",
+        "is_pdf": false,
+        "response_time": 0.12,
+        "final_url": "https://www.juniataco.org/departments/assessment-gis/"
+      }
+    },
+    "summary": {
+      "permit_portal": "UNKNOWN",
+      "gis_portal": "FAILED",
+      "documents": "UNKNOWN",
+      "recommended_method": "MANUAL"
+    }
+  },
+  {
+    "county_id": "PA-CLINTON",
+    "county_name": "Clinton",
+    "state": "PA",
+    "tests": {
+      "county_website": {
+        "url": "https://www.clintoncountypa.gov/",
+        "status": 403,
+        "accessible": false,
+        "error": null,
+        "content_type": "text/html",
+        "is_pdf": false,
+        "response_time": 0.26,
+        "final_url": "https://www.clintoncountypa.gov/"
+      },
+      "gis_portal": {
+        "url": "https://gis.vgsi.com/clintoncountypa/",
+        "status": 200,
+        "accessible": true,
+        "error": null,
+        "content_type": "text/html; charset=utf-8",
+        "is_pdf": false,
+        "response_time": 1.25,
+        "final_url": "https://gis.vgsi.com/clintoncountypa/"
+      },
+      "permit_portal": {
+        "url": "https://www.clintoncountypa.gov/departments/planning-grants-zoning/request-a-zoning-building-permit",
+        "status": 403,
+        "accessible": false,
+        "error": null,
+        "content_type": "text/html",
+        "is_pdf": false,
+        "response_time": 0.16,
+        "final_url": "https://www.clintoncountypa.gov/departments/planning-grants-zoning/request-a-zoning-building-permit"
+      }
+    },
+    "summary": {
+      "permit_portal": "BLOCKED_403",
+      "gis_portal": "WORKING",
+      "documents": "UNKNOWN",
+      "recommended_method": "BROWSER_AUTOMATION"
+    }
+  },
+  {
+    "county_id": "PA-BEDFORD",
+    "county_name": "Bedford",
+    "state": "PA",
+    "tests": {
+      "county_website": {
+        "url": "https://www.bedfordcountypa.org/",
+        "status": 200,
+        "accessible": false,
+        "error": null,
+        "content_type": "text/html; charset=UTF-8",
+        "is_pdf": false,
+        "response_time": 0.46,
+        "final_url": "https://www.bedfordcountypa.org/",
+        "blocked_by": "CAPTCHA/Cloudflare"
+      },
+      "gis_portal": {
+        "url": "https://bedford.mapblock.io/",
+        "status": 200,
+        "accessible": true,
+        "error": null,
+        "content_type": "",
+        "is_pdf": false,
+        "response_time": 0.29,
+        "final_url": "https://bedford.mapblock.io/"
+      }
+    },
+    "summary": {
+      "permit_portal": "UNKNOWN",
+      "gis_portal": "WORKING",
+      "documents": "UNKNOWN",
+      "recommended_method": "MANUAL"
+    }
+  },
+  {
+    "county_id": "PA-BLAIR",
+    "county_name": "Blair",
+    "state": "PA",
+    "tests": {
+      "county_website": {
+        "url": "https://www.blaircountypa.gov/",
+        "status": null,
+        "accessible": false,
+        "error": "CONNECTION_ERROR",
+        "content_type": null,
+        "is_pdf": false,
+        "response_time": null
+      },
+      "gis_portal": {
+        "url": "https://gis.blaircountypa.gov/portal",
+        "status": 200,
+        "accessible": true,
+        "error": null,
+        "content_type": "text/html",
+        "is_pdf": false,
+        "response_time": 0.35,
+        "final_url": "https://gis.blaircountypa.gov/portal/home/"
+      }
+    },
+    "summary": {
+      "permit_portal": "UNKNOWN",
+      "gis_portal": "WORKING",
+      "documents": "UNKNOWN",
+      "recommended_method": "MANUAL"
+    }
+  },
+  {
+    "county_id": "PA-CAMBRIA",
+    "county_name": "Cambria",
+    "state": "PA",
+    "tests": {
+      "county_website": {
+        "url": "https://www.co.cambria.pa.us/",
+        "status": 200,
+        "accessible": false,
+        "error": null,
+        "content_type": "text/html; charset=UTF-8",
+        "is_pdf": false,
+        "response_time": 2.08,
+        "final_url": "https://www.cambriacountypa.gov/",
+        "blocked_by": "CAPTCHA/Cloudflare"
+      },
+      "gis_portal": {
+        "url": "https://cambriapa.maps.arcgis.com/",
+        "status": 200,
+        "accessible": true,
+        "error": null,
+        "content_type": "text/html",
+        "is_pdf": false,
+        "response_time": 0.39,
+        "final_url": "https://cambriapa.maps.arcgis.com/home/index.html"
+      }
+    },
+    "summary": {
+      "permit_portal": "UNKNOWN",
+      "gis_portal": "WORKING",
+      "documents": "UNKNOWN",
+      "recommended_method": "MANUAL"
+    }
+  },
+  {
+    "county_id": "PA-ALLEGHENY",
+    "county_name": "Allegheny",
+    "state": "PA",
+    "tests": {
+      "county_website": {
+        "url": "https://www.alleghenycounty.us/",
+        "status": 403,
+        "accessible": false,
+        "error": null,
+        "content_type": "text/html",
+        "is_pdf": false,
+        "response_time": 0.2,
+        "final_url": "https://www.alleghenycounty.us/"
+      },
+      "gis_portal": {
+        "url": "https://openac-alcogis.opendata.arcgis.com/",
+        "status": 200,
+        "accessible": true,
+        "error": null,
+        "content_type": "text/html; charset=utf-8",
+        "is_pdf": false,
+        "response_time": 0.31,
+        "final_url": "https://openac-alcogis.opendata.arcgis.com/"
+      }
+    },
+    "summary": {
+      "permit_portal": "UNKNOWN",
+      "gis_portal": "WORKING",
+      "documents": "UNKNOWN",
+      "recommended_method": "MANUAL"
+    }
+  },
+  {
+    "county_id": "WV-BERKELEY",
+    "county_name": "Berkeley",
+    "state": "WV",
+    "tests": {
+      "county_website": {
+        "url": "https://www.berkeleywv.org/",
+        "status": 200,
+        "accessible": true,
+        "error": null,
+        "content_type": "text/html; charset=utf-8",
+        "is_pdf": false,
+        "response_time": 0.55,
+        "final_url": "https://www.berkeleywv.org/"
+      },
+      "gis_portal": {
+        "url": "https://maps.berkeleywv.org/berkeleyonline/",
+        "status": 200,
+        "accessible": true,
+        "error": null,
+        "content_type": "text/html",
+        "is_pdf": false,
+        "response_time": 0.22,
+        "final_url": "https://maps.berkeleywv.org/berkeleyonline/"
+      },
+      "permit_portal": {
+        "url": "https://onestop.berkeleywv.org/",
+        "status": 200,
+        "accessible": true,
+        "error": null,
+        "content_type": "text/html; charset=utf-8",
+        "is_pdf": false,
+        "response_time": 0.24,
+        "final_url": "https://onestop.berkeleywv.org/"
+      },
+      "ordinance_pdf": {
+        "url": "https://berkeleywv.org/DocumentCenter/View/342/2025-Subdivision-and-Land-Use-Ordinance-PDF",
+        "status": 200,
+        "accessible": true,
+        "error": null,
+        "content_type": "application/pdf",
+        "is_pdf": true,
+        "response_time": 0.91,
+        "final_url": "https://berkeleywv.org/DocumentCenter/View/342/Subdivision--Land-Development-Ordinance-Amended-30-January-2025-PDF?bidId=",
+        "size_bytes": 1984032
+      }
+    },
+    "summary": {
+      "permit_portal": "WORKING",
+      "gis_portal": "WORKING",
+      "documents": "1/1 ACCESSIBLE",
+      "recommended_method": "SCRAPER"
+    }
+  },
+  {
+    "county_id": "WV-JEFFERSON",
+    "county_name": "Jefferson",
+    "state": "WV",
+    "tests": {
+      "county_website": {
+        "url": "https://www.jeffersoncountywv.org/",
+        "status": 200,
+        "accessible": false,
+        "error": null,
+        "content_type": "text/html; charset=utf-8",
+        "is_pdf": false,
+        "response_time": 0.72,
+        "final_url": "https://www.jeffersoncountywv.org/",
+        "blocked_by": "CAPTCHA/Cloudflare"
+      },
+      "gis_portal": {
+        "url": "https://od-jcwvgis.opendata.arcgis.com/",
+        "status": 200,
+        "accessible": true,
+        "error": null,
+        "content_type": "text/html; charset=utf-8",
+        "is_pdf": false,
+        "response_time": 0.34,
+        "final_url": "https://od-jcwvgis.opendata.arcgis.com/"
+      },
+      "permit_portal": {
+        "url": "https://www.mgoconnect.org/cp?JID=171",
+        "status": 200,
+        "accessible": true,
+        "error": null,
+        "content_type": "text/html",
+        "is_pdf": false,
+        "response_time": 0.29,
+        "final_url": "https://www.mgoconnect.org/cp?JID=171"
+      },
+      "ordinance_pdf": {
+        "url": "http://www.jeffersoncountywv.org/home/showdocument?id=12211",
+        "status": 200,
+        "accessible": true,
+        "error": null,
+        "content_type": "application/pdf",
+        "is_pdf": true,
+        "response_time": 1.71,
+        "final_url": "http://www.jeffersoncountywv.org/home/showdocument?id=12211",
+        "size_bytes": 771066
+      }
+    },
+    "summary": {
+      "permit_portal": "WORKING",
+      "gis_portal": "WORKING",
+      "documents": "1/1 ACCESSIBLE",
+      "recommended_method": "SCRAPER"
+    }
+  },
+  {
+    "county_id": "WV-MORGAN",
+    "county_name": "Morgan",
+    "state": "WV",
+    "tests": {
+      "county_website": {
+        "url": "https://morgancountywv.gov/",
+        "status": 200,
+        "accessible": true,
+        "error": null,
+        "content_type": "text/html; charset=UTF-8",
+        "is_pdf": false,
+        "response_time": 0.38,
+        "final_url": "https://morgancountywv.gov/"
+      },
+      "gis_portal": {
+        "url": "http://www.mapwv.gov/parcel/",
+        "status": 200,
+        "accessible": true,
+        "error": null,
+        "content_type": "text/html",
+        "is_pdf": false,
+        "response_time": 0.21,
+        "final_url": "http://www.mapwv.gov/parcel/"
+      }
+    },
+    "summary": {
+      "permit_portal": "UNKNOWN",
+      "gis_portal": "WORKING",
+      "documents": "UNKNOWN",
+      "recommended_method": "MANUAL"
+    }
+  },
+  {
+    "county_id": "WV-54061",
+    "county_name": "Monongalia",
+    "state": "WV",
+    "tests": {
+      "county_website": {
+        "url": "https://www.monongaliacounty.gov/",
+        "status": 200,
+        "accessible": false,
+        "error": null,
+        "content_type": "text/html; charset=UTF-8",
+        "is_pdf": false,
+        "response_time": 0.46,
+        "final_url": "https://www.monongaliacounty.gov/",
+        "blocked_by": "CAPTCHA/Cloudflare"
+      },
+      "gis_portal": {
+        "url": "https://www.monongaliacounty.gov/",
+        "status": 200,
+        "accessible": false,
+        "error": null,
+        "content_type": "text/html; charset=UTF-8",
+        "is_pdf": false,
+        "response_time": 0.1,
+        "final_url": "https://www.monongaliacounty.gov/",
+        "blocked_by": "CAPTCHA/Cloudflare"
+      }
+    },
+    "summary": {
+      "permit_portal": "UNKNOWN",
+      "gis_portal": "FAILED",
+      "documents": "UNKNOWN",
+      "recommended_method": "MANUAL"
+    }
+  },
+  {
+    "county_id": "WV-54027",
+    "county_name": "Hampshire",
+    "state": "WV",
+    "tests": {
+      "county_website": {
+        "url": "https://hampshirewv.gov/",
+        "status": null,
+        "accessible": false,
+        "error": "DNS_FAIL",
+        "content_type": null,
+        "is_pdf": false,
+        "response_time": null
+      },
+      "gis_portal": {
+        "url": "http://www.mapwv.gov/parcel/",
+        "status": 200,
+        "accessible": true,
+        "error": null,
+        "content_type": "text/html",
+        "is_pdf": false,
+        "response_time": 0.04,
+        "final_url": "http://www.mapwv.gov/parcel/"
+      }
+    },
+    "summary": {
+      "permit_portal": "UNKNOWN",
+      "gis_portal": "WORKING",
+      "documents": "UNKNOWN",
+      "recommended_method": "MANUAL"
+    }
+  },
+  {
+    "county_id": "WV-54057",
+    "county_name": "Mineral",
+    "state": "WV",
+    "tests": {
+      "county_website": {
+        "url": "https://mineralcountywv.gov/",
+        "status": null,
+        "accessible": false,
+        "error": "DNS_FAIL",
+        "content_type": null,
+        "is_pdf": false,
+        "response_time": null
+      },
+      "gis_portal": {
+        "url": "http://www.mapwv.gov/parcel/",
+        "status": 200,
+        "accessible": true,
+        "error": null,
+        "content_type": "text/html",
+        "is_pdf": false,
+        "response_time": 0.03,
+        "final_url": "http://www.mapwv.gov/parcel/"
+      }
+    },
+    "summary": {
+      "permit_portal": "UNKNOWN",
+      "gis_portal": "WORKING",
+      "documents": "UNKNOWN",
+      "recommended_method": "MANUAL"
+    }
+  },
+  {
+    "county_id": "WV-54031",
+    "county_name": "Hardy",
+    "state": "WV",
+    "tests": {
+      "county_website": {
+        "url": "https://www.hardycounty.com/",
+        "status": 200,
+        "accessible": false,
+        "error": null,
+        "content_type": "text/html; charset=UTF-8",
+        "is_pdf": false,
+        "response_time": 0.54,
+        "final_url": "https://www.hardycounty.com/",
+        "blocked_by": "CAPTCHA/Cloudflare"
+      },
+      "gis_portal": {
+        "url": "http://www.mapwv.gov/parcel/",
+        "status": 200,
+        "accessible": true,
+        "error": null,
+        "content_type": "text/html",
+        "is_pdf": false,
+        "response_time": 0.05,
+        "final_url": "http://www.mapwv.gov/parcel/"
+      }
+    },
+    "summary": {
+      "permit_portal": "UNKNOWN",
+      "gis_portal": "WORKING",
+      "documents": "UNKNOWN",
+      "recommended_method": "MANUAL"
+    }
+  },
+  {
+    "county_id": "WV-54083",
+    "county_name": "Randolph",
+    "state": "WV",
+    "tests": {
+      "county_website": {
+        "url": "https://www.randolphcountywv.com/",
+        "status": 200,
+        "accessible": false,
+        "error": null,
+        "content_type": "text/html; charset=UTF-8",
+        "is_pdf": false,
+        "response_time": 3.22,
+        "final_url": "https://randolphcountywv.com/",
+        "blocked_by": "CAPTCHA/Cloudflare"
+      },
+      "gis_portal": {
+        "url": "http://www.mapwv.gov/parcel/",
+        "status": 200,
+        "accessible": true,
+        "error": null,
+        "content_type": "text/html",
+        "is_pdf": false,
+        "response_time": 0.04,
+        "final_url": "http://www.mapwv.gov/parcel/"
+      }
+    },
+    "summary": {
+      "permit_portal": "UNKNOWN",
+      "gis_portal": "WORKING",
+      "documents": "UNKNOWN",
+      "recommended_method": "MANUAL"
+    }
+  },
+  {
+    "county_id": "WV-54077",
+    "county_name": "Preston",
+    "state": "WV",
+    "tests": {
+      "county_website": {
+        "url": "https://prestoncountywv.gov/",
+        "status": 200,
+        "accessible": false,
+        "error": null,
+        "content_type": "text/html; charset=UTF-8",
+        "is_pdf": false,
+        "response_time": 0.55,
+        "final_url": "https://prestoncountywv.gov/",
+        "blocked_by": "CAPTCHA/Cloudflare"
+      },
+      "gis_portal": {
+        "url": "http://www.mapwv.gov/parcel/",
+        "status": 200,
+        "accessible": true,
+        "error": null,
+        "content_type": "text/html",
+        "is_pdf": false,
+        "response_time": 0.04,
+        "final_url": "http://www.mapwv.gov/parcel/"
+      }
+    },
+    "summary": {
+      "permit_portal": "UNKNOWN",
+      "gis_portal": "WORKING",
+      "documents": "UNKNOWN",
+      "recommended_method": "MANUAL"
+    }
+  },
+  {
+    "county_id": "WV-54049",
+    "county_name": "Marion",
+    "state": "WV",
+    "tests": {
+      "county_website": {
+        "url": "https://www.marioncountywv.com/",
+        "status": 200,
+        "accessible": true,
+        "error": null,
+        "content_type": "text/html; charset=UTF-8",
+        "is_pdf": false,
+        "response_time": 0.39,
+        "final_url": "https://www.marioncountywv.com/"
+      },
+      "gis_portal": {
+        "url": "http://www.mapwv.gov/parcel/",
+        "status": 200,
+        "accessible": true,
+        "error": null,
+        "content_type": "text/html",
+        "is_pdf": false,
+        "response_time": 0.03,
+        "final_url": "http://www.mapwv.gov/parcel/"
+      }
+    },
+    "summary": {
+      "permit_portal": "UNKNOWN",
+      "gis_portal": "WORKING",
+      "documents": "UNKNOWN",
+      "recommended_method": "MANUAL"
+    }
+  },
+  {
+    "county_id": "WV-54033",
+    "county_name": "Harrison",
+    "state": "WV",
+    "tests": {
+      "county_website": {
+        "url": "https://harrisoncountywv.com/",
+        "status": 404,
+        "accessible": false,
+        "error": null,
+        "content_type": "text/html; charset=us-ascii",
+        "is_pdf": false,
+        "response_time": 0.77,
+        "final_url": "https://harrisoncountywv.com/"
+      },
+      "gis_portal": {
+        "url": "http://www.mapwv.gov/parcel/",
+        "status": 200,
+        "accessible": true,
+        "error": null,
+        "content_type": "text/html",
+        "is_pdf": false,
+        "response_time": 0.04,
+        "final_url": "http://www.mapwv.gov/parcel/"
+      }
+    },
+    "summary": {
+      "permit_portal": "UNKNOWN",
+      "gis_portal": "WORKING",
+      "documents": "UNKNOWN",
+      "recommended_method": "MANUAL"
+    }
+  },
+  {
+    "county_id": "WV-54023",
+    "county_name": "Grant",
+    "state": "WV",
+    "tests": {
+      "county_website": {
+        "url": "https://grantcountywv.gov/",
+        "status": null,
+        "accessible": false,
+        "error": "DNS_FAIL",
+        "content_type": null,
+        "is_pdf": false,
+        "response_time": null
+      },
+      "gis_portal": {
+        "url": "http://www.mapwv.gov/parcel/",
+        "status": 200,
+        "accessible": true,
+        "error": null,
+        "content_type": "text/html",
+        "is_pdf": false,
+        "response_time": 0.04,
+        "final_url": "http://www.mapwv.gov/parcel/"
+      }
+    },
+    "summary": {
+      "permit_portal": "UNKNOWN",
+      "gis_portal": "WORKING",
+      "documents": "UNKNOWN",
+      "recommended_method": "MANUAL"
+    }
+  },
+  {
+    "county_id": "WV-54071",
+    "county_name": "Pendleton",
+    "state": "WV",
+    "tests": {
+      "county_website": {
+        "url": "https://pendletoncountywv.gov/",
+        "status": null,
+        "accessible": false,
+        "error": "DNS_FAIL",
+        "content_type": null,
+        "is_pdf": false,
+        "response_time": null
+      },
+      "gis_portal": {
+        "url": "http://www.mapwv.gov/parcel/",
+        "status": 200,
+        "accessible": true,
+        "error": null,
+        "content_type": "text/html",
+        "is_pdf": false,
+        "response_time": 0.03,
+        "final_url": "http://www.mapwv.gov/parcel/"
+      }
+    },
+    "summary": {
+      "permit_portal": "UNKNOWN",
+      "gis_portal": "WORKING",
+      "documents": "UNKNOWN",
+      "recommended_method": "MANUAL"
+    }
+  },
+  {
+    "county_id": "WV-54093",
+    "county_name": "Tucker",
+    "state": "WV",
+    "tests": {
+      "county_website": {
+        "url": "https://tuckercountywv.gov/",
+        "status": null,
+        "accessible": false,
+        "error": "DNS_FAIL",
+        "content_type": null,
+        "is_pdf": false,
+        "response_time": null
+      },
+      "gis_portal": {
+        "url": "http://www.mapwv.gov/parcel/",
+        "status": 200,
+        "accessible": true,
+        "error": null,
+        "content_type": "text/html",
+        "is_pdf": false,
+        "response_time": 0.04,
+        "final_url": "http://www.mapwv.gov/parcel/"
+      }
+    },
+    "summary": {
+      "permit_portal": "UNKNOWN",
+      "gis_portal": "WORKING",
+      "documents": "UNKNOWN",
+      "recommended_method": "MANUAL"
+    }
+  },
+  {
+    "county_id": "WV-54075",
+    "county_name": "Pocahontas",
+    "state": "WV",
+    "tests": {
+      "county_website": {
+        "url": "https://pocahontascountywv.gov/",
+        "status": 200,
+        "accessible": false,
+        "error": null,
+        "content_type": "text/html;charset=utf-8",
+        "is_pdf": false,
+        "response_time": 0.61,
+        "final_url": "https://www.pocahontascountywv.gov/",
+        "blocked_by": "CAPTCHA/Cloudflare"
+      },
+      "gis_portal": {
+        "url": "http://www.mapwv.gov/parcel/",
+        "status": 200,
+        "accessible": true,
+        "error": null,
+        "content_type": "text/html",
+        "is_pdf": false,
+        "response_time": 0.04,
+        "final_url": "http://www.mapwv.gov/parcel/"
+      }
+    },
+    "summary": {
+      "permit_portal": "UNKNOWN",
+      "gis_portal": "WORKING",
+      "documents": "UNKNOWN",
+      "recommended_method": "MANUAL"
+    }
+  },
+  {
+    "county_id": "VA-FREDERICK",
+    "county_name": "Frederick",
+    "state": "VA",
+    "tests": {
+      "county_website": {
+        "url": "https://www.fcva.us/",
+        "status": 403,
+        "accessible": false,
+        "error": null,
+        "content_type": "text/html",
+        "is_pdf": false,
+        "response_time": 0.28,
+        "final_url": "https://www.fcva.us/"
+      },
+      "gis_portal": {
+        "url": "https://gis.fcva.us/",
+        "status": null,
+        "accessible": false,
+        "error": "DNS_FAIL",
+        "content_type": null,
+        "is_pdf": false,
+        "response_time": null
+      },
+      "permit_portal": {
+        "url": "https://energov.frederickcountyva.gov/",
+        "status": null,
+        "accessible": false,
+        "error": "DNS_FAIL",
+        "content_type": null,
+        "is_pdf": false,
+        "response_time": null
+      },
+      "permit_reports": {
+        "url": "https://www.fcva.us/departments/building-inspections/permit-reports",
+        "status": 403,
+        "accessible": false,
+        "error": null,
+        "content_type": "text/html",
+        "is_pdf": false,
+        "response_time": 0.2,
+        "final_url": "https://www.fcva.us/departments/building-inspections/permit-reports"
+      }
+    },
+    "summary": {
+      "permit_portal": "DNS_FAIL",
+      "gis_portal": "FAILED",
+      "documents": "UNKNOWN",
+      "recommended_method": "MANUAL"
+    }
+  },
+  {
+    "county_id": "VA-51187",
+    "county_name": "Warren",
+    "state": "VA",
+    "tests": {
+      "county_website": {
+        "url": "https://www.warrencountyva.gov/",
+        "status": 200,
+        "accessible": true,
+        "error": null,
+        "content_type": "text/html; charset=utf-8",
+        "is_pdf": false,
+        "response_time": 0.67,
+        "final_url": "https://www.warrencountyva.gov/"
+      },
+      "gis_portal": {
+        "url": "https://www.warrencountyva.gov/government/departments/gis",
+        "status": 404,
+        "accessible": false,
+        "error": null,
+        "content_type": "text/html; charset=utf-8",
+        "is_pdf": false,
+        "response_time": 0.13,
+        "final_url": "https://www.warrencountyva.gov/government/departments/gis"
+      },
+      "permit_portal": {
+        "url": "https://www.warrencountyva.gov/government/departments/building_inspections",
+        "status": 404,
+        "accessible": false,
+        "error": null,
+        "content_type": "text/html; charset=utf-8",
+        "is_pdf": false,
+        "response_time": 0.07,
+        "final_url": "https://www.warrencountyva.gov/government/departments/building_inspections"
+      }
+    },
+    "summary": {
+      "permit_portal": "FAILED",
+      "gis_portal": "FAILED",
+      "documents": "UNKNOWN",
+      "recommended_method": "MANUAL"
+    }
+  },
+  {
+    "county_id": "VA-51171",
+    "county_name": "Shenandoah",
+    "state": "VA",
+    "tests": {
+      "county_website": {
+        "url": "https://www.shenandoahcountyva.us/",
+        "status": 200,
+        "accessible": true,
+        "error": null,
+        "content_type": "text/html; charset=utf-8",
+        "is_pdf": false,
+        "response_time": 1.21,
+        "final_url": "https://www.shenandoahcountyva.gov/"
+      },
+      "gis_portal": {
+        "url": "https://www.shenandoahcountyva.us/gis/",
+        "status": 404,
+        "accessible": false,
+        "error": null,
+        "content_type": "text/html; charset=utf-8",
+        "is_pdf": false,
+        "response_time": 0.19,
+        "final_url": "https://www.shenandoahcountyva.us/gis/"
+      },
+      "permit_portal": {
+        "url": "https://www.shenandoahcountyva.us/building/",
+        "status": 404,
+        "accessible": false,
+        "error": null,
+        "content_type": "text/html; charset=utf-8",
+        "is_pdf": false,
+        "response_time": 0.07,
+        "final_url": "https://www.shenandoahcountyva.us/building/"
+      }
+    },
+    "summary": {
+      "permit_portal": "FAILED",
+      "gis_portal": "FAILED",
+      "documents": "UNKNOWN",
+      "recommended_method": "MANUAL"
+    }
+  },
+  {
+    "county_id": "VA-51165",
+    "county_name": "Rockingham",
+    "state": "VA",
+    "tests": {
+      "county_website": {
+        "url": "https://www.rockinghamcountyva.gov/",
+        "status": 200,
+        "accessible": true,
+        "error": null,
+        "content_type": "text/html; charset=utf-8",
+        "is_pdf": false,
+        "response_time": 0.75,
+        "final_url": "https://www.rockinghamcountyva.gov/"
+      },
+      "gis_portal": {
+        "url": "https://gis.rockinghamcountyva.gov/",
+        "status": null,
+        "accessible": false,
+        "error": "DNS_FAIL",
+        "content_type": null,
+        "is_pdf": false,
+        "response_time": null
+      },
+      "permit_portal": {
+        "url": "https://www.rockinghamcountyva.gov/306/Building-Inspection",
+        "status": 200,
+        "accessible": true,
+        "error": null,
+        "content_type": "text/html; charset=utf-8",
+        "is_pdf": false,
+        "response_time": 0.29,
+        "final_url": "https://www.rockinghamcountyva.gov/306/Personal-Property-Tax"
+      }
+    },
+    "summary": {
+      "permit_portal": "WORKING",
+      "gis_portal": "FAILED",
+      "documents": "UNKNOWN",
+      "recommended_method": "SCRAPER"
+    }
+  },
+  {
+    "county_id": "VA-51015",
+    "county_name": "Augusta",
+    "state": "VA",
+    "tests": {
+      "county_website": {
+        "url": "https://www.co.augusta.va.us/",
+        "status": 403,
+        "accessible": false,
+        "error": null,
+        "content_type": "text/html",
+        "is_pdf": false,
+        "response_time": 0.31,
+        "final_url": "https://www.co.augusta.va.us/"
+      },
+      "gis_portal": {
+        "url": "https://gis.co.augusta.va.us/",
+        "status": 200,
+        "accessible": true,
+        "error": null,
+        "content_type": "text/html;charset=utf-8",
+        "is_pdf": false,
+        "response_time": 0.44,
+        "final_url": "https://gis.co.augusta.va.us/arcgis/rest/services"
+      },
+      "permit_portal": {
+        "url": "https://www.co.augusta.va.us/government/building-inspections",
+        "status": 403,
+        "accessible": false,
+        "error": null,
+        "content_type": "text/html",
+        "is_pdf": false,
+        "response_time": 0.23,
+        "final_url": "https://www.co.augusta.va.us/government/building-inspections"
+      }
+    },
+    "summary": {
+      "permit_portal": "BLOCKED_403",
+      "gis_portal": "WORKING",
+      "documents": "UNKNOWN",
+      "recommended_method": "BROWSER_AUTOMATION"
+    }
+  },
+  {
+    "county_id": "VA-51043",
+    "county_name": "Clarke",
+    "state": "VA",
+    "tests": {
+      "county_website": {
+        "url": "https://www.clarkecounty.gov/",
+        "status": 403,
+        "accessible": false,
+        "error": null,
+        "content_type": "text/html",
+        "is_pdf": false,
+        "response_time": 0.3,
+        "final_url": "https://www.clarkecounty.gov/"
+      },
+      "gis_portal": {
+        "url": "https://www.clarkecounty.gov/government/gis",
+        "status": 403,
+        "accessible": false,
+        "error": null,
+        "content_type": "text/html",
+        "is_pdf": false,
+        "response_time": 0.16,
+        "final_url": "https://www.clarkecounty.gov/government/gis"
+      }
+    },
+    "summary": {
+      "permit_portal": "UNKNOWN",
+      "gis_portal": "FAILED",
+      "documents": "UNKNOWN",
+      "recommended_method": "MANUAL"
+    }
+  },
+  {
+    "county_id": "VA-51139",
+    "county_name": "Page",
+    "state": "VA",
+    "tests": {
+      "county_website": {
+        "url": "https://www.pagecounty.virginia.gov/",
+        "status": 200,
+        "accessible": true,
+        "error": null,
+        "content_type": "text/html; charset=utf-8",
+        "is_pdf": false,
+        "response_time": 0.84,
+        "final_url": "https://www.pagecounty.virginia.gov/"
+      },
+      "gis_portal": {
+        "url": "https://www.pagecounty.virginia.gov/264/GIS-Mapping",
+        "status": 200,
+        "accessible": true,
+        "error": null,
+        "content_type": "text/html; charset=utf-8",
+        "is_pdf": false,
+        "response_time": 0.39,
+        "final_url": "https://www.pagecounty.virginia.gov/m/newsflash"
+      }
+    },
+    "summary": {
+      "permit_portal": "UNKNOWN",
+      "gis_portal": "WORKING",
+      "documents": "UNKNOWN",
+      "recommended_method": "MANUAL"
+    }
+  },
+  {
+    "county_id": "VA-51005",
+    "county_name": "Alleghany",
+    "state": "VA",
+    "tests": {
+      "county_website": {
+        "url": "https://www.alleghanycounty-va.gov/",
+        "status": null,
+        "accessible": false,
+        "error": "DNS_FAIL",
+        "content_type": null,
+        "is_pdf": false,
+        "response_time": null
+      },
+      "gis_portal": {
+        "url": "https://www.alleghanycounty-va.gov/",
+        "status": null,
+        "accessible": false,
+        "error": "DNS_FAIL",
+        "content_type": null,
+        "is_pdf": false,
+        "response_time": null
+      }
+    },
+    "summary": {
+      "permit_portal": "UNKNOWN",
+      "gis_portal": "FAILED",
+      "documents": "UNKNOWN",
+      "recommended_method": "MANUAL"
+    }
+  },
+  {
+    "county_id": "VA-51163",
+    "county_name": "Rockbridge",
+    "state": "VA",
+    "tests": {
+      "county_website": {
+        "url": "https://www.rockbridgecountyva.gov/",
+        "status": null,
+        "accessible": false,
+        "error": "CONNECTION_ERROR",
+        "content_type": null,
+        "is_pdf": false,
+        "response_time": null
+      },
+      "gis_portal": {
+        "url": "https://gis.rockbridgecountyva.gov/",
+        "status": null,
+        "accessible": false,
+        "error": "DNS_FAIL",
+        "content_type": null,
+        "is_pdf": false,
+        "response_time": null
+      }
+    },
+    "summary": {
+      "permit_portal": "UNKNOWN",
+      "gis_portal": "FAILED",
+      "documents": "UNKNOWN",
+      "recommended_method": "MANUAL"
+    }
+  },
+  {
+    "county_id": "VA-51023",
+    "county_name": "Botetourt",
+    "state": "VA",
+    "tests": {
+      "county_website": {
+        "url": "https://www.botetourt.org/",
+        "status": 200,
+        "accessible": false,
+        "error": null,
+        "content_type": "text/html; charset=utf-8",
+        "is_pdf": false,
+        "response_time": 1.16,
+        "final_url": "https://www.botetourtva.gov/",
+        "blocked_by": "CAPTCHA/Cloudflare"
+      },
+      "gis_portal": {
+        "url": "https://gis.botetourt.org/",
+        "status": null,
+        "accessible": false,
+        "error": "DNS_FAIL",
+        "content_type": null,
+        "is_pdf": false,
+        "response_time": null
+      },
+      "permit_portal": {
+        "url": "https://www.botetourt.org/government/departments/building_inspection",
+        "status": 200,
+        "accessible": false,
+        "error": null,
+        "content_type": "text/html; charset=utf-8",
+        "is_pdf": false,
+        "response_time": 0.16,
+        "final_url": "https://www.botetourtva.gov/",
+        "blocked_by": "CAPTCHA/Cloudflare"
+      }
+    },
+    "summary": {
+      "permit_portal": "FAILED",
+      "gis_portal": "FAILED",
+      "documents": "UNKNOWN",
+      "recommended_method": "MANUAL"
+    }
+  },
+  {
+    "county_id": "VA-51091",
+    "county_name": "Highland",
+    "state": "VA",
+    "tests": {
+      "county_website": {
+        "url": "https://www.highlandcova.org/",
+        "status": 403,
+        "accessible": false,
+        "error": null,
+        "content_type": "text/html; charset=UTF-8",
+        "is_pdf": false,
+        "response_time": 0.32,
+        "final_url": "https://www.highlandcova.org/"
+      },
+      "gis_portal": {
+        "url": "https://www.highlandcova.org/",
+        "status": 403,
+        "accessible": false,
+        "error": null,
+        "content_type": "text/html; charset=UTF-8",
+        "is_pdf": false,
+        "response_time": 0.16,
+        "final_url": "https://www.highlandcova.org/"
+      }
+    },
+    "summary": {
+      "permit_portal": "UNKNOWN",
+      "gis_portal": "FAILED",
+      "documents": "UNKNOWN",
+      "recommended_method": "MANUAL"
+    }
+  },
+  {
+    "county_id": "VA-51017",
+    "county_name": "Bath",
+    "state": "VA",
+    "tests": {
+      "county_website": {
+        "url": "https://www.bathcountyva.org/",
+        "status": null,
+        "accessible": false,
+        "error": "DNS_FAIL",
+        "content_type": null,
+        "is_pdf": false,
+        "response_time": null
+      },
+      "gis_portal": {
+        "url": "https://www.bathcountyva.org/",
+        "status": null,
+        "accessible": false,
+        "error": "DNS_FAIL",
+        "content_type": null,
+        "is_pdf": false,
+        "response_time": null
+      }
+    },
+    "summary": {
+      "permit_portal": "UNKNOWN",
+      "gis_portal": "FAILED",
+      "documents": "UNKNOWN",
+      "recommended_method": "MANUAL"
+    }
+  },
+  {
+    "county_id": "VA-51009",
+    "county_name": "Amherst",
+    "state": "VA",
+    "tests": {
+      "county_website": {
+        "url": "https://www.countyofamherst.com/",
+        "status": 200,
+        "accessible": true,
+        "error": null,
+        "content_type": "text/html; charset=UTF-8",
+        "is_pdf": false,
+        "response_time": 0.83,
+        "final_url": "https://www.countyofamherst.com/"
+      },
+      "gis_portal": {
+        "url": "https://www.countyofamherst.com/government/gis",
+        "status": 404,
+        "accessible": false,
+        "error": null,
+        "content_type": "text/html",
+        "is_pdf": false,
+        "response_time": 0.03,
+        "final_url": "https://www.countyofamherst.com/government/gis"
+      }
+    },
+    "summary": {
+      "permit_portal": "UNKNOWN",
+      "gis_portal": "FAILED",
+      "documents": "UNKNOWN",
+      "recommended_method": "MANUAL"
+    }
+  },
+  {
+    "county_id": "MD-24043",
+    "county_name": "Washington",
+    "state": "MD",
+    "tests": {
+      "county_website": {
+        "url": "https://www.washco-md.net/",
+        "status": 200,
+        "accessible": false,
+        "error": null,
+        "content_type": "text/html; charset=UTF-8",
+        "is_pdf": false,
+        "response_time": 0.24,
+        "final_url": "https://www.washco-md.net/",
+        "blocked_by": "CAPTCHA/Cloudflare"
+      },
+      "gis_portal": {
+        "url": "https://gis.washco-md.net/",
+        "status": null,
+        "accessible": false,
+        "error": "DNS_FAIL",
+        "content_type": null,
+        "is_pdf": false,
+        "response_time": null
+      },
+      "permit_portal": {
+        "url": "https://www.washco-md.net/permits-and-inspections/",
+        "status": 200,
+        "accessible": false,
+        "error": null,
+        "content_type": "text/html; charset=UTF-8",
+        "is_pdf": false,
+        "response_time": 0.06,
+        "final_url": "https://www.washco-md.net/permits-and-inspections/",
+        "blocked_by": "CAPTCHA/Cloudflare"
+      }
+    },
+    "summary": {
+      "permit_portal": "FAILED",
+      "gis_portal": "FAILED",
+      "documents": "UNKNOWN",
+      "recommended_method": "MANUAL"
+    }
+  },
+  {
+    "county_id": "MD-24021",
+    "county_name": "Frederick",
+    "state": "MD",
+    "tests": {
+      "county_website": {
+        "url": "https://www.frederickcountymd.gov/",
+        "status": 200,
+        "accessible": true,
+        "error": null,
+        "content_type": "text/html; charset=utf-8",
+        "is_pdf": false,
+        "response_time": 1.05,
+        "final_url": "https://www.frederickcountymd.gov/"
+      },
+      "gis_portal": {
+        "url": "https://gis.frederickcountymd.gov/",
+        "status": null,
+        "accessible": false,
+        "error": "DNS_FAIL",
+        "content_type": null,
+        "is_pdf": false,
+        "response_time": null
+      },
+      "permit_portal": {
+        "url": "https://www.frederickcountymd.gov/7974/Permits-and-Inspections",
+        "status": 200,
+        "accessible": true,
+        "error": null,
+        "content_type": "text/html; charset=utf-8",
+        "is_pdf": false,
+        "response_time": 0.56,
+        "final_url": "https://www.frederickcountymd.gov/7974/Permits-and-Inspections"
+      }
+    },
+    "summary": {
+      "permit_portal": "WORKING",
+      "gis_portal": "FAILED",
+      "documents": "UNKNOWN",
+      "recommended_method": "SCRAPER"
+    }
+  },
+  {
+    "county_id": "MD-24001",
+    "county_name": "Allegany",
+    "state": "MD",
+    "tests": {
+      "county_website": {
+        "url": "https://alleganyco.gov/",
+        "status": 403,
+        "accessible": false,
+        "error": null,
+        "content_type": "text/html",
+        "is_pdf": false,
+        "response_time": 0.32,
+        "final_url": "https://alleganyco.gov/"
+      },
+      "gis_portal": {
+        "url": "https://www.alleganyco.gov/gis/",
+        "status": 403,
+        "accessible": false,
+        "error": null,
+        "content_type": "text/html",
+        "is_pdf": false,
+        "response_time": 0.32,
+        "final_url": "https://www.alleganyco.gov/gis/"
+      },
+      "permit_portal": {
+        "url": "https://alleganyco.gov/permits-inspections/",
+        "status": 403,
+        "accessible": false,
+        "error": null,
+        "content_type": "text/html",
+        "is_pdf": false,
+        "response_time": 0.06,
+        "final_url": "https://alleganyco.gov/permits-inspections/"
+      }
+    },
+    "summary": {
+      "permit_portal": "BLOCKED_403",
+      "gis_portal": "FAILED",
+      "documents": "UNKNOWN",
+      "recommended_method": "BROWSER_AUTOMATION"
+    }
+  },
+  {
+    "county_id": "MD-24023",
+    "county_name": "Garrett",
+    "state": "MD",
+    "tests": {
+      "county_website": {
+        "url": "https://www.garrettcounty.org/",
+        "status": 200,
+        "accessible": false,
+        "error": null,
+        "content_type": "text/html; charset=UTF-8",
+        "is_pdf": false,
+        "response_time": 0.64,
+        "final_url": "https://www.garrettcountymd.gov/",
+        "blocked_by": "CAPTCHA/Cloudflare"
+      },
+      "gis_portal": {
+        "url": "https://www.garrettcounty.org/gis",
+        "status": 404,
+        "accessible": false,
+        "error": null,
+        "content_type": "text/html; charset=UTF-8",
+        "is_pdf": false,
+        "response_time": 1.05,
+        "final_url": "https://www.garrettcountymd.gov/gis"
+      },
+      "permit_portal": {
+        "url": "https://www.garrettcounty.org/planning-land-development/permits",
+        "status": 404,
+        "accessible": false,
+        "error": null,
+        "content_type": "text/html; charset=UTF-8",
+        "is_pdf": false,
+        "response_time": 1.05,
+        "final_url": "https://www.garrettcountymd.gov/planning-land-development/permits"
+      }
+    },
+    "summary": {
+      "permit_portal": "FAILED",
+      "gis_portal": "FAILED",
+      "documents": "UNKNOWN",
+      "recommended_method": "MANUAL"
+    }
+  },
+  {
+    "county_id": "MD-24013",
+    "county_name": "Carroll",
+    "state": "MD",
+    "tests": {
+      "county_website": {
+        "url": "https://www.carrollcountymd.gov/",
+        "status": 200,
+        "accessible": false,
+        "error": null,
+        "content_type": "text/html; charset=utf-8",
+        "is_pdf": false,
+        "response_time": 0.35,
+        "final_url": "https://www.carrollcountymd.gov/",
+        "blocked_by": "CAPTCHA/Cloudflare"
+      },
+      "gis_portal": {
+        "url": "https://gis.carrollcountymd.gov/",
+        "status": 502,
+        "accessible": false,
+        "error": null,
+        "content_type": "text/html",
+        "is_pdf": false,
+        "response_time": 0.29,
+        "final_url": "https://gis.carrollcountymd.gov/"
+      },
+      "permit_portal": {
+        "url": "https://www.carrollcountymd.gov/government/directory/permits-and-inspections/",
+        "status": 404,
+        "accessible": false,
+        "error": null,
+        "content_type": "text/html; charset=utf-8",
+        "is_pdf": false,
+        "response_time": 0.05,
+        "final_url": "https://www.carrollcountymd.gov/government/directory/permits-and-inspections/"
+      }
+    },
+    "summary": {
+      "permit_portal": "FAILED",
+      "gis_portal": "FAILED",
+      "documents": "UNKNOWN",
+      "recommended_method": "MANUAL"
+    }
+  }
+]
