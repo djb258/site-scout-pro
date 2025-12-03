@@ -1,116 +1,55 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
-*/
-
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 215 25% 27%;
-
-    --card: 0 0% 100%;
-    --card-foreground: 215 25% 27%;
-
-    --popover: 0 0% 100%;
-    --popover-foreground: 215 25% 27%;
-
-    --primary: 214 95% 47%;
-    --primary-foreground: 0 0% 100%;
-
-    --secondary: 214 25% 95%;
-    --secondary-foreground: 214 30% 25%;
-
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215 16% 47%;
-
-    --accent: 214 25% 95%;
-    --accent-foreground: 214 30% 25%;
-
-    --success: 142 76% 36%;
-    --success-foreground: 0 0% 100%;
-
-    --warning: 38 92% 50%;
-    --warning-foreground: 0 0% 100%;
-
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 100%;
-
-    --border: 214 32% 91%;
-    --input: 214 32% 91%;
-    --ring: 214 95% 47%;
-
-    --radius: 0.5rem;
-    
-    --step-indicator: 214 95% 47%;
-    --step-complete: 142 76% 36%;
-    --step-pending: 214 25% 85%;
-
-    --sidebar-background: 0 0% 98%;
-
-    --sidebar-foreground: 240 5.3% 26.1%;
-
-    --sidebar-primary: 240 5.9% 10%;
-
-    --sidebar-primary-foreground: 0 0% 98%;
-
-    --sidebar-accent: 240 4.8% 95.9%;
-
-    --sidebar-accent-foreground: 240 5.9% 10%;
-
-    --sidebar-border: 220 13% 91%;
-
-    --sidebar-ring: 217.2 91.2% 59.8%;
-  }
-
-  .dark {
-    --background: 215 28% 17%;
+    /* HIVE Dark Theme - Amber + Gray */
+    --background: 222 47% 6%;
     --foreground: 210 40% 98%;
-
-    --card: 215 25% 20%;
-    --card-foreground: 210 40% 98%;
-
-    --popover: 215 25% 20%;
-    --popover-foreground: 210 40% 98%;
-
-    --primary: 214 95% 55%;
-    --primary-foreground: 0 0% 100%;
-
-    --secondary: 215 20% 25%;
-    --secondary-foreground: 210 40% 98%;
-
-    --muted: 215 20% 25%;
-    --muted-foreground: 215 20% 65%;
-
-    --accent: 215 20% 25%;
-    --accent-foreground: 210 40% 98%;
-
-    --success: 142 76% 36%;
-    --success-foreground: 0 0% 100%;
-
-    --warning: 38 92% 50%;
-    --warning-foreground: 0 0% 100%;
-
-    --destructive: 0 63% 31%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 215 20% 25%;
-    --input: 215 20% 25%;
-    --ring: 214 95% 55%;
     
-    --step-indicator: 214 95% 55%;
-    --step-complete: 142 76% 36%;
-    --step-pending: 215 20% 30%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --card: 222 41% 11%;
+    --card-foreground: 210 40% 98%;
+    
+    --popover: 222 41% 11%;
+    --popover-foreground: 210 40% 98%;
+    
+    --primary: 38 92% 50%;
+    --primary-foreground: 222 47% 6%;
+    
+    --secondary: 217 33% 17%;
+    --secondary-foreground: 210 40% 98%;
+    
+    --muted: 217 33% 17%;
+    --muted-foreground: 215 20% 65%;
+    
+    --accent: 38 92% 50%;
+    --accent-foreground: 222 47% 6%;
+    
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 210 40% 98%;
+    
+    --border: 217 33% 25%;
+    --input: 217 33% 25%;
+    --ring: 38 92% 50%;
+    
+    --radius: 0.75rem;
+    
+    --success: 142 76% 36%;
+    --success-foreground: 210 40% 98%;
+    --warning: 45 93% 47%;
+    --warning-foreground: 222 47% 6%;
+    
+    --sidebar-background: 222 41% 11%;
+    --sidebar-foreground: 210 40% 98%;
+    --sidebar-primary: 38 92% 50%;
+    --sidebar-primary-foreground: 222 47% 6%;
+    --sidebar-accent: 217 33% 17%;
+    --sidebar-accent-foreground: 210 40% 98%;
+    --sidebar-border: 217 33% 25%;
+    --sidebar-ring: 38 92% 50%;
   }
 }
 
@@ -118,8 +57,61 @@ All colors MUST be HSL.
   * {
     @apply border-border;
   }
-
+  
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-sans antialiased;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  }
+}
+
+/* Leaflet dark theme overrides */
+.leaflet-container {
+  background: hsl(222 47% 6%);
+}
+
+.leaflet-popup-content-wrapper {
+  background: hsl(222 41% 11%);
+  color: hsl(210 40% 98%);
+  border-radius: 0.75rem;
+  border: 1px solid hsl(217 33% 25%);
+}
+
+.leaflet-popup-tip {
+  background: hsl(222 41% 11%);
+}
+
+.emoji-marker {
+  background: transparent !important;
+  border: none !important;
+}
+
+.text-label {
+  background: transparent !important;
+  border: none !important;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: hsl(222 41% 11%);
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsl(217 33% 25%);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(215 16% 47%);
+}
+
+@media print {
+  body {
+    background: white !important;
+    color: black !important;
   }
 }
