@@ -31,60 +31,22 @@ Deno.serve(async (req) => {
     console.log("Connecting to Neon database...");
     const sql = postgres(neonUrl, { ssl: "require" });
 
-    // Query all ZIP codes from Neon's zips_master table
+    // Query all ZIP codes from Neon's zips_master table - use * to get all available columns
     console.log("Fetching ZIP codes from Neon zips_master...");
-    const neonZips = await sql`
-      SELECT 
-        zip,
-        lat,
-        lng,
-        city,
-        state,
-        state_name,
-        zcta,
-        parent_zcta,
-        population,
-        density,
-        county_fips,
-        county_name,
-        county_fips_all,
-        county_names_all,
-        county_weights,
-        imprecise,
-        military,
-        timezone,
-        age_median,
-        male,
-        female,
-        married,
-        family_size,
-        income_household_median,
-        income_household_six_figure,
-        home_ownership,
-        home_value,
-        rent_median,
-        education_college_or_above,
-        labor_force_participation,
-        unemployment_rate,
-        race_white,
-        race_black,
-        race_asian,
-        race_native,
-        race_pacific,
-        race_other,
-        race_multiple
-      FROM zips_master
-    `;
+    const neonZips = await sql`SELECT * FROM zips_master`;
 
     console.log(`Fetched ${neonZips.length} ZIP codes from Neon`);
+    if (neonZips.length > 0) {
+      console.log("Available columns:", Object.keys(neonZips[0]).join(", "));
+    }
 
-    // Map Neon columns to Lovable Cloud schema
+    // Map Neon columns to Lovable Cloud schema - handle missing columns gracefully
     const mappedZips = neonZips.map((z: any) => ({
       zip: z.zip,
-      lat: z.lat,
-      lng: z.lng,
+      lat: z.lat ?? z.latitude,
+      lng: z.lng ?? z.longitude,
       city: z.city,
-      state_id: z.state,
+      state_id: z.state ?? z.state_id,
       state_name: z.state_name,
       zcta: z.zcta,
       parent_zcta: z.parent_zcta,
