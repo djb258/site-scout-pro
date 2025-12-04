@@ -32,6 +32,109 @@ export type Database = {
         }
         Relationships: []
       }
+      pass1_results: {
+        Row: {
+          analysis_summary: Json | null
+          anchors: Json | null
+          competitors: Json | null
+          created_at: string
+          housing_signals: Json | null
+          id: string
+          industrial_signals: Json | null
+          radius_counties: Json | null
+          rv_lake_signals: Json | null
+          zip_metadata: Json | null
+          zip_run_id: string
+        }
+        Insert: {
+          analysis_summary?: Json | null
+          anchors?: Json | null
+          competitors?: Json | null
+          created_at?: string
+          housing_signals?: Json | null
+          id?: string
+          industrial_signals?: Json | null
+          radius_counties?: Json | null
+          rv_lake_signals?: Json | null
+          zip_metadata?: Json | null
+          zip_run_id: string
+        }
+        Update: {
+          analysis_summary?: Json | null
+          anchors?: Json | null
+          competitors?: Json | null
+          created_at?: string
+          housing_signals?: Json | null
+          id?: string
+          industrial_signals?: Json | null
+          radius_counties?: Json | null
+          rv_lake_signals?: Json | null
+          zip_metadata?: Json | null
+          zip_run_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pass1_results_zip_run_id_fkey"
+            columns: ["zip_run_id"]
+            isOneToOne: false
+            referencedRelation: "zip_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pass2_results: {
+        Row: {
+          created_at: string
+          feasibility: Json | null
+          fusion_model: Json | null
+          housing_pipeline: Json | null
+          id: string
+          industrial_deep: Json | null
+          permit_intel: Json | null
+          rent_benchmarks: Json | null
+          reverse_feasibility: Json | null
+          verdict: Json | null
+          zip_run_id: string
+          zoning: Json | null
+        }
+        Insert: {
+          created_at?: string
+          feasibility?: Json | null
+          fusion_model?: Json | null
+          housing_pipeline?: Json | null
+          id?: string
+          industrial_deep?: Json | null
+          permit_intel?: Json | null
+          rent_benchmarks?: Json | null
+          reverse_feasibility?: Json | null
+          verdict?: Json | null
+          zip_run_id: string
+          zoning?: Json | null
+        }
+        Update: {
+          created_at?: string
+          feasibility?: Json | null
+          fusion_model?: Json | null
+          housing_pipeline?: Json | null
+          id?: string
+          industrial_deep?: Json | null
+          permit_intel?: Json | null
+          rent_benchmarks?: Json | null
+          reverse_feasibility?: Json | null
+          verdict?: Json | null
+          zip_run_id?: string
+          zoning?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pass2_results_zip_run_id_fkey"
+            columns: ["zip_run_id"]
+            isOneToOne: false
+            referencedRelation: "zip_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       rent_band_staging: {
         Row: {
           created_at: string
@@ -368,6 +471,45 @@ export type Database = {
           unemployment_rate?: number | null
           zcta?: boolean | null
           zip?: string
+        }
+        Relationships: []
+      }
+      zip_runs: {
+        Row: {
+          analysis_mode: string | null
+          created_at: string
+          id: string
+          industrial_momentum: boolean | null
+          multifamily_priority: boolean | null
+          recreation_load: boolean | null
+          status: string | null
+          updated_at: string
+          urban_exclude: boolean | null
+          zip_code: string
+        }
+        Insert: {
+          analysis_mode?: string | null
+          created_at?: string
+          id?: string
+          industrial_momentum?: boolean | null
+          multifamily_priority?: boolean | null
+          recreation_load?: boolean | null
+          status?: string | null
+          updated_at?: string
+          urban_exclude?: boolean | null
+          zip_code: string
+        }
+        Update: {
+          analysis_mode?: string | null
+          created_at?: string
+          id?: string
+          industrial_momentum?: boolean | null
+          multifamily_priority?: boolean | null
+          recreation_load?: boolean | null
+          status?: string | null
+          updated_at?: string
+          urban_exclude?: boolean | null
+          zip_code?: string
         }
         Relationships: []
       }

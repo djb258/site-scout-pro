@@ -5,3 +5,12 @@ verify_jwt = false
 
 [functions.uploadZipCodes]
 verify_jwt = false
+
+[functions.startPass1]
+verify_jwt = false
+
+[functions.startPass2]
+verify_jwt = false
+
+[functions.saveToVault]
+verify_jwt = false
