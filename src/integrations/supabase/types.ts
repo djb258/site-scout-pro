@@ -14,6 +14,72 @@ export type Database = {
   }
   public: {
     Tables: {
+      calculators_state: {
+        Row: {
+          acres_available: number | null
+          cap_rate_target: number | null
+          concrete_cost_yd: number | null
+          concrete_finish_cost: number | null
+          id: string
+          land_cost_per_acre: number | null
+          market_rent_10x10: number | null
+          market_rent_10x20: number | null
+          metal_cost_sqft: number | null
+          updated_at: string
+        }
+        Insert: {
+          acres_available?: number | null
+          cap_rate_target?: number | null
+          concrete_cost_yd?: number | null
+          concrete_finish_cost?: number | null
+          id?: string
+          land_cost_per_acre?: number | null
+          market_rent_10x10?: number | null
+          market_rent_10x20?: number | null
+          metal_cost_sqft?: number | null
+          updated_at?: string
+        }
+        Update: {
+          acres_available?: number | null
+          cap_rate_target?: number | null
+          concrete_cost_yd?: number | null
+          concrete_finish_cost?: number | null
+          id?: string
+          land_cost_per_acre?: number | null
+          market_rent_10x10?: number | null
+          market_rent_10x20?: number | null
+          metal_cost_sqft?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      engine_logs: {
+        Row: {
+          created_at: string
+          engine: string
+          event: string
+          id: string
+          payload: Json | null
+          status: string | null
+        }
+        Insert: {
+          created_at?: string
+          engine: string
+          event: string
+          id?: string
+          payload?: Json | null
+          status?: string | null
+        }
+        Update: {
+          created_at?: string
+          engine?: string
+          event?: string
+          id?: string
+          payload?: Json | null
+          status?: string | null
+        }
+        Relationships: []
+      }
       generic_ingest_log: {
         Row: {
           created_at: string
@@ -82,6 +148,51 @@ export type Database = {
           },
         ]
       }
+      pass1_runs: {
+        Row: {
+          created_at: string
+          gemini_anchors: Json | null
+          gemini_facilities: Json | null
+          gemini_housing: Json | null
+          gemini_industry_news: Json | null
+          gemini_recreation: Json | null
+          id: string
+          radius_counties: Json | null
+          status: string | null
+          toggles: Json | null
+          updated_at: string
+          zip: string
+        }
+        Insert: {
+          created_at?: string
+          gemini_anchors?: Json | null
+          gemini_facilities?: Json | null
+          gemini_housing?: Json | null
+          gemini_industry_news?: Json | null
+          gemini_recreation?: Json | null
+          id?: string
+          radius_counties?: Json | null
+          status?: string | null
+          toggles?: Json | null
+          updated_at?: string
+          zip: string
+        }
+        Update: {
+          created_at?: string
+          gemini_anchors?: Json | null
+          gemini_facilities?: Json | null
+          gemini_housing?: Json | null
+          gemini_industry_news?: Json | null
+          gemini_recreation?: Json | null
+          id?: string
+          radius_counties?: Json | null
+          status?: string | null
+          toggles?: Json | null
+          updated_at?: string
+          zip?: string
+        }
+        Relationships: []
+      }
       pass2_results: {
         Row: {
           created_at: string
@@ -131,6 +242,65 @@ export type Database = {
             columns: ["zip_run_id"]
             isOneToOne: false
             referencedRelation: "zip_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pass2_runs: {
+        Row: {
+          created_at: string
+          feasibility: Json | null
+          fusion_model: Json | null
+          housing_pipeline: Json | null
+          id: string
+          industrial_deep_dive: Json | null
+          pass1_id: string | null
+          permit_intel: Json | null
+          rent_benchmarks: Json | null
+          reverse_feasibility: Json | null
+          status: string | null
+          updated_at: string
+          verdict: Json | null
+          zoning_intel: Json | null
+        }
+        Insert: {
+          created_at?: string
+          feasibility?: Json | null
+          fusion_model?: Json | null
+          housing_pipeline?: Json | null
+          id?: string
+          industrial_deep_dive?: Json | null
+          pass1_id?: string | null
+          permit_intel?: Json | null
+          rent_benchmarks?: Json | null
+          reverse_feasibility?: Json | null
+          status?: string | null
+          updated_at?: string
+          verdict?: Json | null
+          zoning_intel?: Json | null
+        }
+        Update: {
+          created_at?: string
+          feasibility?: Json | null
+          fusion_model?: Json | null
+          housing_pipeline?: Json | null
+          id?: string
+          industrial_deep_dive?: Json | null
+          pass1_id?: string | null
+          permit_intel?: Json | null
+          rent_benchmarks?: Json | null
+          reverse_feasibility?: Json | null
+          status?: string | null
+          updated_at?: string
+          verdict?: Json | null
+          zoning_intel?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pass2_runs_pass1_id_fkey"
+            columns: ["pass1_id"]
+            isOneToOne: false
+            referencedRelation: "pass1_runs"
             referencedColumns: ["id"]
           },
         ]
@@ -345,6 +515,35 @@ export type Database = {
           },
         ]
       }
+      staging_payload: {
+        Row: {
+          created_at: string
+          id: string
+          pass2_id: string | null
+          payload: Json | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          pass2_id?: string | null
+          payload?: Json | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          pass2_id?: string | null
+          payload?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "staging_payload_pass2_id_fkey"
+            columns: ["pass2_id"]
+            isOneToOne: false
+            referencedRelation: "pass2_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       us_zip_codes: {
         Row: {
           age_median: number | null
@@ -473,6 +672,41 @@ export type Database = {
           zip?: string
         }
         Relationships: []
+      }
+      vault_push_queue: {
+        Row: {
+          created_at: string
+          id: string
+          neon_payload: Json | null
+          staging_id: string | null
+          status: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          neon_payload?: Json | null
+          staging_id?: string | null
+          status?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          neon_payload?: Json | null
+          staging_id?: string | null
+          status?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vault_push_queue_staging_id_fkey"
+            columns: ["staging_id"]
+            isOneToOne: false
+            referencedRelation: "staging_payload"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       zip_runs: {
         Row: {
