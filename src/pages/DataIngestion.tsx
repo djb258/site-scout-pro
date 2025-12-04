@@ -16,6 +16,8 @@ export default function DataIngestion() {
   const [apiHeaders, setApiHeaders] = useState("");
   const [apiMethod, setApiMethod] = useState("GET");
 
+  const [uploadProgress, setUploadProgress] = useState<string>("");
+
   async function handleCsvUpload() {
     if (!csvFile) {
       toast.error("Please select a CSV file");
@@ -25,24 +27,28 @@ export default function DataIngestion() {
     const reader = new FileReader();
     reader.onload = async (e) => {
       const text = e.target?.result as string;
-      const rows = text.split("\n").map(row => row.split(","));
+      const firstLine = text.split("\n")[0]?.toLowerCase() || "";
       
       try {
         // Check if this is ZIP code data by looking at headers
-        const headers = rows[0]?.join(",").toLowerCase() || "";
-        const isZipCodeData = headers.includes("zip") && headers.includes("lat") && headers.includes("lng");
+        const isZipCodeData = firstLine.includes('"zip"') && firstLine.includes('"lat"') && firstLine.includes('"lng"');
 
         if (isZipCodeData) {
-          // Use specialized ZIP code upload
-          const { data, error } = await supabase.functions.invoke('uploadZipCodes', {
-            body: { rows }
+          setUploadProgress("Processing ZIP codes... This may take a minute.");
+          toast.info("Starting bulk ZIP code upload...");
+          
+          // Use bulk loader for ZIP codes - sends raw CSV content
+          const { data, error } = await supabase.functions.invoke('bulkLoadZips', {
+            body: { csvContent: text }
           });
           
           if (error) throw error;
           
-          toast.success(`Successfully uploaded ${data.count} ZIP codes to database`);
+          setUploadProgress("");
+          toast.success(`Successfully uploaded ${data.inserted} ZIP codes to database`);
         } else {
           // Use generic ingestion for other CSV types
+          const rows = text.split("\n").map(row => row.split(","));
           await send({
             type: "csv_ingestion",
             filename: csvFile.name,
@@ -55,7 +61,8 @@ export default function DataIngestion() {
         setCsvFile(null);
       } catch (error) {
         console.error("CSV upload error:", error);
-        toast.error("Failed to ingest CSV");
+        setUploadProgress("");
+        toast.error("Failed to ingest CSV: " + (error instanceof Error ? error.message : "Unknown error"));
       }
     };
     reader.readAsText(csvFile);
@@ -125,13 +132,18 @@ export default function DataIngestion() {
                   <span className="text-sm text-foreground">{csvFile.name}</span>
                 </div>
               )}
+              {uploadProgress && (
+                <div className="p-3 bg-primary/10 rounded-md border border-primary/20">
+                  <span className="text-sm text-primary">{uploadProgress}</span>
+                </div>
+              )}
               <Button 
                 onClick={handleCsvUpload} 
-                disabled={!csvFile || isLoading}
+                disabled={!csvFile || isLoading || !!uploadProgress}
                 className="w-full"
               >
                 <Upload className="w-4 h-4 mr-2" />
-                {isLoading ? "Uploading..." : "Upload CSV"}
+                {uploadProgress ? "Processing..." : isLoading ? "Uploading..." : "Upload CSV"}
               </Button>
             </CardContent>
           </Card>
