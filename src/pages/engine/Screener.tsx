@@ -6,13 +6,16 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { ArrowLeft, Loader2, Zap } from 'lucide-react';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { ArrowLeft, Loader2, Zap, Settings, ChevronDown } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { DEFAULT_CALCULATOR_INPUTS, type CalculatorInputs } from '@/services/pass2Calculators';
 
 export default function EngineScreener() {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
+  const [showCalculatorSettings, setShowCalculatorSettings] = useState(false);
   
   const [formData, setFormData] = useState({
     zip_code: '',
@@ -22,6 +25,8 @@ export default function EngineScreener() {
     industrial_momentum: false,
     analysis_mode: 'build'
   });
+
+  const [calculatorInputs, setCalculatorInputs] = useState<CalculatorInputs>(DEFAULT_CALCULATOR_INPUTS);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,6 +39,9 @@ export default function EngineScreener() {
     setIsLoading(true);
     
     try {
+      // Store calculator inputs in sessionStorage for Pass 2
+      sessionStorage.setItem('calculatorInputs', JSON.stringify(calculatorInputs));
+      
       const { data, error } = await supabase.functions.invoke('startPass1', {
         body: formData
       });
@@ -48,6 +56,10 @@ export default function EngineScreener() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const updateCalculatorInput = (key: keyof CalculatorInputs, value: number) => {
+    setCalculatorInputs(prev => ({ ...prev, [key]: value }));
   };
 
   return (
@@ -179,6 +191,136 @@ export default function EngineScreener() {
               </div>
             </CardContent>
           </Card>
+
+          {/* Calculator Settings (Collapsible) */}
+          <Collapsible open={showCalculatorSettings} onOpenChange={setShowCalculatorSettings}>
+            <Card className="bg-card border-border">
+              <CollapsibleTrigger asChild>
+                <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <Settings className="h-5 w-5 text-amber-500" />
+                      <div>
+                        <CardTitle className="text-foreground">Calculator Inputs</CardTitle>
+                        <CardDescription>Customize feasibility assumptions</CardDescription>
+                      </div>
+                    </div>
+                    <ChevronDown className={`h-5 w-5 transition-transform ${showCalculatorSettings ? 'rotate-180' : ''}`} />
+                  </div>
+                </CardHeader>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <CardContent className="space-y-6">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>Metal Building $/sqft</Label>
+                      <Input
+                        type="number"
+                        step="0.5"
+                        min="18"
+                        max="35"
+                        value={calculatorInputs.metalBuildingCostPerSqft}
+                        onChange={(e) => updateCalculatorInput('metalBuildingCostPerSqft', parseFloat(e.target.value) || 0)}
+                        className="bg-background"
+                      />
+                      <p className="text-xs text-muted-foreground">Typical: $22-24</p>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Concrete $/yard</Label>
+                      <Input
+                        type="number"
+                        step="5"
+                        min="100"
+                        max="250"
+                        value={calculatorInputs.concreteCostPerYard}
+                        onChange={(e) => updateCalculatorInput('concreteCostPerYard', parseFloat(e.target.value) || 0)}
+                        className="bg-background"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Finish Labor $/sqft</Label>
+                      <Input
+                        type="number"
+                        step="0.25"
+                        min="1"
+                        max="5"
+                        value={calculatorInputs.finishLaborCost}
+                        onChange={(e) => updateCalculatorInput('finishLaborCost', parseFloat(e.target.value) || 0)}
+                        className="bg-background"
+                      />
+                      <p className="text-xs text-muted-foreground">Default: $2.50</p>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Land Cost ($)</Label>
+                      <Input
+                        type="number"
+                        step="10000"
+                        min="50000"
+                        value={calculatorInputs.landCost}
+                        onChange={(e) => updateCalculatorInput('landCost', parseFloat(e.target.value) || 0)}
+                        className="bg-background"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Cap Rate Target (%)</Label>
+                      <Input
+                        type="number"
+                        step="0.25"
+                        min="4"
+                        max="12"
+                        value={(calculatorInputs.capRateTarget * 100).toFixed(2)}
+                        onChange={(e) => updateCalculatorInput('capRateTarget', (parseFloat(e.target.value) || 0) / 100)}
+                        className="bg-background"
+                      />
+                      <p className="text-xs text-muted-foreground">Default: 6.5%</p>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Acreage Available</Label>
+                      <Input
+                        type="number"
+                        step="0.5"
+                        min="0.5"
+                        max="20"
+                        value={calculatorInputs.acreageAvailable}
+                        onChange={(e) => updateCalculatorInput('acreageAvailable', parseFloat(e.target.value) || 0)}
+                        className="bg-background"
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="border-t border-border pt-4">
+                    <h4 className="text-sm font-medium text-foreground mb-3">Market Rents</h4>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label>10×10 Unit $/mo</Label>
+                        <Input
+                          type="number"
+                          step="5"
+                          min="50"
+                          max="400"
+                          value={calculatorInputs.marketRent10x10}
+                          onChange={(e) => updateCalculatorInput('marketRent10x10', parseFloat(e.target.value) || 0)}
+                          className="bg-background"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>10×20 Unit $/mo</Label>
+                        <Input
+                          type="number"
+                          step="5"
+                          min="75"
+                          max="500"
+                          value={calculatorInputs.marketRent10x20}
+                          onChange={(e) => updateCalculatorInput('marketRent10x20', parseFloat(e.target.value) || 0)}
+                          className="bg-background"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </CollapsibleContent>
+            </Card>
+          </Collapsible>
 
           {/* Submit */}
           <Button 

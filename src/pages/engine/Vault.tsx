@@ -125,7 +125,11 @@ export default function Vault() {
                         >
                           {record.decision || viability.final_verdict || 'EVALUATE'}
                         </Badge>
-                        <Button variant="ghost" size="icon">
+                        <Button 
+                          variant="ghost" 
+                          size="icon"
+                          onClick={() => navigate(`/engine/vault/${record.id}`)}
+                        >
                           <Eye className="h-4 w-4" />
                         </Button>
                       </div>
