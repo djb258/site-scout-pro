@@ -23,3 +23,6 @@ verify_jwt = false
 
 [functions.bulkLoadZips]
 verify_jwt = false
+
+[functions.syncZipsFromNeon]
+verify_jwt = false
