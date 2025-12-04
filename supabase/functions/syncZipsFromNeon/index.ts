@@ -12,10 +12,17 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const neonUrl = Deno.env.get("NEON_DATABASE_URL");
+    let neonUrl = Deno.env.get("NEON_DATABASE_URL");
     if (!neonUrl) {
       throw new Error("NEON_DATABASE_URL not configured");
     }
+    
+    // Clean up the URL if it has psql command wrapper or quotes
+    neonUrl = neonUrl
+      .replace(/^psql\s+/i, '')  // Remove "psql " prefix
+      .replace(/^['"]/, '')       // Remove leading quote
+      .replace(/['"]$/, '')       // Remove trailing quote
+      .trim();
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
