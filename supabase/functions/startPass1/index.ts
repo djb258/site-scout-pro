@@ -35,7 +35,52 @@ serve(async (req) => {
 
     console.log(`[Pass1] Starting analysis for ZIP: ${zip_code}`);
 
-    // 1. Create zip_run record
+    // 1. HYDRATE: Fetch ZIP metadata from us_zip_codes FIRST (fail fast if missing)
+    const { data: zipData, error: zipError } = await supabase
+      .from('us_zip_codes')
+      .select('*')
+      .eq('zip', zip_code)
+      .maybeSingle();
+
+    if (zipError) {
+      console.error('[Pass1] Error fetching ZIP metadata:', zipError);
+      throw zipError;
+    }
+
+    if (!zipData) {
+      console.warn(`[Pass1] ZIP ${zip_code} not found in us_zip_codes reference table`);
+      return new Response(
+        JSON.stringify({ 
+          error: `ZIP code ${zip_code} not found in reference data. Please sync ZIP codes first.`,
+          hint: 'Run syncZipsFromNeon to populate reference data'
+        }),
+        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    console.log(`[Pass1] Hydrated ZIP metadata: ${zipData.city}, ${zipData.state_name} (pop: ${zipData.population})`);
+
+    // Build structured ZIP metadata
+    const zipMetadata = {
+      zip: zipData.zip,
+      city: zipData.city,
+      county: zipData.county_name,
+      state_id: zipData.state_id,
+      state_name: zipData.state_name,
+      lat: zipData.lat,
+      lng: zipData.lng,
+      population: zipData.population,
+      density: zipData.density,
+      income_household_median: zipData.income_household_median,
+      home_value: zipData.home_value,
+      home_ownership: zipData.home_ownership,
+      rent_median: zipData.rent_median,
+      age_median: zipData.age_median,
+      education_college_or_above: zipData.education_college_or_above,
+      unemployment_rate: zipData.unemployment_rate
+    };
+
+    // 2. Create zip_run record
     const { data: zipRun, error: runError } = await supabase
       .from('zip_runs')
       .insert({
@@ -57,25 +102,24 @@ serve(async (req) => {
 
     console.log(`[Pass1] Created zip_run: ${zipRun.id}`);
 
-    // 2. Fetch ZIP metadata from us_zip_codes
-    const { data: zipData, error: zipError } = await supabase
-      .from('us_zip_codes')
-      .select('*')
-      .eq('zip', zip_code)
-      .single();
+    // 3. Log engine event for audit trail
+    await supabase.from('engine_logs').insert({
+      engine: 'startPass1',
+      event: 'hydration_complete',
+      payload: { 
+        zip_run_id: zipRun.id, 
+        zip_code,
+        city: zipData.city,
+        county: zipData.county_name,
+        state: zipData.state_name,
+        population: zipData.population
+      },
+      status: 'success'
+    });
 
-    const zipMetadata = zipData || {
-      zip: zip_code,
-      city: 'Unknown',
-      state_name: 'Unknown',
-      population: 0,
-      density: 0,
-      income_household_median: 0
-    };
-
-    // 3. Calculate 120-mile radius counties (simplified - using state for now)
+    // 4. Calculate 120-mile radius counties (simplified - using state for now)
     let radiusCounties: any[] = [];
-    if (zipData?.state_id) {
+    if (zipData.state_id) {
       const { data: nearbyZips } = await supabase
         .from('us_zip_codes')
         .select('county_name, state_name, population, lat, lng')
@@ -97,28 +141,28 @@ serve(async (req) => {
       radiusCounties = Array.from(countyMap.values()).slice(0, 20);
     }
 
-    // 4. Generate competitor placeholders (would connect to Google Places API)
+    // 5. Generate competitor placeholders (would connect to Google Places API)
     const competitors = [
       { name: 'Public Storage', distance_miles: 2.3, estimated_sqft: 45000 },
       { name: 'Extra Space Storage', distance_miles: 4.1, estimated_sqft: 62000 },
       { name: 'CubeSmart', distance_miles: 5.8, estimated_sqft: 38000 }
     ];
 
-    // 5. Housing signals based on demographics
+    // 6. Housing signals based on demographics
     const housingSignals = {
-      median_home_value: zipData?.home_value || 0,
-      home_ownership_rate: zipData?.home_ownership || 0,
-      rent_median: zipData?.rent_median || 0,
-      growth_indicator: zipData?.population > 10000 ? 'high' : 'moderate'
+      median_home_value: zipData.home_value || 0,
+      home_ownership_rate: zipData.home_ownership || 0,
+      rent_median: zipData.rent_median || 0,
+      growth_indicator: (zipData.population || 0) > 10000 ? 'high' : 'moderate'
     };
 
-    // 6. Anchors (major employers/attractions)
+    // 7. Anchors (major employers/attractions)
     const anchors = [
       { type: 'retail', name: 'Regional Shopping Center', distance_miles: 3.2 },
       { type: 'employer', name: 'Industrial Park', distance_miles: 5.1 }
     ];
 
-    // 7. RV/Lake signals
+    // 8. RV/Lake signals
     const rvLakeSignals = {
       recreation_load: recreation_load,
       rv_potential: recreation_load ? 'high' : 'low',
@@ -126,14 +170,14 @@ serve(async (req) => {
       campground_nearby: false
     };
 
-    // 8. Industrial signals
+    // 9. Industrial signals
     const industrialSignals = {
       industrial_momentum: industrial_momentum,
       distribution_centers_nearby: 2,
       manufacturing_presence: industrial_momentum ? 'moderate' : 'low'
     };
 
-    // 9. Analysis summary
+    // 10. Analysis summary
     const analysisSummary = {
       analysis_mode,
       urban_exclude,
@@ -141,13 +185,15 @@ serve(async (req) => {
       viability_score: 65, // Placeholder
       recommendation: 'Proceed to Pass 2 for deep dive',
       key_factors: [
-        `Population: ${zipMetadata.population?.toLocaleString() || 'Unknown'}`,
+        `Population: ${(zipMetadata.population || 0).toLocaleString()}`,
+        `Location: ${zipMetadata.city}, ${zipMetadata.state_name}`,
+        `County: ${zipMetadata.county || 'Unknown'}`,
         `Competitors within 10mi: ${competitors.length}`,
         `Analysis mode: ${analysis_mode}`
       ]
     };
 
-    // 10. Store Pass 1 results
+    // 11. Store Pass 1 results
     const { error: pass1Error } = await supabase
       .from('pass1_results')
       .insert({
@@ -167,7 +213,7 @@ serve(async (req) => {
       throw pass1Error;
     }
 
-    // 11. Update status to pass1_complete
+    // 12. Update status to pass1_complete
     await supabase
       .from('zip_runs')
       .update({ status: 'pass1_complete' })
@@ -180,6 +226,7 @@ serve(async (req) => {
         success: true,
         zip_run_id: zipRun.id,
         status: 'pass1_complete',
+        zip_metadata: zipMetadata,
         summary: analysisSummary
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
