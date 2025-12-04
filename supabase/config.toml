@@ -14,3 +14,9 @@ verify_jwt = false
 
 [functions.saveToVault]
 verify_jwt = false
+
+[functions.start_pass1]
+verify_jwt = false
+
+[functions.start_pass2]
+verify_jwt = false
