@@ -20,3 +20,6 @@ verify_jwt = false
 
 [functions.start_pass2]
 verify_jwt = false
+
+[functions.bulkLoadZips]
+verify_jwt = false
