@@ -15,6 +15,7 @@ import EngineScreener from "./pages/engine/Screener";
 import Pass1Results from "./pages/engine/Pass1Results";
 import Pass2Results from "./pages/engine/Pass2Results";
 import Vault from "./pages/engine/Vault";
+import VaultDeepDive from "./pages/engine/VaultDeepDive";
 
 const queryClient = new QueryClient();
 
@@ -33,6 +34,7 @@ const App = () => (
             <Route path="/engine/pass1/:runId" element={<Pass1Results />} />
             <Route path="/engine/pass2/:runId" element={<Pass2Results />} />
             <Route path="/engine/vault" element={<Vault />} />
+            <Route path="/engine/vault/:id" element={<VaultDeepDive />} />
             
             {/* Hive UI Routes */}
             <Route element={<HiveLayout />}>
