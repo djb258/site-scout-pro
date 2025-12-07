@@ -19,6 +19,10 @@ DOC_DIRS = [
 
 # Documentation files to sync (root level)
 DOC_FILES = [
+    "BARTON_STORAGE_EMPIRE_CONSTITUTION.md",
+    "PASS2_IMPLEMENTATION_REPORT.md",
+    "ARCHITECTURE_GAP_REPORT.md",
+    "LOVABLE_COMPATIBILITY_CHECKLIST.md",
     "UI_UPDATE_PROMPT_LEASE_UP.md",
     "EMPTY_TABLES_REPORT.md",
     "PA_JURISDICTION_DATA_IMPORT.md",
@@ -111,6 +115,14 @@ This directory contains all documentation for the Storage Containers project.
 **Repository:** `{SOURCE_PATH}`
 
 ## Documentation Files
+
+### Empire Doctrine
+- [[BARTON_STORAGE_EMPIRE_CONSTITUTION]] - The foundational doctrines governing all investment decisions
+
+### Engine Implementation
+- [[PASS2_IMPLEMENTATION_REPORT]] - Pass-2 Underwriting Hub implementation report
+- [[ARCHITECTURE_GAP_REPORT]] - Architecture gap analysis
+- [[LOVABLE_COMPATIBILITY_CHECKLIST]] - Lovable/Cloudflare compatibility checklist
 
 ### Recent Documentation
 - [[UI_UPDATE_PROMPT_LEASE_UP]] - UI update prompt for lease-up logic
