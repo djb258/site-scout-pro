@@ -19,7 +19,7 @@ DOC_DIRS = [
 
 # Documentation files to sync (root level)
 DOC_FILES = [
-    "BARTON_STORAGE_EMPIRE_CONSTITUTION.md",
+    "BARTON_STORAGE_SYSTEM_CONSTITUTION.md",
     "PASS2_IMPLEMENTATION_REPORT.md",
     "ARCHITECTURE_GAP_REPORT.md",
     "LOVABLE_COMPATIBILITY_CHECKLIST.md",
@@ -116,8 +116,8 @@ This directory contains all documentation for the Storage Containers project.
 
 ## Documentation Files
 
-### Empire Doctrine
-- [[BARTON_STORAGE_EMPIRE_CONSTITUTION]] - The foundational doctrines governing all investment decisions
+### System Doctrine
+- [[BARTON_STORAGE_SYSTEM_CONSTITUTION]] - The foundational doctrines governing all investment decisions
 
 ### Engine Implementation
 - [[PASS2_IMPLEMENTATION_REPORT]] - Pass-2 Underwriting Hub implementation report
