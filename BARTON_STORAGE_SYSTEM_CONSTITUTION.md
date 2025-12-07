@@ -1,18 +1,18 @@
-# THE BARTON STORAGE EMPIRE CONSTITUTION
+# THE BARTON STORAGE SYSTEM CONSTITUTION
 
 ## Part One — Sections I–IV
 
-> **Purpose**: This document establishes the foundational doctrines, principles, and decision-making frameworks that govern all investment decisions within the Barton Storage Empire. Every tool, algorithm, and screening pipeline in this codebase exists to enforce these principles programmatically.
+> **Purpose**: This document establishes the foundational doctrines, principles, and decision-making frameworks that govern all investment decisions within the Barton Storage System. Every tool, algorithm, and screening pipeline in this codebase exists to enforce these principles programmatically.
 
 ---
 
 # SECTION I — MISSION & PRIME DIRECTIVE
 
-## 1.1 Mission of the Empire
+## 1.1 Mission of the System
 
-The Barton Storage Empire exists to build **sovereign, simple, phaseable, low-labor assets** that compound for generations.
+The Barton Storage System exists to build **sovereign, simple, phaseable, low-labor assets** that compound for generations.
 
-The Empire prioritizes:
+The System prioritizes:
 
 - **Minimal overhead**
 - **Maximum cashflow per acre**
@@ -45,7 +45,15 @@ The Empire prioritizes:
 - Compounding assets
 - Minimal operational burden
 
-Every asset, decision, and investment must strengthen the Empire by reinforcing **simplicity, sovereignty, and scalable profit**.
+Every asset, decision, and investment must strengthen the System by reinforcing **simplicity, sovereignty, and scalable profit**.
+
+### The Earners' Doctrine
+
+> **"I will never give you anything — but I will make it easier for you to earn it."**
+
+This system does not give rewards; it gives pathways.
+Anyone can win.
+Nobody is guaranteed anything.
 
 ---
 
@@ -84,16 +92,16 @@ Storage fits the doctrine because it is:
 - **Recession-proof** — Demand persists in downturns
 - **Repeatable** — Works across counties and states
 
-> Storage is the Empire's first vehicle.
-> The system underneath it is the real asset — transferable to many sectors.
+> Storage is the System's first vehicle.
+> The framework underneath it is the real asset — transferable to many sectors.
 
 ---
 
-# SECTION II — CORE EMPIRE DOCTRINES
+# SECTION II — CORE SYSTEM DOCTRINES
 
 ## 2.1 Sovereignty Doctrine
 
-The Empire rejects anything that requires:
+The System rejects anything that requires:
 
 - Utilities (water, sewer, gas)
 - Large capital infrastructure
@@ -114,7 +122,7 @@ If it's not simple:
 - Harder to maintain
 - Prone to failure
 
-> **Simplicity scales. Complexity kills empires.**
+> **Simplicity scales. Complexity kills systems.**
 
 ---
 
@@ -148,14 +156,14 @@ if (zoningData.requiresSewer || zoningData.requiresWater) {
 
 ## 2.4 The Profit Rule — $5,000 per Acre per Month
 
-The Empire engages **NO DEAL** that cannot generate:
+The System engages **NO DEAL** that cannot generate:
 
 | Metric | Minimum Threshold |
 |--------|-------------------|
 | Monthly net per acre | $5,000+ |
 | Annual net per acre | $60,000+ |
 
-> This keeps the Empire focused on high-density, high-yield assets.
+> This keeps the System focused on high-density, high-yield assets.
 
 ### Implementation in Code
 
@@ -187,7 +195,7 @@ Every asset must have **at least two fallback uses**, including:
 - Container storage
 - Laydown yard
 
-> **If you cannot pivot, you are trapped. The Empire never gets trapped.**
+> **If you cannot pivot, you are trapped. The System never gets trapped.**
 
 ### Implementation in Code
 
@@ -214,7 +222,7 @@ Build in phases:
 | Phase 2 | Scales with proven demand |
 | Phase 3 | Optimizes NOI |
 
-> **No full-build upfront. The Empire expands only after earning the right.**
+> **No full-build upfront. The System expands only after earning the right.**
 
 ### Phase Triggers
 
@@ -253,7 +261,7 @@ if (preleaseRate < PRELEASING_TARGET && !hasStrongDemandSignals) {
 
 ## 2.8 Continuous Tending Doctrine
 
-The Empire is not "set it and forget it."
+The System is not "set it and forget it."
 
 It must be:
 - Reviewed
@@ -366,7 +374,7 @@ Every deal is evaluated:
 - Systematically
 - Unemotionally
 
-> **This rule protects the Empire from bad decisions and whim-based investments.**
+> **This rule protects the System from bad decisions and whim-based investments.**
 
 ---
 
@@ -404,7 +412,7 @@ These assets share:
 
 ## 4.2 Disallowed Assets (Anti-Portfolio)
 
-The Empire **NEVER** invests in:
+The System **NEVER** invests in:
 
 | Asset Class | Violation |
 |-------------|-----------|
@@ -493,7 +501,7 @@ WALK: Fatal flaw detected OR score < 45
 
 # Summary
 
-The Barton Storage Empire Constitution establishes:
+The Barton Storage System Constitution establishes:
 
 1. **Clear mission**: Sovereign, simple, phaseable assets that compound
 2. **Non-negotiable doctrines**: Sovereignty, simplicity, profit rule, porta-john rule
@@ -501,10 +509,10 @@ The Barton Storage Empire Constitution establishes:
 4. **Fix path requirement**: Every failure shows how to fix
 5. **Asset class restrictions**: Only dynasty-grade assets allowed
 
-Every line of code in this repository exists to **enforce these principles programmatically** and protect the Empire from emotional, undisciplined investment decisions.
+Every line of code in this repository exists to **enforce these principles programmatically** and protect the System from emotional, undisciplined investment decisions.
 
 ---
 
 > **"You don't make money on service — you make money on deals."**
 
-*The Barton Storage Empire Constitution — Part One*
+*The Barton Storage System Constitution — Part One*
