@@ -454,8 +454,5 @@ export function extractNeonRecord(payload: VaultPayload): NeonVaultRecord | null
     return null;
   }
 
-  return payload.payload.neonRecord || null;
+  return (payload.payload.neonRecord as NeonVaultRecord) || null;
 }
-
-// Re-export types
-export type { VaultPayload, NeonVaultRecord };

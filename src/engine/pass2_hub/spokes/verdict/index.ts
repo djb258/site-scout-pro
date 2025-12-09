@@ -490,5 +490,5 @@ export function prepareVaultPayload(
   };
 }
 
-// Re-export types for convenience
-export type { VerdictResult, VerdictShellInput };
+// Re-export types for convenience (VerdictResult only - VerdictShellInput is defined locally)
+export type { VerdictResult };

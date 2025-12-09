@@ -48,8 +48,9 @@ const createMockDB = (): LovableDB => {
       if (!storage.has(table)) {
         storage.set(table, new Map());
       }
-      const existing = storage.get(table)!.get(id) || {};
-      const updated = { ...existing, ...data, updated_at: Date.now() };
+      const existing = storage.get(table)!.get(id);
+      const existingObj = typeof existing === 'object' && existing !== null ? existing : {};
+      const updated = { ...existingObj, ...data, updated_at: Date.now() };
       storage.get(table)!.set(id, updated);
       console.log(`[LOVABLE_DB] UPDATE ${table}:`, id);
       return { id, data: updated as T };

@@ -182,13 +182,15 @@ export function runFusionDemand(input: FusionDemandInput): LegacyFusionDemandRes
   const supply_sqft = pass1_macro.macro_supply.total_supply_sqft;
   const supply_gap_sqft = demand_sqft - supply_sqft;
 
-  // Determine market timing
-  let market_timing: FusionDemandResult['market_timing'] = 'neutral';
+  // Determine market timing (snake_case for legacy interface)
+  type LegacyMarketTiming = 'favorable' | 'neutral' | 'unfavorable';
+  let market_timing: LegacyMarketTiming = 'neutral';
   if (supply_gap_sqft > 50000 && housing_score > 60) market_timing = 'favorable';
   else if (supply_gap_sqft < 0) market_timing = 'unfavorable';
 
-  // Determine competition intensity
-  let competition_intensity: FusionDemandResult['competition_intensity'] = 'moderate';
+  // Determine competition intensity (snake_case for legacy interface)
+  type LegacyCompetitionIntensity = 'low' | 'moderate' | 'high';
+  let competition_intensity: LegacyCompetitionIntensity = 'moderate';
   if (pass1_macro.macro_supply.density_score >= 70) competition_intensity = 'low';
   else if (pass1_macro.macro_supply.density_score <= 40) competition_intensity = 'high';
 
@@ -197,6 +199,7 @@ export function runFusionDemand(input: FusionDemandInput): LegacyFusionDemandRes
 
   console.log(`[FUSION_DEMAND] Score: ${demand_score}, Gap: ${supply_gap_sqft.toLocaleString()} sqft`);
 
+  // Return legacy format with snake_case properties
   return {
     demand_score,
     supply_gap_sqft,
@@ -206,7 +209,7 @@ export function runFusionDemand(input: FusionDemandInput): LegacyFusionDemandRes
     industrial_contribution: Math.round(industrial_score * INDUSTRIAL_WEIGHT),
     housing_contribution: Math.round(housing_score * HOUSING_WEIGHT),
     population_contribution: Math.round(population_score * POPULATION_WEIGHT),
-  };
+  } as LegacyFusionDemandResult;
 }
 
 /**
