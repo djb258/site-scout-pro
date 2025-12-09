@@ -70,6 +70,18 @@ export interface Competitor {
   climate_controlled?: boolean;
   rating?: number;
   review_count?: number;
+  // Enrichment fields (added by competitor_enrichment spoke)
+  grade?: 'A' | 'B' | 'C'; // A=National REIT, B=Regional operator, C=Mom & Pop
+  facility_type?: 'traditional' | 'climate_only' | 'rv_boat' | 'mixed' | 'portable';
+  brand?: string;
+  is_reit?: boolean;
+  unit_count_estimate?: number;
+  occupancy_estimate?: number;
+  year_built?: number;
+  has_rv_boat?: boolean;
+  has_wine_storage?: boolean;
+  has_vehicle_storage?: boolean;
+  enrichment_confidence?: 'high' | 'medium' | 'low';
 }
 
 export interface HousingSignals {
@@ -129,6 +141,29 @@ export interface HotspotScore {
   tier: 'A' | 'B' | 'C' | 'D';
 }
 
+export interface CompetitorEnrichmentSummary {
+  total_competitors: number;
+  grade_a_count: number;
+  grade_b_count: number;
+  grade_c_count: number;
+  reit_presence: boolean;
+  avg_estimated_sqft: number;
+  total_estimated_sqft: number;
+  dominant_type: 'traditional' | 'climate_only' | 'rv_boat' | 'mixed' | 'portable';
+  enrichment_complete: boolean;
+  enrichment_timestamp?: string;
+}
+
+export interface Pass1ValidationResult {
+  is_valid: boolean;
+  validation_timestamp: string;
+  missing_fields: string[];
+  warnings: string[];
+  pass2_ready: boolean;
+  validation_score: number; // 0-100 completeness score
+  blockers: string[]; // Critical issues that prevent Pass-2
+}
+
 export interface Pass1MacroResults {
   zip_metadata: ZipMetadata;
   radius_counties: RadiusCounty[];
@@ -140,6 +175,10 @@ export interface Pass1MacroResults {
   macro_demand: MacroDemandResult;
   macro_supply: MacroSupplyResult;
   hotspot_score: HotspotScore;
+  // NEW: Enrichment summary
+  competitor_enrichment?: CompetitorEnrichmentSummary;
+  // NEW: Validation gate result
+  validation?: Pass1ValidationResult;
 }
 
 // ============================================================================

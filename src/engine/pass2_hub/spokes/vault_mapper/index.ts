@@ -24,6 +24,7 @@ import type {
   PricingVerificationResult,
   FusionDemandResult,
   CompetitivePressureResult,
+  CivilConstraintResult,
   FeasibilityResult,
   ReverseFeasibilityResult,
   MomentumResult,
@@ -44,6 +45,7 @@ export interface VaultMapperInput {
   pricing: PricingVerificationResult;
   fusion: FusionDemandResult;
   comp: CompetitivePressureResult;
+  civil: CivilConstraintResult; // NEW: Civil constraints
   feasibility: FeasibilityResult;
   reverse: ReverseFeasibilityResult;
   momentum: MomentumResult;
@@ -146,6 +148,26 @@ export interface NeonVaultRecord {
   mom_housing_growth_score: number;
   mom_timeline_alignment: string;
 
+  // Civil Constraints (flattened - NEW)
+  civil_score: number;
+  civil_rating: string;
+  civil_lot_coverage_feasible: boolean;
+  civil_lot_coverage_required_pct: number;
+  civil_lot_coverage_allowed_pct: number;
+  civil_developable_acres: number;
+  civil_parking_stalls: number;
+  civil_ada_stalls: number;
+  civil_topography_slope_pct: number;
+  civil_topography_buildable_reduction_pct: number;
+  civil_grading_cost: number;
+  civil_retaining_walls_required: boolean;
+  civil_stormwater_detention_acres: number;
+  civil_stormwater_cost: number;
+  civil_infiltration_viability: string;
+  civil_bonding_required: boolean;
+  civil_bonding_amount: number;
+  civil_total_cost_adder: number;
+
   // Final Verdict
   verdict_decision: string;
   verdict_recommendation: string;
@@ -163,7 +185,7 @@ export interface NeonVaultRecord {
  * Map Pass-2 results to Neon vault record format
  */
 function mapToNeonRecord(input: VaultMapperInput): NeonVaultRecord {
-  const { opportunity, zoning, permits, pricing, fusion, comp, feasibility, reverse, momentum, verdict } = input;
+  const { opportunity, zoning, permits, pricing, fusion, comp, civil, feasibility, reverse, momentum, verdict } = input;
 
   return {
     // Primary identifiers
@@ -259,6 +281,26 @@ function mapToNeonRecord(input: VaultMapperInput): NeonVaultRecord {
     mom_new_housing_units: momentum.newUnitsPlanned || 0,
     mom_housing_growth_score: momentum.housingGrowth || 0,
     mom_timeline_alignment: momentum.timelineAlignment || 'neutral',
+
+    // Civil Constraints (NEW)
+    civil_score: civil.civilScore || 0,
+    civil_rating: civil.civilRating || 'moderate',
+    civil_lot_coverage_feasible: civil.lotCoverage?.isFeasible ?? true,
+    civil_lot_coverage_required_pct: civil.lotCoverage?.requiredCoveragePct || 0,
+    civil_lot_coverage_allowed_pct: civil.lotCoverage?.allowedCoveragePct || 70,
+    civil_developable_acres: civil.developableAcres || 0,
+    civil_parking_stalls: civil.parking?.minStalls || 0,
+    civil_ada_stalls: civil.parking?.adaStalls || 0,
+    civil_topography_slope_pct: civil.topography?.avgSlopePct || 0,
+    civil_topography_buildable_reduction_pct: civil.topography?.buildableAreaReductionPct || 0,
+    civil_grading_cost: civil.topography?.gradingCostEstimate || 0,
+    civil_retaining_walls_required: civil.topography?.retainingWallsRequired ?? false,
+    civil_stormwater_detention_acres: civil.stormwater?.detentionBasinAcres || 0,
+    civil_stormwater_cost: civil.stormwater?.estimatedCost || 0,
+    civil_infiltration_viability: civil.stormwater?.infiltrationViability || 'medium',
+    civil_bonding_required: civil.bonding?.bondRequired ?? false,
+    civil_bonding_amount: civil.bonding?.estimatedAmount || 0,
+    civil_total_cost_adder: civil.totalCivilCostAdder || 0,
 
     // Verdict
     verdict_decision: verdict.decision || 'EVALUATE',

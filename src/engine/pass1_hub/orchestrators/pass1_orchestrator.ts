@@ -1,5 +1,5 @@
 /**
- * PASS 1 ORCHESTRATOR
+ * PASS 1 ORCHESTRATOR (Recon Hub - Final Version)
  *
  * Coordinates all Pass 1 spokes in sequence:
  *   1. hydrateZip() - Fetch ZIP metadata from Lovable.DB zip_master
@@ -8,12 +8,15 @@
  *   4. runMacroSupply() - Fetch competitors and calculate supply
  *   5. identifyHotspots() - Mark counties where demand > 1.25 × supply
  *   6. computeHotspotScore() - Generate composite viability score
- *   7. runLocalScanIfRequested() - Optional detailed scan (5-30mi radius)
- *   8. generateCallSheet() - Prep for AI dialer if needed
- *   9. assembleOpportunityObject() - Build final output
+ *   7. enrichCompetitors() - Classify competitors (A/B/C grade + type + est sqft)
+ *   8. runLocalScanIfRequested() - Optional detailed scan (5-30mi radius)
+ *   9. generateCallSheet() - Prep for AI dialer if needed
+ *  10. validateForPass2() - Ensure OpportunityObject is complete before Pass-2
+ *  11. assembleOpportunityObject() - Build final output
+ *  12. writeToPass1Runs() - Persist to pass1_runs table
  *
  * Input: ZIP code + AnalysisToggles
- * Output: OpportunityObject ready for Pass 2 or Vault
+ * Output: OpportunityObject ready for Pass 2 or Vault (JSON-serializable)
  *
  * All returns are JSON-serializable (Lovable.dev compatible)
  */
@@ -27,6 +30,7 @@ import type {
   RvLakeSignals,
   IndustrialSignals,
   Anchor,
+  Pass1ValidationResult,
 } from '../../shared/opportunity_object';
 
 import { createEmptyOpportunityObject } from '../../shared/opportunity_object';
@@ -37,7 +41,20 @@ import { runMacroSupply, fetchCompetitors } from '../spokes/macro_supply';
 import { computeHotspots, identifyCountyHotspots, type CountyHotspot } from '../spokes/hotspot_scoring';
 import { runLocalScan, checkPricingReadiness } from '../spokes/local_scan';
 import { generateCallSheet, triggerCalls } from '../spokes/call_sheet';
-import { writeLog, writeErrorLog, ensureSerializable } from '../../shared/lovable_adapter';
+import { enrichCompetitors, calculateGradedPressure, identifyPrimaryThreat } from '../spokes/competitor_enrichment';
+import { validateForPass2, isPass2Ready, getCompletionPercentage } from '../spokes/validation_gate';
+import {
+  writeLog,
+  writeErrorLog,
+  ensureSerializable,
+  writeData,
+  TABLES,
+  stageOpportunity,
+} from '../../shared/lovable_adapter';
+
+// ============================================================================
+// TYPES
+// ============================================================================
 
 export interface Pass1Input {
   zip_code: string;
@@ -45,6 +62,7 @@ export interface Pass1Input {
   run_local_scan?: boolean;
   local_scan_radius?: number;
   trigger_ai_calls?: boolean;
+  strict_validation?: boolean; // If true, warnings become blockers
 }
 
 export interface Pass1Output {
@@ -53,6 +71,7 @@ export interface Pass1Output {
   opportunity: OpportunityObject | null;
   hotspots?: CountyHotspot[];
   summary?: Pass1Summary;
+  validation?: Pass1ValidationResult;
   error?: string;
 }
 
@@ -70,16 +89,35 @@ export interface Pass1Summary {
   tier: 'A' | 'B' | 'C' | 'D';
   viability_score: number;
   proceed_to_pass2: boolean;
+  // NEW: Enrichment summary
+  reit_presence: boolean;
+  grade_a_competitors: number;
+  competition_pressure: number;
+  // NEW: Validation summary
+  validation_score: number;
+  completion_pct: number;
 }
+
+// ============================================================================
+// MAIN ORCHESTRATOR
+// ============================================================================
 
 /**
  * Main Pass 1 Orchestrator
  * Runs all Pass-1 spokes and assembles the OpportunityObject
  */
 export async function runPass1(input: Pass1Input): Promise<Pass1Output> {
-  const { zip_code, toggles, run_local_scan, local_scan_radius, trigger_ai_calls } = input;
+  const {
+    zip_code,
+    toggles,
+    run_local_scan,
+    local_scan_radius,
+    trigger_ai_calls,
+    strict_validation = false
+  } = input;
 
   console.log(`[PASS1_ORCHESTRATOR] Starting Pass 1 for ZIP: ${zip_code}`);
+  console.log(`[PASS1_ORCHESTRATOR] Toggles: ${JSON.stringify(toggles)}`);
 
   // Validate ZIP
   if (!validateZip(zip_code)) {
@@ -107,7 +145,6 @@ export async function runPass1(input: Pass1Input): Promise<Pass1Output> {
 
     if (!hydration.success || !hydration.zip_metadata || !hydration.identity) {
       console.warn('[PASS1_ORCHESTRATOR] ZIP hydration failed:', hydration.error);
-      // Return error if we can't hydrate the ZIP
       return {
         success: false,
         status: 'error',
@@ -135,13 +172,17 @@ export async function runPass1(input: Pass1Input): Promise<Pass1Output> {
     }
 
     // =========================================================================
-    // STEP 3: Run Macro Demand
+    // STEP 3: Run Macro Demand (Population × 6 sqft rule)
     // =========================================================================
     console.log('[PASS1_ORCHESTRATOR] Step 3: Calculating macro demand...');
     const macroDemand = runMacroDemand({
       population: opportunity.pass1_macro.zip_metadata.population || 0,
     });
     opportunity.pass1_macro.macro_demand = macroDemand;
+
+    // Also calculate regional demand for the 120-mile radius
+    const regionalDemand = calculateRegionalDemand(opportunity.pass1_macro.radius_counties);
+    console.log(`[PASS1_ORCHESTRATOR] Regional demand: ${regionalDemand.total_demand_sqft.toLocaleString()} sqft across ${regionalDemand.county_count} counties`);
 
     // =========================================================================
     // STEP 4: Run Macro Supply (Fetch Competitors)
@@ -197,6 +238,7 @@ export async function runPass1(input: Pass1Input): Promise<Pass1Output> {
 
     // =========================================================================
     // STEP 6: Compute Hotspot Score & Identify County Hotspots
+    // Hotspot = demand/supply ≥ 1.25
     // =========================================================================
     console.log('[PASS1_ORCHESTRATOR] Step 6: Computing hotspot score...');
     const hotspotScore = computeHotspots({
@@ -215,10 +257,33 @@ export async function runPass1(input: Pass1Input): Promise<Pass1Output> {
     hotspots = identifyCountyHotspots(opportunity.pass1_macro.radius_counties);
 
     // =========================================================================
-    // STEP 7: Run Local Scan (Optional)
+    // STEP 7: Enrich Competitors (NEW - Grade A/B/C classification)
+    // =========================================================================
+    console.log('[PASS1_ORCHESTRATOR] Step 7: Enriching competitors...');
+    const enrichmentResult = await enrichCompetitors({
+      competitors: opportunity.pass1_macro.competitors,
+    });
+
+    if (enrichmentResult.success) {
+      opportunity.pass1_macro.competitors = enrichmentResult.enriched_competitors;
+      opportunity.pass1_macro.competitor_enrichment = enrichmentResult.summary;
+
+      // Calculate graded competition pressure
+      const gradedPressure = calculateGradedPressure(enrichmentResult.enriched_competitors);
+      console.log(`[PASS1_ORCHESTRATOR] Graded competition pressure: ${gradedPressure}`);
+
+      // Identify primary threat
+      const primaryThreat = identifyPrimaryThreat(enrichmentResult.enriched_competitors);
+      if (primaryThreat) {
+        console.log(`[PASS1_ORCHESTRATOR] Primary competitive threat: ${primaryThreat.name} (Grade ${primaryThreat.grade})`);
+      }
+    }
+
+    // =========================================================================
+    // STEP 8: Run Local Scan (Optional - 5-30mi micro-demand/supply)
     // =========================================================================
     if (run_local_scan && local_scan_radius) {
-      console.log(`[PASS1_ORCHESTRATOR] Step 7: Running local scan (${local_scan_radius}mi)...`);
+      console.log(`[PASS1_ORCHESTRATOR] Step 8: Running local scan (${local_scan_radius}mi)...`);
       const localScanResults = await runLocalScan({
         lat: opportunity.identity.lat,
         lng: opportunity.identity.lng,
@@ -236,10 +301,10 @@ export async function runPass1(input: Pass1Input): Promise<Pass1Output> {
     }
 
     // =========================================================================
-    // STEP 8: Generate Call Sheet & Trigger AI Calls (Optional)
+    // STEP 9: Generate Call Sheet & Trigger AI Calls (Optional)
     // =========================================================================
     if (opportunity.local_scan && trigger_ai_calls) {
-      console.log('[PASS1_ORCHESTRATOR] Step 8: Generating call sheet...');
+      console.log('[PASS1_ORCHESTRATOR] Step 9: Generating call sheet...');
       const callSheetOutput = generateCallSheet({
         competitors: opportunity.local_scan.local_competitors,
         prioritize_by: 'distance',
@@ -253,20 +318,55 @@ export async function runPass1(input: Pass1Input): Promise<Pass1Output> {
     }
 
     // =========================================================================
-    // STEP 9: Assemble Pass 1 Recommendation
+    // STEP 10: Validation Gate (NEW - Ensure completeness before Pass-2)
     // =========================================================================
-    console.log('[PASS1_ORCHESTRATOR] Step 9: Assembling recommendation...');
-    const recommendation = assemblePass1Recommendation(hotspotScore, toggles);
+    console.log('[PASS1_ORCHESTRATOR] Step 10: Running validation gate...');
+    const validationResult = await validateForPass2({
+      opportunity,
+      strict_mode: strict_validation,
+    });
+
+    opportunity.pass1_macro.validation = validationResult.validation;
+
+    // =========================================================================
+    // STEP 11: Assemble Pass 1 Recommendation
+    // =========================================================================
+    console.log('[PASS1_ORCHESTRATOR] Step 11: Assembling recommendation...');
+    const recommendation = assemblePass1Recommendation(
+      hotspotScore,
+      toggles,
+      validationResult.can_proceed_to_pass2,
+      opportunity.pass1_macro.competitor_enrichment
+    );
     opportunity.pass1_recommendation = recommendation;
 
     // =========================================================================
-    // STEP 10: Set Prerequisites & Status
+    // STEP 12: Set Prerequisites & Status, Write to pass1_runs
     // =========================================================================
-    opportunity.pass2_ready = recommendation.proceed_to_pass2;
+    opportunity.pass2_ready = recommendation.proceed_to_pass2 && validationResult.can_proceed_to_pass2;
     opportunity.pass1_completed_at = new Date().toISOString();
     opportunity.status = 'pass1_complete';
 
+    // Write full opportunity object to pass1_runs table
+    console.log('[PASS1_ORCHESTRATOR] Step 12: Writing to pass1_runs...');
+    await writeData(TABLES.PASS1_RUNS, {
+      zip_code,
+      opportunity_id: opportunity.id,
+      status: 'complete',
+      tier: recommendation.tier,
+      viability_score: recommendation.viability_score,
+      proceed_to_pass2: recommendation.proceed_to_pass2,
+      validation_score: validationResult.validation.validation_score,
+      toggles,
+      created_at: opportunity.created_at,
+      completed_at: opportunity.pass1_completed_at,
+    });
+
+    // Stage full opportunity for potential retrieval
+    await stageOpportunity(opportunity.id, opportunity);
+
     // Build summary
+    const completion_pct = getCompletionPercentage(opportunity);
     const summary: Pass1Summary = {
       zip: zip_code,
       city: opportunity.identity.city,
@@ -281,6 +381,13 @@ export async function runPass1(input: Pass1Input): Promise<Pass1Output> {
       tier: recommendation.tier,
       viability_score: recommendation.viability_score,
       proceed_to_pass2: recommendation.proceed_to_pass2,
+      // NEW: Enrichment summary
+      reit_presence: opportunity.pass1_macro.competitor_enrichment?.reit_presence || false,
+      grade_a_competitors: opportunity.pass1_macro.competitor_enrichment?.grade_a_count || 0,
+      competition_pressure: calculateGradedPressure(opportunity.pass1_macro.competitors),
+      // NEW: Validation summary
+      validation_score: validationResult.validation.validation_score,
+      completion_pct,
     };
 
     await writeLog('pass1_complete', {
@@ -289,9 +396,12 @@ export async function runPass1(input: Pass1Input): Promise<Pass1Output> {
       score: recommendation.viability_score,
       county_count: summary.county_count,
       hotspot_count: summary.hotspot_count,
+      validation_score: validationResult.validation.validation_score,
+      completion_pct,
+      reit_presence: summary.reit_presence,
     });
 
-    console.log(`[PASS1_ORCHESTRATOR] Pass 1 complete. Tier: ${recommendation.tier}, Score: ${recommendation.viability_score}`);
+    console.log(`[PASS1_ORCHESTRATOR] Pass 1 complete. Tier: ${recommendation.tier}, Score: ${recommendation.viability_score}, Validation: ${validationResult.validation.validation_score}%`);
 
     return {
       success: true,
@@ -299,6 +409,7 @@ export async function runPass1(input: Pass1Input): Promise<Pass1Output> {
       opportunity: ensureSerializable(opportunity),
       hotspots,
       summary,
+      validation: validationResult.validation,
     };
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
@@ -314,12 +425,18 @@ export async function runPass1(input: Pass1Input): Promise<Pass1Output> {
   }
 }
 
+// ============================================================================
+// RECOMMENDATION ASSEMBLY
+// ============================================================================
+
 /**
- * Assemble Pass 1 recommendation from hotspot score
+ * Assemble Pass 1 recommendation from hotspot score and enrichment data
  */
 function assemblePass1Recommendation(
   hotspot: ReturnType<typeof computeHotspots>,
-  toggles: AnalysisToggles
+  toggles: AnalysisToggles,
+  validationPassed: boolean,
+  enrichment?: Pass1MacroResults['competitor_enrichment']
 ): Pass1Recommendation {
   const keyFactors: string[] = [];
   const riskFactors: string[] = [];
@@ -349,6 +466,24 @@ function assemblePass1Recommendation(
     keyFactors.push('Recreation/RV storage opportunity');
   }
 
+  // NEW: Enrichment-based factors
+  if (enrichment) {
+    if (enrichment.reit_presence) {
+      riskFactors.push(`REIT competition (${enrichment.grade_a_count} Grade-A facilities)`);
+    } else {
+      keyFactors.push('No major REIT presence');
+    }
+
+    if (enrichment.grade_c_count > enrichment.grade_a_count + enrichment.grade_b_count) {
+      keyFactors.push('Market dominated by Mom & Pop operators');
+    }
+  }
+
+  // Validation factors
+  if (!validationPassed) {
+    riskFactors.push('Incomplete data - validation failed');
+  }
+
   // Generate recommendation
   let recommendation: string;
   let proceed_to_pass2: boolean;
@@ -356,15 +491,15 @@ function assemblePass1Recommendation(
   switch (hotspot.tier) {
     case 'A':
       recommendation = 'Strong candidate - proceed to Pass 2 deep dive';
-      proceed_to_pass2 = true;
+      proceed_to_pass2 = validationPassed;
       break;
     case 'B':
       recommendation = 'Moderate potential - Pass 2 recommended for validation';
-      proceed_to_pass2 = true;
+      proceed_to_pass2 = validationPassed;
       break;
     case 'C':
       recommendation = 'Marginal opportunity - review risks before proceeding';
-      proceed_to_pass2 = true; // Still allow, but with caution
+      proceed_to_pass2 = validationPassed; // Still allow, but with caution
       break;
     case 'D':
     default:
@@ -388,3 +523,4 @@ function assemblePass1Recommendation(
 // ============================================================================
 
 export type { CountyHotspot };
+export { isPass2Ready, getCompletionPercentage };

@@ -110,11 +110,92 @@ export interface CompetitivePressureResult {
   competitorCount5mi?: number;
   competitorCount10mi?: number;
   localSupplySqFt?: number;
+  totalSupplySqFt?: number; // NEW: Total supply in market area
   sqftPerCapita?: number;
   saturationIndex?: number;
   marketSaturation?: 'undersupplied' | 'balanced' | 'oversupplied';
   newSupplyPipeline?: number;
   pressureScore?: number;
+  notes: string;
+}
+
+// ============================================================================
+// CIVIL CONSTRAINTS RESULT (NEW)
+// ============================================================================
+
+export interface ParkingRequirements {
+  minStalls: number;
+  adaStalls: number;
+  maxSlopePct: number; // ADA requires <2%
+  sqftPerStall: number;
+  totalParkingArea: number; // sqft
+  meetsAdaRequirements: boolean;
+}
+
+export interface LotCoverageAnalysis {
+  allowedCoveragePct: number;
+  requiredCoveragePct: number;
+  isFeasible: boolean;
+  maxBuildableSqft: number;
+  buildingFootprintSqft: number;
+  parkingFootprintSqft: number;
+  landscapeBufferSqft: number;
+  remainingAreaSqft: number;
+}
+
+export interface TopographyAnalysis {
+  avgSlopePct: number;
+  slopeBands: {
+    flat_0_2: number; // % of site 0-2% slope
+    gentle_2_5: number; // % of site 2-5% slope
+    moderate_5_10: number; // % of site 5-10% slope
+    steep_10_plus: number; // % of site >10% slope
+  };
+  buildableAreaReductionPct: number;
+  effectiveBuildableAcres: number;
+  gradingCostEstimate: number;
+  retainingWallsRequired: boolean;
+}
+
+export interface StormwaterAnalysis {
+  runoffCoefficient: number; // 0.0-1.0 (impervious ratio)
+  detentionRequired: boolean;
+  detentionBasinAcres: number;
+  retentionRequired: boolean;
+  infiltrationViability: 'high' | 'medium' | 'low';
+  bmpRequired: boolean; // Best Management Practices
+  estimatedCost: number;
+  regulatoryAuthority?: string;
+  notes?: string;
+}
+
+export interface ConstructionBonding {
+  bondRequired: boolean;
+  bondType: 'performance' | 'payment' | 'subdivision' | 'erosion_control' | 'none';
+  estimatedAmount: number;
+  releaseConditions?: string;
+  letterOfCreditAccepted: boolean;
+}
+
+export interface CivilConstraintResult {
+  status: SpokeStatus;
+  // ADA Parking Requirements
+  parking: ParkingRequirements;
+  // Lot Coverage Feasibility
+  lotCoverage: LotCoverageAnalysis;
+  // Topography Analysis
+  topography: TopographyAnalysis;
+  // Stormwater Management
+  stormwater: StormwaterAnalysis;
+  // Construction Bonding
+  bonding: ConstructionBonding;
+  // Overall Civil Score (0-100)
+  civilScore: number;
+  civilRating: 'favorable' | 'moderate' | 'challenging' | 'prohibitive';
+  // Cost Impacts
+  totalCivilCostAdder: number; // Additional cost beyond standard
+  developableAcres: number; // Net developable after constraints
+  // Notes
   notes: string;
 }
 
@@ -226,6 +307,30 @@ export interface VaultPayload {
 }
 
 // ============================================================================
+// PASS-1 TO PASS-2 VALIDATION (for inline use)
+// ============================================================================
+
+export interface Pass1ToPass2ValidationMeta {
+  validated_at: string;
+  pass1_id: string;
+  zip: string;
+  validation_score: number;
+}
+
+export interface Pass1ToPass2ValidationResult {
+  ok: boolean;
+  blockers: string[];
+  warnings: string[];
+  required_fields: string[];
+  optional_fields: string[];
+  enrichment_status: {
+    competitor_enrichment_ready: boolean;
+    call_sheet_ready: boolean;
+  };
+  validation_meta: Pass1ToPass2ValidationMeta;
+}
+
+// ============================================================================
 // PASS-2 OUTPUT (Complete Result Object)
 // ============================================================================
 
@@ -238,12 +343,15 @@ export interface Pass2Output {
   pricing: PricingVerificationResult;
   fusion: FusionDemandResult;
   comp: CompetitivePressureResult;
+  civil: CivilConstraintResult; // Civil engineering constraints
   feasibility: FeasibilityResult;
   reverse: ReverseFeasibilityResult;
   momentum: MomentumResult;
   verdict: VerdictResult;
   vaultPayload: VaultPayload;
   error?: string;
+  /** Validation result from Pass-1 to Pass-2 gate */
+  validation?: Pass1ToPass2ValidationResult;
 }
 
 // ============================================================================
@@ -287,11 +395,22 @@ export interface CompetitivePressureInput {
   countyFips?: string;
 }
 
+export interface CivilConstraintInput {
+  opportunity: OpportunityObject;
+  acreage: number;
+  zoning: ZoningResult;
+  state: string;
+  county: string;
+  avgSlopePct?: number; // From site survey or terrain data
+  soilType?: 'clay' | 'sand' | 'loam' | 'rock'; // Affects infiltration
+}
+
 export interface FeasibilityInput {
   opportunity: OpportunityObject;
   rentBenchmarks: PricingVerificationResult;
   acreage: number;
   landCostPerAcre: number;
+  civilConstraints?: CivilConstraintResult; // NEW: Civil cost impacts
 }
 
 export interface ReverseFeasibilityInput {
@@ -318,6 +437,7 @@ export interface VerdictInput {
   pricing: PricingVerificationResult;
   fusion: FusionDemandResult;
   comp: CompetitivePressureResult;
+  civil: CivilConstraintResult; // NEW: Civil constraints
   feasibility: FeasibilityResult;
   reverse: ReverseFeasibilityResult;
   momentum: MomentumResult;
@@ -330,6 +450,7 @@ export interface VaultPayloadInput {
   pricing: PricingVerificationResult;
   fusion: FusionDemandResult;
   comp: CompetitivePressureResult;
+  civil: CivilConstraintResult; // NEW: Civil constraints
   feasibility: FeasibilityResult;
   reverse: ReverseFeasibilityResult;
   momentum: MomentumResult;
@@ -372,6 +493,58 @@ export function createStubCompetitivePressure(): CompetitivePressureResult {
   return {
     status: 'stub',
     notes: 'Competitive pressure not implemented. TODO: Calculate saturation index.',
+  };
+}
+
+export function createStubCivilConstraints(): CivilConstraintResult {
+  return {
+    status: 'stub',
+    parking: {
+      minStalls: 0,
+      adaStalls: 0,
+      maxSlopePct: 2,
+      sqftPerStall: 180,
+      totalParkingArea: 0,
+      meetsAdaRequirements: true,
+    },
+    lotCoverage: {
+      allowedCoveragePct: 70,
+      requiredCoveragePct: 0,
+      isFeasible: true,
+      maxBuildableSqft: 0,
+      buildingFootprintSqft: 0,
+      parkingFootprintSqft: 0,
+      landscapeBufferSqft: 0,
+      remainingAreaSqft: 0,
+    },
+    topography: {
+      avgSlopePct: 0,
+      slopeBands: { flat_0_2: 100, gentle_2_5: 0, moderate_5_10: 0, steep_10_plus: 0 },
+      buildableAreaReductionPct: 0,
+      effectiveBuildableAcres: 0,
+      gradingCostEstimate: 0,
+      retainingWallsRequired: false,
+    },
+    stormwater: {
+      runoffCoefficient: 0.85,
+      detentionRequired: true,
+      detentionBasinAcres: 0,
+      retentionRequired: false,
+      infiltrationViability: 'medium',
+      bmpRequired: false,
+      estimatedCost: 0,
+    },
+    bonding: {
+      bondRequired: false,
+      bondType: 'none',
+      estimatedAmount: 0,
+      letterOfCreditAccepted: true,
+    },
+    civilScore: 50,
+    civilRating: 'moderate',
+    totalCivilCostAdder: 0,
+    developableAcres: 0,
+    notes: 'Civil constraints not implemented. TODO: Calculate ADA, lot coverage, topography, stormwater.',
   };
 }
 

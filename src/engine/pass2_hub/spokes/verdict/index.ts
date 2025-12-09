@@ -38,11 +38,13 @@ import type {
   PricingVerificationResult,
   FusionDemandResult,
   CompetitivePressureResult,
+  CivilConstraintResult,
   FeasibilityResult,
   ReverseFeasibilityResult,
   MomentumResult,
 } from '../../types/pass2_types';
 import { createStubVerdict, createErrorResult } from '../../types/pass2_types';
+import { getCivilRiskFactors } from '../civil_constraints';
 
 export interface VerdictInput {
   feasibility: LegacyFeasibilityResult;
@@ -68,6 +70,7 @@ export interface VerdictShellInput {
   pricing: PricingVerificationResult;
   fusion: FusionDemandResult;
   comp: CompetitivePressureResult;
+  civil: CivilConstraintResult; // NEW: Civil constraints
   feasibility: FeasibilityResult;
   reverse: ReverseFeasibilityResult;
   momentum: MomentumResult;
@@ -87,17 +90,18 @@ export function runVerdictShell(
   console.log(`[VERDICT_SPOKE] Generating verdict for ${opportunity.identity.county}, ${opportunity.identity.state}`);
 
   try {
-    const { zoning, permits, pricing, fusion, comp, feasibility, reverse, momentum } = results;
+    const { zoning, permits, pricing, fusion, comp, civil, feasibility, reverse, momentum } = results;
 
     const keyFactors: string[] = [];
     const risks: string[] = [];
     let score = 0;
 
     // =========================================================================
-    // FEASIBILITY SCORE (35%)
+    // FEASIBILITY SCORE (30% - reduced to make room for civil)
     // =========================================================================
+    const ADJUSTED_FEASIBILITY_WEIGHT = 0.30;
     if (feasibility.isViable) {
-      score += FEASIBILITY_WEIGHT * 100;
+      score += ADJUSTED_FEASIBILITY_WEIGHT * 100;
       keyFactors.push(`${feasibility.roi5yr}% 5-year ROI`);
       keyFactors.push(`${feasibility.capRate}% cap rate`);
       if (feasibility.dscr && feasibility.dscr >= 1.5) {
@@ -132,10 +136,11 @@ export function runVerdictShell(
     }
 
     // =========================================================================
-    // ZONING SCORE (20%)
+    // ZONING SCORE (15% - reduced to make room for civil)
     // =========================================================================
+    const ADJUSTED_ZONING_WEIGHT = 0.15;
     const zoningScore = zoning.score || 50;
-    score += (zoningScore / 100) * ZONING_WEIGHT * 100;
+    score += (zoningScore / 100) * ADJUSTED_ZONING_WEIGHT * 100;
 
     if (zoning.classification === 'favorable') {
       keyFactors.push('Favorable zoning');
@@ -151,19 +156,47 @@ export function runVerdictShell(
     }
 
     // =========================================================================
-    // PERMIT COMPLEXITY SCORE (20%)
+    // PERMIT COMPLEXITY SCORE (15% - reduced to make room for civil)
     // =========================================================================
+    const ADJUSTED_PERMIT_WEIGHT = 0.15;
     const permitComplexityScore = permits.complexity === 'low' ? 90
       : permits.complexity === 'moderate' ? 65
       : permits.complexity === 'high' ? 35
       : 15;
 
-    score += (permitComplexityScore / 100) * PERMIT_WEIGHT * 100;
+    score += (permitComplexityScore / 100) * ADJUSTED_PERMIT_WEIGHT * 100;
 
     if (permits.complexity === 'low') {
       keyFactors.push('Streamlined permitting');
     } else if (permits.complexity === 'high' || permits.complexity === 'very_high') {
       risks.push(`Complex permitting: ${permits.estimatedTimeline}`);
+    }
+
+    // =========================================================================
+    // CIVIL CONSTRAINTS SCORE (15% - NEW)
+    // =========================================================================
+    const CIVIL_WEIGHT = 0.15;
+    const civilScore = civil.civilScore || 50;
+    score += (civilScore / 100) * CIVIL_WEIGHT * 100;
+
+    if (civil.civilRating === 'favorable') {
+      keyFactors.push('Favorable civil conditions');
+    } else if (civil.civilRating === 'challenging') {
+      risks.push('Challenging civil/site conditions');
+    } else if (civil.civilRating === 'prohibitive') {
+      risks.push('Prohibitive civil constraints');
+    }
+
+    // Add specific civil risk factors
+    const civilRisks = getCivilRiskFactors(civil);
+    risks.push(...civilRisks);
+
+    // Add civil key factors
+    if (civil.lotCoverage?.isFeasible && civil.topography?.buildableAreaReductionPct < 10) {
+      keyFactors.push('Good site developability');
+    }
+    if (civil.stormwater?.infiltrationViability === 'high') {
+      keyFactors.push('Favorable stormwater conditions');
     }
 
     // =========================================================================
@@ -189,39 +222,56 @@ export function runVerdictShell(
     score = Math.max(0, Math.min(100, score));
 
     let decision: VerdictResult['decision'];
-    let recommendation: string;
+    let recommendation: VerdictResult['recommendation'];
+    let recommendationText: string;
     let nextSteps: string[] = [];
 
-    // Fatal flaws check
+    // Fatal flaws check (now includes civil)
     const hasFatalFlaw = zoning.classification === 'prohibited' ||
       comp.marketSaturation === 'oversupplied' ||
-      (feasibility.dscr !== undefined && feasibility.dscr < 1.0);
+      (feasibility.dscr !== undefined && feasibility.dscr < 1.0) ||
+      civil.civilRating === 'prohibitive' ||
+      !civil.lotCoverage?.isFeasible;
 
     if (hasFatalFlaw) {
       decision = 'WALK';
-      recommendation = 'Fatal flaw identified. This site is not viable for development.';
+      recommendation = 'WALK';
+      recommendationText = 'Fatal flaw identified. This site is not viable for development.';
       nextSteps = ['Consider alternative locations', 'Review market conditions'];
+
+      // Add specific fatal flaw reason
+      if (!civil.lotCoverage?.isFeasible) {
+        recommendationText += ' Lot coverage exceeds zoning limits.';
+      }
+      if (civil.civilRating === 'prohibitive') {
+        recommendationText += ' Civil constraints are prohibitive.';
+      }
     } else if (score >= 70 && feasibility.isViable) {
       decision = 'PROCEED';
-      recommendation = 'Strong fundamentals support development. Recommend proceeding to due diligence.';
+      recommendation = 'BUILD';
+      recommendationText = 'Strong fundamentals support development. Recommend proceeding to due diligence.';
       nextSteps = [
-        'Engage site surveyor',
+        'Engage civil engineer for site survey',
+        'Order geotechnical report',
         'Begin zoning application',
         'Secure financing term sheet',
         'Finalize construction budget',
       ];
     } else if (score >= 45 || feasibility.isViable) {
       decision = 'EVALUATE';
-      recommendation = 'Mixed signals. Further analysis recommended before commitment.';
+      recommendation = 'EVALUATE';
+      recommendationText = 'Mixed signals. Further analysis recommended before commitment.';
       nextSteps = [
         'Verify rent assumptions with additional calls',
         'Review zoning requirements in detail',
+        'Order preliminary civil study',
         'Sensitivity analysis on construction costs',
         'Monitor competitive pipeline',
       ];
     } else {
       decision = 'WALK';
-      recommendation = 'Significant challenges identified. Consider alternative sites.';
+      recommendation = 'WALK';
+      recommendationText = 'Significant challenges identified. Consider alternative sites.';
       nextSteps = ['Review other markets', 'Reassess investment criteria'];
     }
 
@@ -229,14 +279,14 @@ export function runVerdictShell(
 
     const result: VerdictResult = {
       status: 'ok',
-      recommendation: decision === 'PROCEED' ? 'BUILD' : decision === 'WALK' ? 'WALK' : 'EVALUATE',
+      recommendation,
       decision,
       confidence,
       keyFactors,
       risks,
-      recommendationText: recommendation,
+      recommendationText,
       nextSteps,
-      notes: `STUB: Verdict for ${opportunity.identity.county}, ${opportunity.identity.state}. Decision=${decision}, Score=${score}, Confidence=${(confidence * 100).toFixed(0)}%. TODO: Apply weighted scoring to generate decision.`,
+      notes: `Verdict for ${opportunity.identity.county}, ${opportunity.identity.state}. Decision=${decision}, Score=${score}, Confidence=${(confidence * 100).toFixed(0)}%. Civil Score=${civilScore}, Rating=${civil.civilRating}.`,
     };
 
     console.log(`[VERDICT_SPOKE] Result: ${result.decision}, score=${score}, confidence=${(confidence * 100).toFixed(0)}%`);

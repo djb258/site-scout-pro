@@ -85,8 +85,22 @@ export interface StartPass1Response {
     key_factors: string[];
     risk_factors: string[];
     proceed_to_pass2: boolean;
+    // NEW: Enrichment summary
+    reit_presence: boolean;
+    grade_a_competitors: number;
+    competition_pressure: number;
+    // NEW: Validation summary
+    validation_score: number;
+    completion_pct: number;
   };
   hotspots?: CountyHotspot[];
+  validation?: {
+    is_valid: boolean;
+    validation_score: number;
+    pass2_ready: boolean;
+    blockers: string[];
+    warnings: string[];
+  };
   error?: string;
   timestamp: number;
 }
@@ -202,6 +216,9 @@ export default async function handler(req: Request): Promise<Response> {
     });
 
     // Build JSON-serializable response
+    const enrichment = result.opportunity.pass1_macro.competitor_enrichment;
+    const validation = result.validation;
+
     const response: StartPass1Response = {
       success: true,
       mode: 'normal',
@@ -225,8 +242,22 @@ export default async function handler(req: Request): Promise<Response> {
         key_factors: result.opportunity.pass1_recommendation.key_factors,
         risk_factors: result.opportunity.pass1_recommendation.risk_factors,
         proceed_to_pass2: result.opportunity.pass1_recommendation.proceed_to_pass2,
+        // NEW: Enrichment summary
+        reit_presence: enrichment?.reit_presence || false,
+        grade_a_competitors: enrichment?.grade_a_count || 0,
+        competition_pressure: result.summary?.competition_pressure || 0,
+        // NEW: Validation summary
+        validation_score: validation?.validation_score || 0,
+        completion_pct: result.summary?.completion_pct || 0,
       },
       hotspots: result.hotspots ? ensureSerializable(result.hotspots) : undefined,
+      validation: validation ? {
+        is_valid: validation.is_valid,
+        validation_score: validation.validation_score,
+        pass2_ready: validation.pass2_ready,
+        blockers: validation.blockers,
+        warnings: validation.warnings,
+      } : undefined,
       timestamp: Date.now(),
     };
 

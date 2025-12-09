@@ -13,6 +13,14 @@ const defaultData = {
   state: '',
   jurisdiction: '',
   jurisdiction_type: 'county',
+  // NEW: Data Collection Tracking
+  data_collection_status: 'pending', // pending, in_progress, complete, needs_verification
+  data_source: '', // phone_call, website, pdf_ordinance, in_person, other
+  last_research_date: '',
+  research_confidence: '', // high, medium, low
+  data_gaps: '', // What information is still missing
+  next_action: '', // What needs to be done next
+  // Zoning
   zoning_districts_allowed: [],
   zoning_code_section: '',
   storage_use_definition: '',
@@ -24,6 +32,11 @@ const defaultData = {
   planning_commission_review: false,
   board_of_zoning_appeals: false,
   approval_code_section: '',
+  // NEW: Approval Path Details
+  approval_path: '', // by_right, administrative, conditional_use, special_exception, variance
+  approval_complexity: '', // simple, moderate, complex, very_complex
+  estimated_approval_months: '',
+  // Dimensional Standards
   setback_front_ft: '',
   setback_side_ft: '',
   setback_rear_ft: '',
@@ -33,6 +46,11 @@ const defaultData = {
   max_lot_coverage_pct: '',
   min_lot_size_acres: '',
   max_building_size_sqft: '',
+  // NEW: Additional Dimensional
+  max_impervious_pct: '',
+  floor_area_ratio: '',
+  min_frontage_ft: '',
+  // Site Requirements
   landscaping_required: false,
   landscaping_code_section: '',
   landscaping_notes: '',
@@ -49,6 +67,14 @@ const defaultData = {
   architectural_standards: false,
   architectural_notes: '',
   facade_materials_restricted: false,
+  // NEW: Additional Site Requirements
+  fire_access_required: false,
+  fire_access_notes: '',
+  ada_requirements: '',
+  utility_requirements: '',
+  environmental_review_required: false,
+  environmental_notes: '',
+  // Parking & Access
   parking_spaces_required: '',
   parking_ratio: '',
   loading_space_required: false,
@@ -57,6 +83,11 @@ const defaultData = {
   signage_notes: '',
   lighting_restrictions: false,
   lighting_notes: '',
+  // NEW: Access Requirements
+  access_road_type: '', // paved, gravel, private
+  access_road_width_ft: '',
+  curb_cut_restrictions: false,
+  // Fees & Costs
   permit_fee_zoning: '',
   permit_fee_building: '',
   permit_fee_site_plan: '',
@@ -67,8 +98,23 @@ const defaultData = {
   impact_fee: '',
   impact_fee_type: '',
   impact_fee_code_section: '',
+  // NEW: Additional Fee Fields
+  review_fee: '',
+  inspection_fee: '',
+  utility_connection_fee: '',
+  escrow_required: false,
+  escrow_amount: '',
+  professional_fees_estimate: '', // Engineer, surveyor, attorney
+  // Timeline
   timeline_estimate_days: '',
   timeline_notes: '',
+  // NEW: Timeline Breakdown
+  timeline_zoning_days: '',
+  timeline_site_plan_days: '',
+  timeline_building_permit_days: '',
+  timeline_inspection_days: '',
+  typical_delays: '',
+  // URLs & Documents
   zoning_ordinance_url: '',
   zoning_map_url: '',
   fee_schedule_url: '',
@@ -76,6 +122,12 @@ const defaultData = {
   gis_portal_url: '',
   zoning_ordinance_date: '',
   fee_schedule_date: '',
+  // NEW: Additional Document URLs
+  site_plan_checklist_url: '',
+  building_permit_app_url: '',
+  stormwater_manual_url: '',
+  design_guidelines_url: '',
+  // Contacts
   planning_contact_name: '',
   planning_contact_title: '',
   planning_contact_phone: '',
@@ -86,15 +138,34 @@ const defaultData = {
   engineering_contact_name: '',
   engineering_contact_phone: '',
   engineering_contact_email: '',
+  // NEW: Additional Contacts
+  zoning_admin_name: '',
+  zoning_admin_phone: '',
+  zoning_admin_email: '',
+  fire_marshal_name: '',
+  fire_marshal_phone: '',
+  stormwater_contact_name: '',
+  stormwater_contact_phone: '',
+  // Notes & Rating
   difficulty_score: '',
   difficulty_rating: '',
   gotchas: '',
   tips: '',
   general_notes: '',
+  // NEW: Strategic Notes
+  political_climate: '', // storage_friendly, neutral, storage_resistant
+  community_opposition_risk: '', // low, medium, high
+  competitor_activity: '', // Notes on recent competitor approvals
+  market_opportunity_notes: '',
+  // Data Collection Metadata
   call_date: '',
   collected_by: '',
   verified: false,
-  verified_date: ''
+  verified_date: '',
+  // NEW: Audit Trail
+  created_date: '',
+  last_updated_date: '',
+  update_history: '' // JSON string of update records
 }
 
 function JurisdictionForm() {
@@ -208,6 +279,7 @@ function JurisdictionForm() {
   }
 
   const sections = [
+    { id: 'status', label: 'Status', icon: Clock },
     { id: 'basic', label: 'Basic', icon: Building2 },
     { id: 'zoning', label: 'Zoning', icon: Map },
     { id: 'approval', label: 'Approval', icon: CheckCircle },
@@ -217,6 +289,7 @@ function JurisdictionForm() {
     { id: 'timeline', label: 'Timeline', icon: Clock },
     { id: 'contacts', label: 'Contacts', icon: Users },
     { id: 'urls', label: 'URLs', icon: LinkIcon },
+    { id: 'strategy', label: 'Strategy', icon: FileText },
     { id: 'notes', label: 'Notes', icon: StickyNote }
   ]
 
@@ -281,6 +354,56 @@ function JurisdictionForm() {
 
         <form onSubmit={handleSubmit}>
           <div className="bg-gray-800 rounded-xl border border-gray-700 p-6 mb-6">
+            {activeSection === 'status' && (
+              <FormSection title="Data Collection Status">
+                <div className="grid md:grid-cols-2 gap-4 mb-6">
+                  <FormSelect
+                    label="Collection Status"
+                    name="data_collection_status"
+                    value={formData.data_collection_status}
+                    onChange={handleChange}
+                    options={[
+                      { value: 'pending', label: 'Pending - Not Started' },
+                      { value: 'in_progress', label: 'In Progress' },
+                      { value: 'complete', label: 'Complete' },
+                      { value: 'needs_verification', label: 'Needs Verification' }
+                    ]}
+                  />
+                  <FormSelect
+                    label="Data Source"
+                    name="data_source"
+                    value={formData.data_source}
+                    onChange={handleChange}
+                    options={[
+                      { value: '', label: 'Select...' },
+                      { value: 'phone_call', label: 'Phone Call' },
+                      { value: 'website', label: 'County Website' },
+                      { value: 'pdf_ordinance', label: 'PDF Ordinance' },
+                      { value: 'in_person', label: 'In-Person Visit' },
+                      { value: 'other', label: 'Other' }
+                    ]}
+                  />
+                  <FormInput label="Last Research Date" name="last_research_date" value={formData.last_research_date} onChange={handleChange} type="date" />
+                  <FormSelect
+                    label="Research Confidence"
+                    name="research_confidence"
+                    value={formData.research_confidence}
+                    onChange={handleChange}
+                    options={[
+                      { value: '', label: 'Select...' },
+                      { value: 'high', label: 'High - Verified with County' },
+                      { value: 'medium', label: 'Medium - From Official Docs' },
+                      { value: 'low', label: 'Low - Needs Verification' }
+                    ]}
+                  />
+                </div>
+                <div className="space-y-4">
+                  <FormTextarea label="Data Gaps (What's Missing)" name="data_gaps" value={formData.data_gaps} onChange={handleChange} rows={2} placeholder="List any missing information..." />
+                  <FormTextarea label="Next Action Required" name="next_action" value={formData.next_action} onChange={handleChange} rows={2} placeholder="What needs to be done next..." />
+                </div>
+              </FormSection>
+            )}
+
             {activeSection === 'basic' && (
               <FormSection title="Basic Information">
                 <div className="grid md:grid-cols-2 gap-4">
@@ -466,13 +589,76 @@ function JurisdictionForm() {
               </FormSection>
             )}
 
+            {activeSection === 'strategy' && (
+              <FormSection title="Strategic Assessment">
+                <div className="grid md:grid-cols-2 gap-4 mb-6">
+                  <FormSelect
+                    label="Political Climate"
+                    name="political_climate"
+                    value={formData.political_climate}
+                    onChange={handleChange}
+                    options={[
+                      { value: '', label: 'Select...' },
+                      { value: 'storage_friendly', label: 'Storage Friendly' },
+                      { value: 'neutral', label: 'Neutral' },
+                      { value: 'storage_resistant', label: 'Storage Resistant' }
+                    ]}
+                  />
+                  <FormSelect
+                    label="Community Opposition Risk"
+                    name="community_opposition_risk"
+                    value={formData.community_opposition_risk}
+                    onChange={handleChange}
+                    options={[
+                      { value: '', label: 'Select...' },
+                      { value: 'low', label: 'Low' },
+                      { value: 'medium', label: 'Medium' },
+                      { value: 'high', label: 'High' }
+                    ]}
+                  />
+                  <FormSelect
+                    label="Approval Path"
+                    name="approval_path"
+                    value={formData.approval_path}
+                    onChange={handleChange}
+                    options={[
+                      { value: '', label: 'Select...' },
+                      { value: 'by_right', label: 'By-Right' },
+                      { value: 'administrative', label: 'Administrative Review' },
+                      { value: 'conditional_use', label: 'Conditional Use' },
+                      { value: 'special_exception', label: 'Special Exception' },
+                      { value: 'variance', label: 'Variance Required' }
+                    ]}
+                  />
+                  <FormSelect
+                    label="Approval Complexity"
+                    name="approval_complexity"
+                    value={formData.approval_complexity}
+                    onChange={handleChange}
+                    options={[
+                      { value: '', label: 'Select...' },
+                      { value: 'simple', label: 'Simple' },
+                      { value: 'moderate', label: 'Moderate' },
+                      { value: 'complex', label: 'Complex' },
+                      { value: 'very_complex', label: 'Very Complex' }
+                    ]}
+                  />
+                  <FormInput label="Est. Approval (months)" name="estimated_approval_months" value={formData.estimated_approval_months} onChange={handleChange} type="number" />
+                </div>
+                <div className="space-y-4">
+                  <FormTextarea label="Competitor Activity" name="competitor_activity" value={formData.competitor_activity} onChange={handleChange} rows={2} placeholder="Recent competitor approvals, pipeline projects..." />
+                  <FormTextarea label="Market Opportunity Notes" name="market_opportunity_notes" value={formData.market_opportunity_notes} onChange={handleChange} rows={3} placeholder="Strategic observations about this market..." />
+                </div>
+              </FormSection>
+            )}
+
             {activeSection === 'notes' && (
               <FormSection title="Notes & Rating">
                 <div className="grid md:grid-cols-2 gap-4 mb-6">
-                  <FormSelect 
-                    label="Difficulty Rating" 
-                    name="difficulty_rating" 
-                    value={formData.difficulty_rating} 
+                  <FormSelect
+                    label="Difficulty Rating"
+                    name="difficulty_rating"
+                    value={formData.difficulty_rating}
                     onChange={handleChange}
                     options={[
                       { value: '', label: 'Select...' },

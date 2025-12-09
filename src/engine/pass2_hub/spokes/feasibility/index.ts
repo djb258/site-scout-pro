@@ -52,13 +52,15 @@ const DEFAULT_DEBT_RATE = 0.07;
  * @param pricing - PricingVerificationResult with rent benchmarks
  * @param acreage - Site acreage
  * @param landCostPerAcre - Land cost per acre
+ * @param civilConstraints - Optional CivilConstraintResult for cost adjustments
  * @returns FeasibilityResult with status and financial projections
  */
 export function runFeasibilityShell(
   opportunity: OpportunityObject,
   pricing: PricingVerificationResult,
   acreage: number,
-  landCostPerAcre: number
+  landCostPerAcre: number,
+  civilConstraints?: import('../../types/pass2_types').CivilConstraintResult
 ): FeasibilityResult {
   console.log(`[FEASIBILITY_SPOKE] Running feasibility for ${opportunity.identity.county}, ${opportunity.identity.state}`);
 
@@ -66,21 +68,32 @@ export function runFeasibilityShell(
     // Land cost
     const landCost = acreage * landCostPerAcre;
 
-    // Buildable sqft (assume 40% of acreage for building footprint)
-    const totalSqft = acreage * 43560;
+    // Use effective buildable acres from civil analysis if available
+    const effectiveAcreage = civilConstraints?.developableAcres || acreage;
+    const totalSqft = effectiveAcreage * 43560;
     const buildableSqft = totalSqft * 0.40;
     const netRentableSqft = Math.round(buildableSqft * 0.85); // 85% efficiency
 
     // Construction costs using defaults
-    const constructionCostPerSqft = 30; // All-in
+    const constructionCostPerSqft = 30; // All-in base cost
     const constructionCost = buildableSqft * constructionCostPerSqft;
     const softCosts = constructionCost * 0.15;
-    const totalDevelopmentCost = Math.round(landCost + constructionCost + softCosts);
+
+    // Add civil cost adder if available
+    const civilCostAdder = civilConstraints?.totalCivilCostAdder || 0;
+    const totalDevelopmentCost = Math.round(landCost + constructionCost + softCosts + civilCostAdder);
 
     // Revenue projection using pricing data
     const standard10x10 = pricing.standard10x10 || 125;
     const outdoor10x20 = pricing.outdoor10x20 || 95;
-    const blendedRentPSF = (standard10x10 / 100 + outdoor10x20 / 200) / 2;
+    const climateControl10x10 = pricing.climateControl10x10 || 185;
+
+    // Blended rent assuming 30% climate, 50% standard, 20% outdoor mix
+    const blendedRentPSF =
+      ((climateControl10x10 / 100) * 0.30 +
+       (standard10x10 / 100) * 0.50 +
+       (outdoor10x20 / 200) * 0.20);
+
     const grossPotentialRent = netRentableSqft * blendedRentPSF * 12;
     const targetOccupancy = 0.88;
     const expenseRatio = 0.35;
@@ -113,8 +126,13 @@ export function runFeasibilityShell(
     // Simple ROI
     const roi = Math.round(((noi / totalDevelopmentCost) * 100) * 10) / 10;
 
-    // Viability check
-    const isViable = capRate >= capRateTarget * 100 && roi5yr > 25 && dscr >= 1.25;
+    // Viability check (also consider civil feasibility)
+    const civilFeasible = !civilConstraints || civilConstraints.lotCoverage?.isFeasible !== false;
+    const isViable = capRate >= capRateTarget * 100 && roi5yr > 25 && dscr >= 1.25 && civilFeasible;
+
+    const civilNote = civilConstraints
+      ? ` Civil cost adder: $${civilCostAdder.toLocaleString()}. Effective acres: ${effectiveAcreage.toFixed(2)}.`
+      : '';
 
     const result: FeasibilityResult = {
       status: 'ok',
@@ -131,7 +149,7 @@ export function runFeasibilityShell(
       cashOnCash,
       dscr,
       isViable,
-      notes: `STUB: Feasibility for ${acreage} acres at $${landCostPerAcre.toLocaleString()}/acre. NOI=$${noi.toLocaleString()}, Cap=${capRate}%, Viable=${isViable}. TODO: Implement NOI/ROI/DSCR calculations.`,
+      notes: `Feasibility for ${acreage} acres at $${landCostPerAcre.toLocaleString()}/acre. NOI=$${noi.toLocaleString()}, Cap=${capRate}%, DSCR=${dscr}, ROI-5yr=${roi5yr}%, Viable=${isViable}.${civilNote}`,
     };
 
     console.log(`[FEASIBILITY_SPOKE] Result: NOI=$${result.noi?.toLocaleString()}, Cap=${result.capRate}%, Viable=${result.isViable}`);

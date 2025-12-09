@@ -23,6 +23,13 @@ import type {
   FinalVerdict,
 } from '../../shared/opportunity_object';
 
+// Validation import
+import {
+  validatePass1ToPass2,
+  createValidationSummary,
+  type Pass1ToPass2Validation,
+} from '../../shared/validators/p1_to_p2_validator';
+
 // New typed imports from pass2_types
 import type {
   Pass2Output as TypedPass2Output,
@@ -31,6 +38,7 @@ import type {
   PricingVerificationResult,
   FusionDemandResult,
   CompetitivePressureResult,
+  CivilConstraintResult,
   FeasibilityResult,
   ReverseFeasibilityResult,
   MomentumResult,
@@ -43,6 +51,7 @@ import {
   createStubPricing,
   createStubFusion,
   createStubCompetitivePressure,
+  createStubCivilConstraints,
   createStubFeasibility,
   createStubReverseFeasibility,
   createStubMomentum,
@@ -56,6 +65,7 @@ import { runPermitShell, runPermits } from '../spokes/permits';
 import { runPricingShell, runPricingVerification, checkPricingExists } from '../spokes/pricing_verification';
 import { runFusionShell, runFusionDemand } from '../spokes/fusion_demand';
 import { runCompPressureShell, runCompPressure } from '../spokes/competitive_pressure';
+import { runCivilConstraintsShell } from '../spokes/civil_constraints';
 import { runFeasibilityShell, runFeasibility } from '../spokes/feasibility';
 import { runReverseShell, runReverseFeasibility } from '../spokes/reverse_feasibility';
 import { runMomentumShell, runIndustrialMomentum } from '../spokes/industrial_momentum';
@@ -68,6 +78,8 @@ export interface Pass2Input {
   opportunity: OpportunityObject;
   acreage?: number;
   land_cost_per_acre?: number;
+  /** Skip validation gate (for testing/override) */
+  skip_validation?: boolean;
 }
 
 // Legacy output type (for backwards compatibility)
@@ -81,16 +93,66 @@ export interface Pass2Output {
  * NEW Pass 2 Orchestrator Shell
  *
  * Uses new typed shell interfaces for all spokes.
+ * Includes Pass-1 → Pass-2 validation gate.
+ * Civil constraints run EARLY and feed into feasibility + verdict.
  * Returns TypedPass2Output with all results.
  */
 export async function runPass2Shell(input: Pass2Input): Promise<TypedPass2Output> {
-  const { opportunity, acreage = 3, land_cost_per_acre = 150000 } = input;
+  const { opportunity, acreage = 3, land_cost_per_acre = 150000, skip_validation = false } = input;
   const timestamp = Date.now();
   const runId = `p2_${opportunity.identity.zip}_${timestamp}`;
 
   console.log(`[PASS2_ORCHESTRATOR] Starting Pass 2 Shell for ZIP: ${opportunity.identity.zip}`);
 
   try {
+    // =========================================================================
+    // STEP 0: VALIDATION GATE - Verify Pass-1 data is complete
+    // =========================================================================
+    console.log('[PASS2_ORCHESTRATOR] Step 0: Running validation gate...');
+    const validation = validatePass1ToPass2(opportunity);
+    console.log(`[PASS2_ORCHESTRATOR] ${createValidationSummary(validation)}`);
+
+    if (!validation.ok && !skip_validation) {
+      console.error('[PASS2_ORCHESTRATOR] Validation FAILED. Blockers:', validation.blockers);
+
+      await writeLog('pass2_validation_failed', {
+        run_id: runId,
+        zip: opportunity.identity.zip,
+        blockers: validation.blockers,
+        warnings: validation.warnings,
+        validation_score: validation.validation_meta.validation_score,
+      });
+
+      // Return error result with validation details
+      return {
+        success: false,
+        runId,
+        timestamp,
+        zoning: createStubZoning(),
+        permits: createStubPermit(),
+        pricing: createStubPricing(),
+        fusion: createStubFusion(),
+        comp: createStubCompetitivePressure(),
+        civil: createStubCivilConstraints(),
+        feasibility: createStubFeasibility(),
+        reverse: createStubReverseFeasibility(),
+        momentum: createStubMomentum(),
+        verdict: createStubVerdict(),
+        vaultPayload: createStubVaultPayload(),
+        error: `Validation failed: ${validation.blockers.join('; ')}`,
+        validation,
+      };
+    }
+
+    if (skip_validation && !validation.ok) {
+      console.warn(`[PASS2_ORCHESTRATOR] Validation skipped despite ${validation.blockers.length} blockers`);
+    }
+
+    // Log warnings even if validation passed
+    if (validation.warnings.length > 0) {
+      console.warn(`[PASS2_ORCHESTRATOR] Validation warnings: ${validation.warnings.join('; ')}`);
+    }
+
     // =========================================================================
     // STEP 1: Run Zoning Analysis
     // =========================================================================
@@ -104,60 +166,68 @@ export async function runPass2Shell(input: Pass2Input): Promise<TypedPass2Output
     const permits = await runPermitShell(opportunity);
 
     // =========================================================================
-    // STEP 3: Run Pricing Verification
+    // STEP 3: Run Civil Constraints Analysis (NEW - EARLY)
+    // Must run before feasibility to provide cost adjustments
     // =========================================================================
-    console.log('[PASS2_ORCHESTRATOR] Step 3: Running pricing shell...');
+    console.log('[PASS2_ORCHESTRATOR] Step 3: Running civil constraints shell...');
+    const civil = await runCivilConstraintsShell(opportunity, acreage, zoning);
+
+    // =========================================================================
+    // STEP 4: Run Pricing Verification
+    // =========================================================================
+    console.log('[PASS2_ORCHESTRATOR] Step 4: Running pricing shell...');
     const pricing = await runPricingShell(opportunity);
 
     // =========================================================================
-    // STEP 4: Run Momentum Analysis (Combined Industrial + Housing)
+    // STEP 5: Run Momentum Analysis (Combined Industrial + Housing)
     // =========================================================================
-    console.log('[PASS2_ORCHESTRATOR] Step 4: Running momentum shell...');
+    console.log('[PASS2_ORCHESTRATOR] Step 5: Running momentum shell...');
     const momentum = await runMomentumShell(opportunity);
 
     // =========================================================================
-    // STEP 5: Run Fusion Demand Analysis
+    // STEP 6: Run Fusion Demand Analysis
     // =========================================================================
-    console.log('[PASS2_ORCHESTRATOR] Step 5: Running fusion shell...');
+    console.log('[PASS2_ORCHESTRATOR] Step 6: Running fusion shell...');
     const fusion = runFusionShell(opportunity, momentum);
 
     // =========================================================================
-    // STEP 6: Run Competitive Pressure Analysis
+    // STEP 7: Run Competitive Pressure Analysis
     // =========================================================================
-    console.log('[PASS2_ORCHESTRATOR] Step 6: Running comp pressure shell...');
+    console.log('[PASS2_ORCHESTRATOR] Step 7: Running comp pressure shell...');
     const comp = await runCompPressureShell(opportunity);
 
     // =========================================================================
-    // STEP 7: Run Feasibility Analysis
+    // STEP 8: Run Feasibility Analysis (consumes civil constraints)
     // =========================================================================
-    console.log('[PASS2_ORCHESTRATOR] Step 7: Running feasibility shell...');
-    const feasibility = runFeasibilityShell(opportunity, pricing, acreage, land_cost_per_acre);
+    console.log('[PASS2_ORCHESTRATOR] Step 8: Running feasibility shell...');
+    const feasibility = runFeasibilityShell(opportunity, pricing, acreage, land_cost_per_acre, civil);
 
     // =========================================================================
-    // STEP 8: Run Reverse Feasibility
+    // STEP 9: Run Reverse Feasibility
     // =========================================================================
-    console.log('[PASS2_ORCHESTRATOR] Step 8: Running reverse shell...');
+    console.log('[PASS2_ORCHESTRATOR] Step 9: Running reverse shell...');
     const reverse = runReverseShell(opportunity, pricing, acreage);
 
     // =========================================================================
-    // STEP 9: Generate Final Verdict
+    // STEP 10: Generate Final Verdict (consumes civil constraints)
     // =========================================================================
-    console.log('[PASS2_ORCHESTRATOR] Step 9: Running verdict shell...');
+    console.log('[PASS2_ORCHESTRATOR] Step 10: Running verdict shell...');
     const verdict = runVerdictShell(opportunity, {
       zoning,
       permits,
       pricing,
       fusion,
       comp,
+      civil,
       feasibility,
       reverse,
       momentum,
     });
 
     // =========================================================================
-    // STEP 10: Build Vault Payload using Vault Mapper
+    // STEP 11: Build Vault Payload using Vault Mapper
     // =========================================================================
-    console.log('[PASS2_ORCHESTRATOR] Step 10: Building vault payload...');
+    console.log('[PASS2_ORCHESTRATOR] Step 11: Building vault payload...');
     const vaultPayload = await runVaultMapperShell({
       opportunity,
       zoning,
@@ -165,6 +235,7 @@ export async function runPass2Shell(input: Pass2Input): Promise<TypedPass2Output
       pricing,
       fusion,
       comp,
+      civil,
       feasibility,
       reverse,
       momentum,
@@ -172,9 +243,9 @@ export async function runPass2Shell(input: Pass2Input): Promise<TypedPass2Output
     });
 
     // =========================================================================
-    // STEP 11: Store intermediate results to pass2_runs scratchpad
+    // STEP 12: Store intermediate results to pass2_runs scratchpad
     // =========================================================================
-    console.log('[PASS2_ORCHESTRATOR] Step 11: Storing run results...');
+    console.log('[PASS2_ORCHESTRATOR] Step 12: Storing run results...');
     await writeData(TABLES.PASS2_RUNS, {
       run_id: runId,
       opportunity_id: opportunity.id,
@@ -186,6 +257,9 @@ export async function runPass2Shell(input: Pass2Input): Promise<TypedPass2Output
       cap_rate: feasibility.capRate,
       noi: feasibility.noi,
       is_viable: feasibility.isViable,
+      civil_score: civil.civilScore,
+      civil_rating: civil.civilRating,
+      civil_cost_adder: civil.totalCivilCostAdder,
       timestamp,
     });
 
@@ -204,9 +278,11 @@ export async function runPass2Shell(input: Pass2Input): Promise<TypedPass2Output
       decision: verdict.decision,
       confidence: verdict.confidence,
       cap_rate: feasibility.capRate,
+      civil_score: civil.civilScore,
+      civil_rating: civil.civilRating,
     });
 
-    console.log(`[PASS2_ORCHESTRATOR] Pass 2 Shell complete. Verdict: ${verdict.decision}`);
+    console.log(`[PASS2_ORCHESTRATOR] Pass 2 Shell complete. Verdict: ${verdict.decision}, Civil: ${civil.civilRating}`);
 
     return {
       success: true,
@@ -217,6 +293,7 @@ export async function runPass2Shell(input: Pass2Input): Promise<TypedPass2Output
       pricing,
       fusion,
       comp,
+      civil,
       feasibility,
       reverse,
       momentum,
@@ -236,6 +313,7 @@ export async function runPass2Shell(input: Pass2Input): Promise<TypedPass2Output
       pricing: createStubPricing(),
       fusion: createStubFusion(),
       comp: createStubCompetitivePressure(),
+      civil: createStubCivilConstraints(),
       feasibility: createStubFeasibility(),
       reverse: createStubReverseFeasibility(),
       momentum: createStubMomentum(),
@@ -531,6 +609,7 @@ export type {
   PricingVerificationResult,
   FusionDemandResult,
   CompetitivePressureResult,
+  CivilConstraintResult,
   FeasibilityResult,
   ReverseFeasibilityResult,
   MomentumResult,
