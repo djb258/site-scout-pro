@@ -1,17 +1,28 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, ArrowRight, Loader2, MapPin, Users, Building2, Home, Factory, Tent, Landmark } from 'lucide-react';
+import { CircularProgress } from '@/components/ui/circular-progress';
+import { ReadinessBadge, getReadinessStatus } from '@/components/engine/ReadinessBadge';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { 
+  ArrowLeft, 
+  ArrowRight, 
+  Loader2, 
+  MapPin, 
+  TrendingUp, 
+  Building2, 
+  Target, 
+  Crown,
+  Radar,
+  Users
+} from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { 
   compilePass1Summary, 
   calculateCompetitorDensity,
-  calculateMultifamilyInfluence,
-  calculateIndustrialQuickScore,
-  calculateRecreationProximity,
   type Pass1Data as Pass1CalcData,
   type Pass1Flags
 } from '@/services/pass1Calculators';
@@ -60,7 +71,6 @@ export default function Pass1Results() {
       if (pass1Error) throw pass1Error;
       setData(pass1 as unknown as Pass1Data);
 
-      // Run client-side calculators
       const flags: Pass1Flags = {
         urban_exclude: run.urban_exclude,
         multifamily_priority: run.multifamily_priority,
@@ -116,13 +126,29 @@ export default function Pass1Results() {
   const zipMeta = data.zip_metadata;
   const summary = calculatedSummary || data.analysis_summary;
   const competitorCalc = calculateCompetitorDensity(data as Pass1CalcData);
-  const multifamilyCalc = calculateMultifamilyInfluence(data as Pass1CalcData);
-  const industrialCalc = calculateIndustrialQuickScore(data as Pass1CalcData);
-  const recreationCalc = calculateRecreationProximity(data as Pass1CalcData);
+  
+  // Derive values
+  const population = zipMeta?.population || 0;
+  const demandSqft = population * 6; // Standard 6 sqft per capita
+  const supplySqft = competitorCalc.totalSqft || 0;
+  const supplyGap = demandSqft - supplySqft;
+  const hotspotCounties = data.radius_counties?.filter((c: any) => c.is_hotspot) || [];
+  const gradeACount = data.competitors?.filter((c: any) => c.grade === 'A').length || 0;
+  const pass2Ready = summary?.tier !== 'D' && summary?.viabilityScore >= 40;
+  const validationScore = summary?.viabilityScore || 0;
+  const readinessStatus = getReadinessStatus(pass2Ready, validationScore);
+
+  // REIT presence badge logic
+  const getReitBadge = () => {
+    if (gradeACount >= 3) return { label: "REIT Dominated", variant: "destructive" as const };
+    if (gradeACount >= 1) return { label: "Regional Mix", variant: "secondary" as const };
+    return { label: "Mom & Pop Market", variant: "outline" as const };
+  };
+  const reitBadge = getReitBadge();
 
   return (
-    <div className="min-h-screen bg-background p-6">
-      <div className="max-w-4xl mx-auto space-y-6">
+    <div className="min-h-screen bg-background p-4 md:p-6">
+      <div className="max-w-5xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
@@ -130,281 +156,269 @@ export default function Pass1Results() {
               <ArrowLeft className="h-5 w-5" />
             </Button>
             <div>
-              <h1 className="text-2xl font-bold text-foreground">Pass 1 Results</h1>
-              <p className="text-muted-foreground">Quick scan analysis for ZIP {zipRun?.zip_code}</p>
+              <h1 className="text-xl md:text-2xl font-bold text-foreground">Pass 1 — Market Screening</h1>
+              <p className="text-sm text-muted-foreground">Quick scan for ZIP {zipRun?.zip_code}</p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <Badge variant="outline" className="bg-amber-500/10 text-amber-500 border-amber-500/30">
-              {zipRun?.analysis_mode?.toUpperCase()} MODE
-            </Badge>
-            {summary?.tier && (
-              <Badge variant={summary.tier === 'A' ? 'default' : summary.tier === 'B' ? 'secondary' : 'outline'}>
-                Tier {summary.tier}
-              </Badge>
-            )}
-          </div>
+          <Badge variant="outline" className="bg-amber-500/10 text-amber-500 border-amber-500/30">
+            {zipRun?.analysis_mode?.toUpperCase() || 'BUILD'} MODE
+          </Badge>
         </div>
 
-        {/* ZIP Summary */}
+        {/* ========== SECTION 1: ZIP METADATA CARD ========== */}
         <Card className="bg-card border-border">
-          <CardHeader>
+          <CardHeader className="pb-4">
             <div className="flex items-center gap-3">
               <MapPin className="h-5 w-5 text-amber-500" />
-              <CardTitle className="text-foreground">Location Summary</CardTitle>
+              <CardTitle className="text-foreground">ZIP Metadata</CardTitle>
             </div>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div>
-                <p className="text-sm text-muted-foreground">City</p>
-                <p className="font-medium text-foreground">{zipMeta?.city || 'Unknown'}</p>
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+              {/* Left: Metadata Grid */}
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4 flex-1">
+                <div>
+                  <p className="text-xs text-muted-foreground uppercase tracking-wide">ZIP</p>
+                  <p className="text-lg font-semibold text-foreground">{zipMeta?.zip || zipRun?.zip_code}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground uppercase tracking-wide">City</p>
+                  <p className="text-lg font-semibold text-foreground">{zipMeta?.city || 'Unknown'}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground uppercase tracking-wide">County</p>
+                  <p className="text-lg font-semibold text-foreground">{zipMeta?.county || 'Unknown'}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground uppercase tracking-wide">State</p>
+                  <p className="text-lg font-semibold text-foreground">{zipMeta?.state_id || zipMeta?.state_name || 'Unknown'}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground uppercase tracking-wide">Lat / Lng</p>
+                  <p className="text-sm font-medium text-foreground">
+                    {zipMeta?.lat?.toFixed(4) || 'N/A'} / {zipMeta?.lng?.toFixed(4) || 'N/A'}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground uppercase tracking-wide">Population</p>
+                  <p className="text-lg font-semibold text-foreground">{population.toLocaleString()}</p>
+                </div>
               </div>
-              <div>
-                <p className="text-sm text-muted-foreground">State</p>
-                <p className="font-medium text-foreground">{zipMeta?.state_name || 'Unknown'}</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Population</p>
-                <p className="font-medium text-foreground">{zipMeta?.population?.toLocaleString() || 'N/A'}</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Density</p>
-                <p className="font-medium text-foreground">{zipMeta?.density?.toFixed(1) || 'N/A'}/sq mi</p>
+
+              {/* Right: Validation Score + Badge */}
+              <div className="flex items-center gap-4">
+                <CircularProgress value={validationScore} size={90} label="Score" />
+                <ReadinessBadge status={readinessStatus} />
               </div>
             </div>
           </CardContent>
         </Card>
 
-        {/* Competitors with Calculator Score */}
-        <Card className="bg-card border-border">
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <Building2 className="h-5 w-5 text-amber-500" />
-                <CardTitle className="text-foreground">Competitors ({data.competitors?.length || 0})</CardTitle>
+        {/* ========== SECTION 2: MARKET INTELLIGENCE CARDS (2-column grid) ========== */}
+        <div className="grid md:grid-cols-2 gap-4">
+          {/* Card A: Macro Demand */}
+          <Card className="bg-card border-border">
+            <CardHeader className="pb-3">
+              <div className="flex items-center gap-2">
+                <TrendingUp className="h-4 w-4 text-emerald-500" />
+                <CardTitle className="text-sm font-medium text-foreground">Macro Demand</CardTitle>
               </div>
-              <Badge variant={competitorCalc.densityScore > 70 ? 'default' : competitorCalc.densityScore > 40 ? 'secondary' : 'destructive'}>
-                Density Score: {competitorCalc.densityScore}
+            </CardHeader>
+            <CardContent className="space-y-2">
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Population</span>
+                <span className="font-medium text-foreground">{population.toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Demand (sqft)</span>
+                <span className="font-medium text-foreground">{demandSqft.toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Demand/County</span>
+                <span className="font-medium text-foreground">
+                  {data.radius_counties?.length ? Math.round(demandSqft / data.radius_counties.length).toLocaleString() : 'N/A'}
+                </span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Hotspots</span>
+                <span className="font-medium text-amber-500">{hotspotCounties.length}</span>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Card B: Macro Supply */}
+          <Card className="bg-card border-border">
+            <CardHeader className="pb-3">
+              <div className="flex items-center gap-2">
+                <Building2 className="h-4 w-4 text-blue-500" />
+                <CardTitle className="text-sm font-medium text-foreground">Macro Supply</CardTitle>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Competitors</span>
+                <span className="font-medium text-foreground">{data.competitors?.length || 0}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Supply (sqft)</span>
+                <span className="font-medium text-foreground">{supplySqft.toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Supply Gap</span>
+                <Badge variant={supplyGap > 0 ? "default" : "destructive"} className="text-xs">
+                  {supplyGap > 0 ? '+' : ''}{supplyGap.toLocaleString()} sqft
+                </Badge>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Card C: Hotspot Identification */}
+          <Card className="bg-card border-border">
+            <CardHeader className="pb-3">
+              <div className="flex items-center gap-2">
+                <Target className="h-4 w-4 text-amber-500" />
+                <CardTitle className="text-sm font-medium text-foreground">Hotspot Identification</CardTitle>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {hotspotCounties.length > 0 ? (
+                <div className="flex flex-wrap gap-2">
+                  {hotspotCounties.slice(0, 5).map((county: any, i: number) => (
+                    <Badge key={i} variant="outline" className="bg-amber-500/10 text-amber-400 border-amber-500/30">
+                      {county.county} <span className="ml-1 text-xs opacity-70">High Opportunity</span>
+                    </Badge>
+                  ))}
+                  {hotspotCounties.length > 5 && (
+                    <Badge variant="secondary" className="text-xs">
+                      +{hotspotCounties.length - 5} more
+                    </Badge>
+                  )}
+                </div>
+              ) : (
+                <div className="flex flex-wrap gap-2">
+                  {data.radius_counties?.slice(0, 4).map((county: any, i: number) => (
+                    <Badge key={i} variant="secondary" className="text-xs">
+                      {county.county}
+                    </Badge>
+                  ))}
+                  <p className="text-xs text-muted-foreground mt-2 w-full">No high-opportunity hotspots identified</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Card D: REIT Presence */}
+          <Card className="bg-card border-border">
+            <CardHeader className="pb-3">
+              <div className="flex items-center gap-2">
+                <Crown className="h-4 w-4 text-purple-500" />
+                <CardTitle className="text-sm font-medium text-foreground">REIT Presence</CardTitle>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="flex justify-between items-center text-sm">
+                <span className="text-muted-foreground">Grade A Competitors</span>
+                <span className="font-medium text-foreground">{gradeACount}</span>
+              </div>
+              <Badge variant={reitBadge.variant} className="w-full justify-center py-1">
+                {reitBadge.label}
               </Badge>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* ========== SECTION 3: LOCAL SCAN (Micro-Market) ========== */}
+        <Card className="bg-card border-border">
+          <CardHeader className="pb-3">
+            <div className="flex items-center gap-2">
+              <Radar className="h-5 w-5 text-cyan-500" />
+              <CardTitle className="text-foreground">Local Scan (Micro-Market)</CardTitle>
             </div>
           </CardHeader>
           <CardContent>
-            <div className="space-y-3">
-              {data.competitors?.map((comp: any, i: number) => (
-                <div key={i} className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
-                  <div>
-                    <p className="font-medium text-foreground">{comp.name}</p>
-                    <p className="text-sm text-muted-foreground">{comp.distance_miles} miles away</p>
-                  </div>
-                  <Badge variant="outline">{comp.estimated_sqft?.toLocaleString()} sqft</Badge>
-                </div>
-              ))}
-              <div className="pt-3 border-t border-border text-sm text-muted-foreground">
-                Total competitor sqft: {competitorCalc.totalSqft.toLocaleString()} • Avg distance: {competitorCalc.avgDistance} mi
+            <div className="grid md:grid-cols-4 gap-4 mb-4">
+              <div className="bg-muted/30 rounded-lg p-3">
+                <p className="text-xs text-muted-foreground uppercase">Radius Used</p>
+                <p className="text-lg font-semibold text-foreground">15 mi</p>
+              </div>
+              <div className="bg-muted/30 rounded-lg p-3">
+                <p className="text-xs text-muted-foreground uppercase">Local Population</p>
+                <p className="text-lg font-semibold text-foreground">{population.toLocaleString()}</p>
+              </div>
+              <div className="bg-muted/30 rounded-lg p-3">
+                <p className="text-xs text-muted-foreground uppercase">Local Competitors</p>
+                <p className="text-lg font-semibold text-foreground">{data.competitors?.length || 0}</p>
+              </div>
+              <div className="bg-muted/30 rounded-lg p-3">
+                <p className="text-xs text-muted-foreground uppercase">Supply/Demand Gap</p>
+                <p className={`text-lg font-semibold ${supplyGap > 0 ? 'text-emerald-500' : 'text-red-500'}`}>
+                  {supplyGap > 0 ? '+' : ''}{supplyGap.toLocaleString()} sqft
+                </p>
               </div>
             </div>
-          </CardContent>
-        </Card>
 
-        {/* Demand Anchors */}
-        {data.anchors && data.anchors.length > 0 && (
-          <Card className="bg-card border-border">
-            <CardHeader>
-              <div className="flex items-center gap-3">
-                <Landmark className="h-5 w-5 text-amber-500" />
-                <CardTitle className="text-foreground">Demand Anchors ({data.anchors.length})</CardTitle>
-              </div>
-              <CardDescription>Major employers and destinations driving storage demand</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {data.anchors.map((anchor: any, i: number) => (
-                  <div key={i} className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
-                    <div>
-                      <p className="font-medium text-foreground">{anchor.name}</p>
-                      <p className="text-sm text-muted-foreground capitalize">{anchor.type}</p>
-                    </div>
-                    <Badge variant="outline">{anchor.distance_miles} mi</Badge>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Signals Grid with Calculator Scores */}
-        <div className="grid md:grid-cols-2 gap-6">
-          {/* Housing Signals */}
-          <Card className="bg-card border-border">
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <Home className="h-5 w-5 text-amber-500" />
-                  <CardTitle className="text-foreground text-base">Housing Signals</CardTitle>
-                </div>
-                <Badge variant={multifamilyCalc.influence === 'high' ? 'default' : 'secondary'} className="capitalize">
-                  {multifamilyCalc.influence}
-                </Badge>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Home Value</span>
-                <span className="text-foreground">${data.housing_signals?.median_home_value?.toLocaleString() || 'N/A'}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Ownership Rate</span>
-                <span className="text-foreground">{((data.housing_signals?.home_ownership_rate || 0) * 100)?.toFixed(1)}%</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Multifamily Score</span>
-                <span className="text-amber-500 font-medium">{multifamilyCalc.score}/100</span>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Industrial Signals */}
-          <Card className="bg-card border-border">
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <Factory className="h-5 w-5 text-amber-500" />
-                  <CardTitle className="text-foreground text-base">Industrial Signals</CardTitle>
-                </div>
-                <Badge variant={industrialCalc.momentum === 'strong' ? 'default' : 'secondary'} className="capitalize">
-                  {industrialCalc.momentum}
-                </Badge>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Distribution Centers</span>
-                <span className="text-foreground">{industrialCalc.distributionCenters}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Manufacturing</span>
-                <span className="text-foreground capitalize">{industrialCalc.manufacturingPresence}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Industrial Score</span>
-                <span className="text-amber-500 font-medium">{industrialCalc.score}/100</span>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* RV/Recreation */}
-          <Card className="bg-card border-border">
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <Tent className="h-5 w-5 text-amber-500" />
-                  <CardTitle className="text-foreground text-base">Recreation Signals</CardTitle>
-                </div>
-                <Badge variant={recreationCalc.score > 50 ? 'default' : 'secondary'}>
-                  Score: {recreationCalc.score}
-                </Badge>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">RV Potential</span>
-                <Badge variant="outline" className="capitalize">{recreationCalc.rvPotential}</Badge>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Lake Proximity</span>
-                <span className="text-foreground">{recreationCalc.lakeProximity ? 'Yes' : 'No'}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Campground Nearby</span>
-                <span className="text-foreground">{recreationCalc.campgroundNearby ? 'Yes' : 'No'}</span>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Radius Counties */}
-          <Card className="bg-card border-border">
-            <CardHeader>
-              <div className="flex items-center gap-3">
-                <Users className="h-5 w-5 text-amber-500" />
-                <CardTitle className="text-foreground text-base">Nearby Counties ({data.radius_counties?.length || 0})</CardTitle>
-              </div>
-            </CardHeader>
-            <CardContent>
+            {/* Competitor List with Grades */}
+            <div className="space-y-2">
+              <p className="text-xs text-muted-foreground uppercase tracking-wide flex items-center gap-2">
+                <Users className="h-3 w-3" /> Competitor Grades
+              </p>
               <div className="flex flex-wrap gap-2">
-                {data.radius_counties?.slice(0, 8).map((county: any, i: number) => (
-                  <Badge key={i} variant="secondary" className="text-xs">
-                    {county.county}
-                  </Badge>
-                ))}
-                {(data.radius_counties?.length || 0) > 8 && (
-                  <Badge variant="outline" className="text-xs">
-                    +{data.radius_counties.length - 8} more
+                {data.competitors?.slice(0, 8).map((comp: any, i: number) => {
+                  const grade = comp.grade || 'C';
+                  const gradeColors: Record<string, string> = {
+                    A: 'bg-purple-500/20 text-purple-400 border-purple-500/30',
+                    B: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
+                    C: 'bg-gray-500/20 text-gray-400 border-gray-500/30',
+                  };
+                  return (
+                    <Badge key={i} variant="outline" className={gradeColors[grade] || gradeColors.C}>
+                      {comp.name?.slice(0, 20)} [{grade}]
+                    </Badge>
+                  );
+                })}
+                {(data.competitors?.length || 0) > 8 && (
+                  <Badge variant="secondary" className="text-xs">
+                    +{data.competitors.length - 8} more
                   </Badge>
                 )}
               </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Viability Score */}
-        <Card className="bg-card border-amber-500/30">
-          <CardHeader>
-            <CardTitle className="text-foreground">Quick Viability Assessment</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center justify-between mb-4">
-              <span className="text-muted-foreground">Calculated Viability Score</span>
-              <span className="text-3xl font-bold text-amber-500">{summary?.viabilityScore || 0}/100</span>
             </div>
-            <p className="text-sm text-muted-foreground mb-4">{summary?.recommendation}</p>
-            
-            {summary?.keyFactors?.length > 0 && (
-              <div className="mb-3">
-                <p className="text-sm font-medium text-emerald-500 mb-1">Key Factors</p>
-                {summary.keyFactors.map((factor: string, i: number) => (
-                  <p key={i} className="text-sm text-muted-foreground">• {factor}</p>
-                ))}
-              </div>
-            )}
-            
-            {summary?.riskFactors?.length > 0 && (
-              <div>
-                <p className="text-sm font-medium text-red-500 mb-1">Risk Factors</p>
-                {summary.riskFactors.map((risk: string, i: number) => (
-                  <p key={i} className="text-sm text-muted-foreground">• {risk}</p>
-                ))}
-              </div>
-            )}
           </CardContent>
         </Card>
 
-        {/* Actions */}
-        <div className="flex gap-4">
-          <Button 
-            variant="outline" 
-            onClick={() => navigate('/engine/screener')}
-            className="flex-1"
-          >
-            Start Over
-          </Button>
-          <Button 
-            onClick={handleRunPass2}
-            disabled={isRunningPass2}
-            className="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white"
-          >
-            {isRunningPass2 ? (
-              <>
-                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                Running Deep Dive...
-              </>
-            ) : (
-              <>
-                Run Deep Dive
-                <ArrowRight className="ml-2 h-5 w-5" />
-              </>
-            )}
-          </Button>
+        {/* ========== FOOTER ACTION ========== */}
+        <div className="flex justify-center pt-4">
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div>
+                  <Button
+                    size="lg"
+                    onClick={handleRunPass2}
+                    disabled={isRunningPass2 || !pass2Ready}
+                    className="bg-emerald-500 hover:bg-emerald-600 text-white px-8 disabled:opacity-50"
+                  >
+                    {isRunningPass2 ? (
+                      <>
+                        <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                        Running Deep Dive...
+                      </>
+                    ) : (
+                      <>
+                        Proceed to Deep Dive (Pass 2)
+                        <ArrowRight className="ml-2 h-5 w-5" />
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </TooltipTrigger>
+              {!pass2Ready && (
+                <TooltipContent side="top" className="max-w-xs">
+                  <p>Missing required fields — check validation panel</p>
+                </TooltipContent>
+              )}
+            </Tooltip>
+          </TooltipProvider>
         </div>
       </div>
     </div>

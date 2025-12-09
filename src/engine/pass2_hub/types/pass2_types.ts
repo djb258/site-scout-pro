@@ -302,6 +302,7 @@ export interface VaultPayload {
     pass1Summary?: Record<string, unknown>;
     pass2Summary?: Record<string, unknown>;
     verdict?: VerdictResult;
+    neonRecord?: unknown; // Full flattened record for Neon insert
   } | null;
   notes: string;
 }

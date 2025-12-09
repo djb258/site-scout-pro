@@ -504,6 +504,13 @@ async function handleDryRun(): Promise<Response> {
         key_factors: testOpportunity.pass1_recommendation.key_factors,
         risk_factors: testOpportunity.pass1_recommendation.risk_factors,
         proceed_to_pass2: testOpportunity.pass1_recommendation.proceed_to_pass2,
+        // Enrichment summary
+        reit_presence: false,
+        grade_a_competitors: 0,
+        competition_pressure: 45,
+        // Validation summary
+        validation_score: 85,
+        completion_pct: 100,
       },
       hotspots: ensureSerializable(testHotspots),
       timestamp: Date.now(),
