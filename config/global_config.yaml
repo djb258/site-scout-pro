@@ -136,3 +136,23 @@ composio:
     rent: "${COMPOSIO_APP_RENT}"
     geospatial: "${COMPOSIO_APP_GEOSPATIAL}"
 
+# Retell.ai Voice AI Configuration
+retell:
+  enabled: true
+  api_key: "${RETELL_API_KEY}"
+  base_url: "https://api.retellai.com"
+  concurrency_limit: 20
+  # Phone number area codes for different regions
+  area_codes:
+    VA: "540"
+    WV: "304"
+    MD: "301"
+    PA: "717"
+  # Webhook for n8n integration
+  webhook_url: "${RETELL_WEBHOOK_URL}"
+  # Agent settings
+  agent:
+    name: "Storage Rate Collector"
+    voice_id: "eleven_labs_amy"
+    model: "gpt-4o-mini"
+

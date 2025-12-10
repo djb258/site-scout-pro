@@ -9,11 +9,47 @@ Collects actual rental rates via AI voice calls to storage facilities.
 | Facilities in Zone | ~2,344 |
 | With Phone Numbers | ~360 (growing) |
 | Est. Call Duration | 90 sec avg |
+| Cost (Retell.ai) | ~$0.07-0.15/min |
 | Cost (Bland AI) | ~$0.09/min |
 | Cost (Vapi) | ~$0.05/min |
 | Total Est. Cost | $15-50 |
 
+## Recommended Platform: Retell.ai
+
+**Status**: Connected and configured
+
+Retell.ai is our primary AI calling platform because:
+- Native n8n integration (works with Husinger setup)
+- High-quality voice models
+- Good API for batch operations
+- Webhook support for real-time results
+
 ## Quick Start
+
+### Retell.ai (Recommended)
+
+```bash
+# 1. Setup and verify connection
+python retell_caller.py --setup
+
+# 2. Check your agents and phone numbers
+python retell_caller.py --list-agents
+python retell_caller.py --list-phones
+
+# 3. Buy a phone number (if needed)
+python retell_caller.py --buy-phone 540  # VA area code
+
+# 4. Make a test call
+python retell_caller.py --test-call +15405551234
+
+# 5. Check call status and transcript
+python retell_caller.py --status CALL_ID
+
+# 6. Import results to database
+python retell_caller.py --import-results
+```
+
+### Legacy (Bland AI / Vapi)
 
 ```bash
 # 1. Setup (create tables & columns)

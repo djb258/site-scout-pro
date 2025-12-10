@@ -97,22 +97,22 @@ def get_n8n_credentials() -> Dict[str, Any]:
 def get_composio_credentials() -> Dict[str, Any]:
     """
     Get Composio credentials from IMO-Creator.
-    
+
     Checks:
     1. IMO-Creator credentials.yaml
     2. Environment variables
     3. Global config
-    
+
     Returns:
         Dictionary with Composio credentials
     """
     # Load from IMO-Creator credentials file
     credentials = load_credentials_from_file()
     composio_creds = credentials.get("composio", {})
-    
+
     # Override with environment variables if present
     apps = composio_creds.get("apps", {})
-    
+
     result = {
         "base_url": os.getenv("COMPOSIO_BASE_URL", composio_creds.get("base_url", "https://api.composio.dev")),
         "api_key": os.getenv("COMPOSIO_API_KEY", composio_creds.get("api_key", "")),
@@ -128,6 +128,47 @@ def get_composio_credentials() -> Dict[str, Any]:
             "geospatial": os.getenv("COMPOSIO_APP_GEOSPATIAL", apps.get("geospatial", "")),
         }
     }
-    
+
+    return result
+
+
+def get_retell_credentials() -> Dict[str, Any]:
+    """
+    Get Retell.ai credentials from IMO-Creator.
+
+    Checks:
+    1. IMO-Creator credentials.yaml
+    2. Environment variables
+    3. Global config
+
+    Returns:
+        Dictionary with Retell.ai credentials
+    """
+    # Load from IMO-Creator credentials file
+    credentials = load_credentials_from_file()
+    retell_creds = credentials.get("retell", {})
+
+    # Override with environment variables if present
+    area_codes = retell_creds.get("area_codes", {})
+    agent = retell_creds.get("agent", {})
+
+    result = {
+        "api_key": os.getenv("RETELL_API_KEY", retell_creds.get("api_key", "")),
+        "base_url": os.getenv("RETELL_BASE_URL", retell_creds.get("base_url", "https://api.retellai.com")),
+        "concurrency_limit": int(os.getenv("RETELL_CONCURRENCY_LIMIT", retell_creds.get("concurrency_limit", 20))),
+        "webhook_url": os.getenv("RETELL_WEBHOOK_URL", retell_creds.get("webhook_url", "")),
+        "area_codes": {
+            "VA": area_codes.get("VA", "540"),
+            "WV": area_codes.get("WV", "304"),
+            "MD": area_codes.get("MD", "301"),
+            "PA": area_codes.get("PA", "717"),
+        },
+        "agent": {
+            "name": agent.get("name", "Storage Rate Collector"),
+            "voice_id": agent.get("voice_id", "eleven_labs_amy"),
+            "model": agent.get("model", "gpt-4o-mini"),
+        }
+    }
+
     return result
 
