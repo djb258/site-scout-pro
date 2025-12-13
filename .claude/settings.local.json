@@ -1,7 +1,8 @@
 {
   "permissions": {
     "allow": [
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nAdd comprehensive global configuration system for Dual-Hub Architecture\n\nGlobal Config (config/global_config.yaml):\n- Pass-1 Hub settings (spokes, radius, demand, supply, hotspot scoring, validation)\n- Pass-2 Hub settings (civil constraints, feasibility defaults, verdict weights)\n- State-level rules with area codes and rent multipliers\n- Database table configuration\n- Retell.ai voice AI settings with call scripts\n- External API configuration (Census, Google, Firecrawl, etc.)\n\nTypeScript Config Loader (src/config/GlobalConfig.ts):\n- Typed interfaces for all configuration sections\n- Singleton pattern with getters for each config section\n- Convenience functions: getPass1Config, getPass2Config, getBondingAmount, etc.\n- Default configuration hardcoded for browser/Workers compatibility\n\nPython Config Loader (imo_creator/config/credentials.py):\n- Load from global_config.yaml with fallback defaults\n- Hub configuration getters (get_pass1_config, get_pass2_config)\n- State rules and bonding amount lookups\n- Updated credential loaders for n8n, Composio, Retell, external APIs\n\nOrchestrator Integration:\n- Pass1Orchestrator imports GlobalConfig for weights and thresholds\n- Pass2Orchestrator imports GlobalConfig for feasibility and verdict settings\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n)\")"
     ],
     "deny": [],
     "ask": []

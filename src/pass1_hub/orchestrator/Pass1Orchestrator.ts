@@ -52,6 +52,15 @@ import {
   stageOpportunity,
 } from '../../shared/adapters/LovableAdapter';
 
+// Global configuration
+import {
+  getPass1Config,
+  getHotspotWeights,
+  getTierThresholds,
+  getCompetitorGradeConfig,
+  getValidationGateConfig,
+} from '../../config/GlobalConfig';
+
 // ============================================================================
 // TYPES
 // ============================================================================

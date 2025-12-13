@@ -1,5 +1,8 @@
-# Global Configuration File
+# ============================================================================
+# GLOBAL CONFIGURATION FILE
 # IMO-Creator + Storage Site Scouting Backend
+# Dual-Hub Architecture (Pass-1 Recon + Pass-2 Underwriting)
+# ============================================================================
 
 # Doctrine Flags
 doctrine:
@@ -8,7 +11,215 @@ doctrine:
   STACKED: true
   BARTON_DOCTRINE: true
 
-# Scoring Weights
+# ============================================================================
+# PASS-1 RECON HUB CONFIGURATION
+# ============================================================================
+pass1_hub:
+  enabled: true
+  # Spoke execution order
+  spokes:
+    - ZipHydration
+    - RadiusBuilder
+    - MacroDemand
+    - MacroSupply
+    - HotspotScoring
+    - LocalScan
+    - CallSheet
+    - CompetitorEnrichment
+    - ValidationGate
+
+  # Radius builder settings
+  radius_builder:
+    default_radius_miles: 15
+    min_radius_miles: 5
+    max_radius_miles: 50
+
+  # Macro demand settings
+  macro_demand:
+    sqft_per_capita: 6
+    sqft_per_household: 15
+
+  # Macro supply settings
+  macro_supply:
+    default_sqft_per_competitor: 45000
+    climate_controlled_multiplier: 1.2
+
+  # Hotspot scoring weights
+  hotspot_scoring:
+    weights:
+      population: 0.25
+      competition: 0.25
+      industrial: 0.20
+      multifamily: 0.15
+      recreation: 0.15
+    tier_thresholds:
+      A: 80
+      B: 65
+      C: 50
+      D: 0
+
+  # Competitor enrichment settings
+  competitor_enrichment:
+    # Grade classification thresholds
+    grades:
+      A:
+        brands:
+          - "Public Storage"
+          - "Extra Space"
+          - "CubeSmart"
+          - "Life Storage"
+          - "U-Haul"
+          - "StorageMart"
+        min_sqft: 75000
+      B:
+        min_sqft: 25000
+        max_sqft: 75000
+      C:
+        max_sqft: 25000
+
+  # Validation gate thresholds
+  validation_gate:
+    required_fields:
+      - zip
+      - city
+      - county
+      - state
+      - lat
+      - lng
+      - macro_demand
+      - macro_supply
+      - hotspot_score
+    min_population: 1000
+    min_income: 25000
+    min_viability_score: 20
+    min_competitors_for_pricing: 3
+
+# ============================================================================
+# PASS-2 UNDERWRITING HUB CONFIGURATION
+# ============================================================================
+pass2_hub:
+  enabled: true
+  # Spoke execution order
+  spokes:
+    - Zoning
+    - CivilConstraints
+    - Permits
+    - PricingVerification
+    - Momentum
+    - FusionDemand
+    - CompetitivePressure
+    - Feasibility
+    - ReverseFeasibility
+    - Verdict
+    - VaultMapper
+
+  # Civil constraints settings
+  civil_constraints:
+    # ADA parking requirements
+    parking:
+      sqft_per_stall: 180
+      ada_ratios:
+        1_25: 1
+        26_50: 2
+        51_75: 3
+        76_100: 4
+        101_150: 5
+        151_200: 6
+        201_300: 7
+        301_400: 8
+        401_500: 9
+        501_1000: 2_percent
+        over_1000: 20_plus_1_per_100
+      cost_per_ada_space: 2500
+
+    # Lot coverage defaults
+    lot_coverage:
+      default_max_pct: 50
+      building_efficiency: 0.40
+      parking_ratio: 0.25
+      landscape_buffer_pct: 0.10
+
+    # Topography settings
+    topography:
+      slope_bands:
+        ideal: 5
+        manageable: 10
+        challenging: 15
+      grading_cost_per_acre: 5000
+
+    # Stormwater settings
+    stormwater:
+      runoff_coefficient: 0.85
+      storm_intensity_inches: 4
+      detention_factor: 1.5
+      bmp_cost_per_acre: 15000
+
+    # State bonding requirements
+    bonding:
+      high_requirement_states:
+        - TX
+        - CA
+        - FL
+      high_bond_amount: 25000
+      medium_requirement_states:
+        - NY
+        - IL
+      medium_bond_amount: 35000
+      default_bond_amount: 20000
+
+  # Feasibility settings
+  feasibility:
+    defaults:
+      metal_cost_sqft: 23
+      concrete_cost_yard: 150
+      finish_labor_cost: 2.50
+      construction_cost_sqft: 30
+      soft_cost_pct: 0.15
+      cap_rate_target: 0.065
+      expense_ratio: 0.35
+      target_occupancy: 0.88
+      ltv_ratio: 0.70
+      debt_rate: 0.07
+      building_efficiency: 0.85
+      buildable_pct: 0.40
+
+    # Unit mix assumptions
+    unit_mix:
+      climate_control_pct: 0.30
+      standard_pct: 0.50
+      outdoor_pct: 0.20
+
+    # Viability thresholds
+    viability:
+      min_cap_rate: 6.5
+      min_roi_5yr: 25
+      min_dscr: 1.25
+
+  # Verdict scoring weights
+  verdict:
+    weights:
+      feasibility: 0.30
+      fusion_demand: 0.25
+      zoning: 0.15
+      permits: 0.15
+      civil: 0.15
+
+    # Decision thresholds
+    thresholds:
+      proceed: 75
+      evaluate: 50
+      walk: 0
+
+    # Fatal flaws (auto-WALK)
+    fatal_flaws:
+      - lot_coverage_infeasible
+      - zoning_prohibited
+      - prohibitive_topography
+      - negative_dscr
+
+# ============================================================================
+# SCORING WEIGHTS (Legacy - for backwards compatibility)
+# ============================================================================
 scoring:
   weights:
     saturation: 0.25
@@ -16,14 +227,18 @@ scoring:
     county: 0.20
     financial: 0.30
 
-# Saturation Constants
+# ============================================================================
+# SATURATION CONSTANTS
+# ============================================================================
 saturation:
   sqft_per_person: 6
   undersupplied_threshold: 0.7
   oversupplied_threshold: 1.1
   elimination_threshold: 1.1
 
-# Financial Constants
+# ============================================================================
+# FINANCIAL CONSTANTS (Legacy)
+# ============================================================================
 financial:
   units: 116
   vacancy_rate: 0.20
@@ -34,14 +249,18 @@ financial:
   rent_high: 120
   min_dscr: 1.0
 
-# Parcel Scoring Thresholds
+# ============================================================================
+# PARCEL SCORING THRESHOLDS
+# ============================================================================
 parcel:
   shape_threshold: 50
   slope_threshold: 50
   access_threshold: 50
   floodplain_elimination: true
 
-# Elimination Thresholds
+# ============================================================================
+# ELIMINATION THRESHOLDS
+# ============================================================================
 elimination:
   min_population: 5000
   min_households: 2000
@@ -49,66 +268,126 @@ elimination:
   max_county_difficulty: 50
   min_final_score: 60
 
-# State-Level Rules
+# ============================================================================
+# STATE-LEVEL RULES
+# ============================================================================
 states:
   supported:
     - WV
     - PA
     - MD
     - VA
+    - TX
+    - FL
+    - CA
+    - NY
+    - IL
   rules:
     WV:
       default_county_difficulty: 50
       rent_multiplier: 1.0
+      area_code: "304"
     PA:
       default_county_difficulty: 45
       rent_multiplier: 1.1
+      area_code: "717"
     MD:
       default_county_difficulty: 40
       rent_multiplier: 1.2
+      area_code: "301"
     VA:
       default_county_difficulty: 50
       rent_multiplier: 1.1
+      area_code: "540"
+    TX:
+      default_county_difficulty: 35
+      rent_multiplier: 1.0
+      area_code: "512"
+    FL:
+      default_county_difficulty: 40
+      rent_multiplier: 1.15
+      area_code: "407"
+    CA:
+      default_county_difficulty: 60
+      rent_multiplier: 1.5
+      area_code: "415"
+    NY:
+      default_county_difficulty: 55
+      rent_multiplier: 1.4
+      area_code: "212"
+    IL:
+      default_county_difficulty: 45
+      rent_multiplier: 1.2
+      area_code: "312"
 
-# County Difficulty Defaults
+# ============================================================================
+# COUNTY DIFFICULTY DEFAULTS
+# ============================================================================
 county:
   default_difficulty: 50
   fast_permitting_score: 80
   slow_permitting_score: 20
 
-# API Configuration
+# ============================================================================
+# API CONFIGURATION
+# ============================================================================
 api:
   prefix: "/api"
   version: "1.0.0"
   title: "Storage Site Scouting API"
 
-# Database Configuration
+# ============================================================================
+# DATABASE CONFIGURATION
+# ============================================================================
 database:
   pool_min_size: 2
   pool_max_size: 10
   command_timeout: 60
   table_prefix: ""
+  tables:
+    pass1_runs: "pass1_runs"
+    pass2_runs: "pass2_runs"
+    staging_payload: "staging_payload"
+    vault: "vault"
+    engine_logs: "engine_logs"
+    jurisdiction_cards: "jurisdiction_cards"
+    rate_observations: "rate_observations"
+    rent_benchmarks: "rent_benchmarks"
 
-# Logging Configuration
+# ============================================================================
+# LOGGING CONFIGURATION
+# ============================================================================
 logging:
   level: "INFO"
   format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
   datefmt: "%Y-%m-%d %H:%M:%S"
+  engines:
+    pass1_orchestrator: "INFO"
+    pass2_orchestrator: "INFO"
+    spokes: "DEBUG"
+    validation: "INFO"
 
-# Process Registry
+# ============================================================================
+# PROCESS REGISTRY
+# ============================================================================
 process_registry:
   enabled: true
   auto_load: true
   registry_file: "ctb/process_registry.yaml"
 
-# IMO-Creator Settings
+# ============================================================================
+# IMO-CREATOR SETTINGS
+# ============================================================================
 imo_creator:
   enabled: true
   template_dir: "imo_creator/templates"
   processor_dir: "imo_creator/processors"
   pipeline_dir: "imo_creator/pipeline"
+  global_dir: "imo_creator/global"
 
-# n8n Integration Configuration
+# ============================================================================
+# N8N INTEGRATION CONFIGURATION
+# ============================================================================
 n8n:
   enabled: true
   base_url: "${N8N_BASE_URL}"
@@ -119,8 +398,13 @@ n8n:
     saturation: "${N8N_WEBHOOK_SATURATION}"
     scoring: "${N8N_WEBHOOK_SCORING}"
     parcel: "${N8N_WEBHOOK_PARCEL}"
+    pass1_complete: "${N8N_WEBHOOK_PASS1_COMPLETE}"
+    pass2_complete: "${N8N_WEBHOOK_PASS2_COMPLETE}"
+    retell_callback: "${N8N_WEBHOOK_RETELL_CALLBACK}"
 
-# Composio Integration Configuration
+# ============================================================================
+# COMPOSIO INTEGRATION CONFIGURATION
+# ============================================================================
 composio:
   enabled: true
   base_url: "${COMPOSIO_BASE_URL}"
@@ -136,23 +420,75 @@ composio:
     rent: "${COMPOSIO_APP_RENT}"
     geospatial: "${COMPOSIO_APP_GEOSPATIAL}"
 
-# Retell.ai Voice AI Configuration
+# ============================================================================
+# RETELL.AI VOICE AI CONFIGURATION
+# ============================================================================
 retell:
   enabled: true
   api_key: "${RETELL_API_KEY}"
   base_url: "https://api.retellai.com"
   concurrency_limit: 20
-  # Phone number area codes for different regions
-  area_codes:
-    VA: "540"
-    WV: "304"
-    MD: "301"
-    PA: "717"
-  # Webhook for n8n integration
   webhook_url: "${RETELL_WEBHOOK_URL}"
   # Agent settings
   agent:
     name: "Storage Rate Collector"
     voice_id: "eleven_labs_amy"
     model: "gpt-4o-mini"
+    language: "en-US"
+    # Call settings
+    max_call_duration_seconds: 180
+    silence_timeout_seconds: 10
+    end_call_after_silence: true
+  # Rate collection script
+  script:
+    greeting: "Hi, I'm calling to inquire about storage unit rates at your facility."
+    unit_sizes:
+      - "5x5"
+      - "5x10"
+      - "10x10"
+      - "10x15"
+      - "10x20"
+      - "10x30"
+    questions:
+      - "What are your current rates for a {size} unit?"
+      - "Do you have any move-in specials or promotions?"
+      - "Is climate control available?"
+      - "What is the admin fee?"
 
+# ============================================================================
+# SUPABASE CONFIGURATION
+# ============================================================================
+supabase:
+  url: "${SUPABASE_URL}"
+  anon_key: "${SUPABASE_ANON_KEY}"
+  service_role_key: "${SUPABASE_SERVICE_ROLE_KEY}"
+
+# ============================================================================
+# NEON DATABASE CONFIGURATION
+# ============================================================================
+neon:
+  connection_string: "${NEON_CONNECTION_STRING}"
+  database_url: "${NEON_DATABASE_URL}"
+  pool_size: 10
+
+# ============================================================================
+# EXTERNAL API KEYS
+# ============================================================================
+external_apis:
+  census:
+    api_key: "${CENSUS_API_KEY}"
+    base_url: "https://api.census.gov/data"
+  google:
+    api_key: "${GOOGLE_API_KEY}"
+    places_enabled: true
+    geocoding_enabled: true
+  data_gov:
+    api_key: "${DATA_GOV_API_KEY}"
+  fbi:
+    api_key: "${FBI_API_KEY}"
+  recreation_gov:
+    api_key: "${RECREATION_GOV_API_KEY}"
+  firecrawl:
+    api_key: "${FIRECRAWL_API_KEY}"
+  scraper_api:
+    api_key: "${SCRAPER_API_KEY}"

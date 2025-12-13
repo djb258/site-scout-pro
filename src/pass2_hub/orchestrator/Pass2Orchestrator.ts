@@ -74,6 +74,14 @@ import { runVerdictShell, generateVerdict, prepareVaultPayload } from '../spokes
 import { runVaultMapperShell } from '../spokes/VaultMapper';
 import { writeLog, writeData, TABLES } from '../../shared/adapters/LovableAdapter';
 
+// Global configuration
+import {
+  getPass2Config,
+  getFeasibilityDefaults,
+  getVerdictConfig,
+  getCivilConstraintsConfig,
+} from '../../config/GlobalConfig';
+
 export interface Pass2Input {
   opportunity: OpportunityObject;
   acreage?: number;
