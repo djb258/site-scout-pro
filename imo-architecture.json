@@ -1,0 +1,507 @@
+{
+  "$schema": "./config/global-config/imo-ra-schema.json",
+  "model": "IMO-Radial Architecture",
+  "version": "1.1",
+  "instance": "storage-site-scout",
+
+  "centralHub": {
+    "name": "STORAGE_SITE_SCOUT",
+    "type": "root",
+    "description": "Self-storage site scouting and underwriting platform. Dual-Hub Architecture for Pass-1 Recon and Pass-2 Underwriting.",
+    "doctrine_id": "SS.00.00",
+    "metric": {
+      "name": "SITE_VIABILITY_INDEX",
+      "description": "Aggregate health metric combining Pass-1 screening success, Pass-2 underwriting accuracy, and pipeline throughput.",
+      "formula": "weighted_average(pass1_success_rate * 0.3, pass2_accuracy * 0.4, pipeline_health * 0.3)",
+      "thresholds": {
+        "healthy": ">= 0.85",
+        "degraded": ">= 0.65",
+        "critical": "< 0.65"
+      }
+    },
+    "primaryHubs": [
+      {
+        "name": "PASS1_RECON_HUB",
+        "type": "domain",
+        "description": "Pass-1 Exploration/Recon Hub - Market analysis and opportunity screening.",
+        "doctrine_id": "SS.01.00",
+        "weight": 0.35,
+        "subHubs": [
+          {
+            "name": "ZIP_HYDRATION",
+            "type": "spoke",
+            "description": "Fetch ZIP metadata from census data.",
+            "doctrine_id": "SS.01.01",
+            "tools": ["census_api", "lovable_db"],
+            "failures": [
+              {
+                "code": "ZIP_NOT_FOUND",
+                "severity": "error",
+                "description": "ZIP code not found in database",
+                "remediation": "Verify ZIP code format, check census data availability",
+                "autoRepairEnabled": false
+              },
+              {
+                "code": "CENSUS_API_TIMEOUT",
+                "severity": "warning",
+                "description": "Census API request timed out",
+                "remediation": "Retry with exponential backoff, use cached data",
+                "autoRepairEnabled": true
+              }
+            ]
+          },
+          {
+            "name": "RADIUS_BUILDER",
+            "type": "spoke",
+            "description": "Build county radius using Haversine distance.",
+            "doctrine_id": "SS.01.02",
+            "tools": ["haversine_calc", "county_adjacency"],
+            "failures": [
+              {
+                "code": "INVALID_COORDINATES",
+                "severity": "error",
+                "description": "Invalid lat/lng coordinates provided",
+                "remediation": "Geocode from ZIP, validate coordinate bounds",
+                "autoRepairEnabled": true
+              }
+            ]
+          },
+          {
+            "name": "MACRO_DEMAND",
+            "type": "spoke",
+            "description": "Calculate population-based demand (pop × 6 sqft).",
+            "doctrine_id": "SS.01.03",
+            "tools": ["demand_calculator"],
+            "failures": [
+              {
+                "code": "MISSING_POPULATION_DATA",
+                "severity": "error",
+                "description": "Population data not available for ZIP",
+                "remediation": "Fetch from census, use county aggregates",
+                "autoRepairEnabled": true
+              }
+            ]
+          },
+          {
+            "name": "MACRO_SUPPLY",
+            "type": "spoke",
+            "description": "Fetch competitors and calculate supply.",
+            "doctrine_id": "SS.01.04",
+            "tools": ["google_places", "competitor_db"],
+            "failures": [
+              {
+                "code": "NO_COMPETITORS_FOUND",
+                "severity": "warning",
+                "description": "No competitors found in radius",
+                "remediation": "Expand search radius, verify location",
+                "autoRepairEnabled": false
+              },
+              {
+                "code": "GOOGLE_API_QUOTA_EXCEEDED",
+                "severity": "critical",
+                "description": "Google Places API quota exhausted",
+                "remediation": "Wait for quota reset, use cached data",
+                "autoRepairEnabled": false
+              }
+            ]
+          },
+          {
+            "name": "HOTSPOT_SCORING",
+            "type": "spoke",
+            "description": "Generate composite viability score and tier.",
+            "doctrine_id": "SS.01.05",
+            "tools": ["scoring_engine"],
+            "failures": [
+              {
+                "code": "INSUFFICIENT_DATA_FOR_SCORING",
+                "severity": "error",
+                "description": "Not enough data points to calculate score",
+                "remediation": "Ensure demand/supply data available",
+                "autoRepairEnabled": false
+              }
+            ]
+          },
+          {
+            "name": "COMPETITOR_ENRICHMENT",
+            "type": "spoke",
+            "description": "Classify competitors (A/B/C grade, type, est sqft).",
+            "doctrine_id": "SS.01.06",
+            "tools": ["enrichment_engine", "brand_classifier"],
+            "failures": [
+              {
+                "code": "ENRICHMENT_PARTIAL",
+                "severity": "warning",
+                "description": "Some competitors could not be enriched",
+                "remediation": "Log gaps, use defaults for missing data",
+                "autoRepairEnabled": true
+              }
+            ]
+          },
+          {
+            "name": "VALIDATION_GATE",
+            "type": "spoke",
+            "description": "Validate OpportunityObject is complete before Pass-2.",
+            "doctrine_id": "SS.01.07",
+            "tools": ["validator"],
+            "failures": [
+              {
+                "code": "VALIDATION_BLOCKED",
+                "severity": "error",
+                "description": "Pass-1 data incomplete, cannot proceed to Pass-2",
+                "remediation": "Review blockers, complete missing fields",
+                "autoRepairEnabled": false
+              }
+            ]
+          }
+        ],
+        "failures": [
+          {
+            "code": "PASS1_ORCHESTRATOR_FAILURE",
+            "severity": "critical",
+            "description": "Pass-1 orchestrator encountered unrecoverable error",
+            "remediation": "Check logs, restart orchestrator, verify DB connection",
+            "autoRepairEnabled": false
+          }
+        ]
+      },
+      {
+        "name": "PASS2_UNDERWRITING_HUB",
+        "type": "domain",
+        "description": "Pass-2 Underwriting Hub - Detailed site analysis and GO/NOGO verdict.",
+        "doctrine_id": "SS.02.00",
+        "weight": 0.45,
+        "subHubs": [
+          {
+            "name": "ZONING",
+            "type": "spoke",
+            "description": "Fetch zoning regulations and constraints.",
+            "doctrine_id": "SS.02.01",
+            "tools": ["zoning_api", "regrid"],
+            "failures": [
+              {
+                "code": "ZONING_NOT_FOUND",
+                "severity": "warning",
+                "description": "Zoning data not available for parcel",
+                "remediation": "Use county defaults, flag for manual review",
+                "autoRepairEnabled": true
+              },
+              {
+                "code": "ZONING_PROHIBITED",
+                "severity": "critical",
+                "description": "Self-storage not permitted in zone",
+                "remediation": "Flag as WALK, no auto-repair",
+                "autoRepairEnabled": false
+              }
+            ]
+          },
+          {
+            "name": "CIVIL_CONSTRAINTS",
+            "type": "spoke",
+            "description": "Calculate ADA parking, lot coverage, topography, stormwater, bonding.",
+            "doctrine_id": "SS.02.02",
+            "tools": ["civil_calculator", "usgs_dem"],
+            "failures": [
+              {
+                "code": "LOT_COVERAGE_EXCEEDED",
+                "severity": "critical",
+                "description": "Lot coverage exceeds zoning limits",
+                "remediation": "Flag as fatal flaw, recommend WALK",
+                "autoRepairEnabled": false
+              },
+              {
+                "code": "PROHIBITIVE_TOPOGRAPHY",
+                "severity": "critical",
+                "description": "Slope exceeds 15%, site infeasible",
+                "remediation": "Flag as fatal flaw, recommend WALK",
+                "autoRepairEnabled": false
+              }
+            ]
+          },
+          {
+            "name": "PERMITS",
+            "type": "spoke",
+            "description": "Estimate permit timeline and costs.",
+            "doctrine_id": "SS.02.03",
+            "tools": ["permit_db", "buildzoom"],
+            "failures": [
+              {
+                "code": "PERMIT_DATA_UNAVAILABLE",
+                "severity": "warning",
+                "description": "Permit timeline data not available",
+                "remediation": "Use county defaults",
+                "autoRepairEnabled": true
+              }
+            ]
+          },
+          {
+            "name": "PRICING_VERIFICATION",
+            "type": "spoke",
+            "description": "Verify and consolidate street rates.",
+            "doctrine_id": "SS.02.04",
+            "tools": ["rent_benchmarks", "retell_ai"],
+            "failures": [
+              {
+                "code": "INSUFFICIENT_PRICING_DATA",
+                "severity": "warning",
+                "description": "Fewer than 3 pricing observations",
+                "remediation": "Trigger AI calls, use market defaults",
+                "autoRepairEnabled": true
+              }
+            ]
+          },
+          {
+            "name": "FEASIBILITY",
+            "type": "spoke",
+            "description": "Calculate NOI, ROI, DSCR, stabilized value.",
+            "doctrine_id": "SS.02.05",
+            "tools": ["feasibility_engine"],
+            "failures": [
+              {
+                "code": "NEGATIVE_NOI",
+                "severity": "critical",
+                "description": "Projected NOI is negative",
+                "remediation": "Flag as non-viable, recommend WALK",
+                "autoRepairEnabled": false
+              },
+              {
+                "code": "DSCR_BELOW_THRESHOLD",
+                "severity": "error",
+                "description": "DSCR below 1.25 threshold",
+                "remediation": "Adjust inputs, flag risk",
+                "autoRepairEnabled": false
+              }
+            ]
+          },
+          {
+            "name": "VERDICT",
+            "type": "spoke",
+            "description": "Generate GO/CONDITIONAL/WALK decision.",
+            "doctrine_id": "SS.02.06",
+            "tools": ["verdict_engine"],
+            "failures": [
+              {
+                "code": "VERDICT_CALCULATION_ERROR",
+                "severity": "error",
+                "description": "Could not calculate verdict score",
+                "remediation": "Verify all inputs present, check weights",
+                "autoRepairEnabled": true
+              }
+            ]
+          },
+          {
+            "name": "VAULT_MAPPER",
+            "type": "spoke",
+            "description": "Map results to Neon vault schema.",
+            "doctrine_id": "SS.02.07",
+            "tools": ["vault_mapper", "neon_db"],
+            "failures": [
+              {
+                "code": "VAULT_WRITE_FAILED",
+                "severity": "critical",
+                "description": "Failed to write to Neon vault",
+                "remediation": "Check DB connection, retry with backoff",
+                "autoRepairEnabled": true
+              }
+            ]
+          }
+        ],
+        "failures": [
+          {
+            "code": "PASS2_ORCHESTRATOR_FAILURE",
+            "severity": "critical",
+            "description": "Pass-2 orchestrator encountered unrecoverable error",
+            "remediation": "Check logs, restart orchestrator, verify DB connection",
+            "autoRepairEnabled": false
+          },
+          {
+            "code": "VALIDATION_GATE_BLOCKED",
+            "severity": "error",
+            "description": "Pass-1 validation failed, cannot run Pass-2",
+            "remediation": "Review Pass-1 blockers, complete prerequisites",
+            "autoRepairEnabled": false
+          }
+        ]
+      },
+      {
+        "name": "DATA_LAYER_HUB",
+        "type": "domain",
+        "description": "Database and persistence layer - Supabase, Neon, Firebase.",
+        "doctrine_id": "SS.03.00",
+        "weight": 0.20,
+        "subHubs": [
+          {
+            "name": "SUPABASE_ADAPTER",
+            "type": "component",
+            "description": "Supabase/Lovable.DB adapter for pass1_runs, pass2_runs, staging.",
+            "doctrine_id": "SS.03.01",
+            "tools": ["supabase_client"],
+            "failures": [
+              {
+                "code": "SUPABASE_CONNECTION_FAILED",
+                "severity": "critical",
+                "description": "Cannot connect to Supabase",
+                "remediation": "Check credentials, verify service status",
+                "autoRepairEnabled": true
+              }
+            ]
+          },
+          {
+            "name": "NEON_VAULT",
+            "type": "component",
+            "description": "Neon PostgreSQL for STAMPED vault data.",
+            "doctrine_id": "SS.03.02",
+            "tools": ["neon_client", "pg_client"],
+            "failures": [
+              {
+                "code": "NEON_CONNECTION_FAILED",
+                "severity": "critical",
+                "description": "Cannot connect to Neon database",
+                "remediation": "Check connection string, verify service status",
+                "autoRepairEnabled": true
+              }
+            ]
+          },
+          {
+            "name": "FIREBASE_REALTIME",
+            "type": "component",
+            "description": "Firebase for SPVPET realtime working memory.",
+            "doctrine_id": "SS.03.03",
+            "tools": ["firebase_client"],
+            "failures": [
+              {
+                "code": "FIREBASE_AUTH_FAILED",
+                "severity": "critical",
+                "description": "Firebase authentication failed",
+                "remediation": "Check credentials, verify project ID",
+                "autoRepairEnabled": false
+              }
+            ]
+          }
+        ],
+        "failures": [
+          {
+            "code": "DATA_LAYER_DEGRADED",
+            "severity": "error",
+            "description": "One or more data sources unavailable",
+            "remediation": "Activate fallback data sources, queue writes",
+            "autoRepairEnabled": true
+          }
+        ]
+      }
+    ]
+  },
+
+  "failureSystem": {
+    "strategy": "distributed_centralized_reporting",
+    "description": "Each hub tracks local failures but also reports upward to the Master Failure Hub.",
+    "masterFailureHub": {
+      "name": "MASTER_FAILURE_LOG",
+      "type": "core_monitor",
+      "description": "Centralized collection of all failure spokes across the storage site scout system.",
+      "doctrine_id": "SS.00.FL",
+      "table": "master_failure_log",
+      "responsibilities": [
+        "Aggregate failure events from Pass-1 and Pass-2 hubs",
+        "Classify severity and frequency patterns",
+        "Trigger alerts via Slack/email",
+        "Dispatch auto-repair hooks when enabled",
+        "Feed diagnostic learning models",
+        "Report health metrics back to SITE_VIABILITY_INDEX"
+      ],
+      "endpoints": {
+        "report": "/api/failures/report",
+        "query": "/api/failures/query",
+        "dashboard": "/api/failures/dashboard",
+        "health": "/api/failures/health"
+      }
+    },
+    "propagationRules": {
+      "onFailure": "report_to_parent_and_master",
+      "retryPolicy": {
+        "enabled": true,
+        "maxRetries": 3,
+        "backoffMultiplier": 2,
+        "initialDelayMs": 1000
+      },
+      "autoRepairHooks": {
+        "enabled": true,
+        "triggerOn": ["error", "critical"],
+        "cooldownSeconds": 300
+      },
+      "severityLevels": [
+        {"level": "info", "priority": 4, "alerting": false, "autoRepair": false},
+        {"level": "warning", "priority": 3, "alerting": true, "autoRepair": false},
+        {"level": "error", "priority": 2, "alerting": true, "autoRepair": true},
+        {"level": "critical", "priority": 1, "alerting": true, "autoRepair": true}
+      ],
+      "escalation": {
+        "warningToError": {"afterMinutes": 30, "ifUnresolved": true},
+        "errorToCritical": {"afterMinutes": 60, "ifUnresolved": true}
+      }
+    },
+    "selfHealingLoop": {
+      "enabled": true,
+      "description": "Master Failure Hub feeds SITE_VIABILITY_INDEX for adjustment and learning",
+      "components": [
+        "failure_aggregation",
+        "pattern_detection",
+        "auto_repair_dispatch",
+        "learning_feedback",
+        "metric_adjustment"
+      ],
+      "feedbackCycle": {
+        "frequency": "continuous",
+        "batchWindow": "5m",
+        "learningModel": "anomaly_detection"
+      }
+    }
+  },
+
+  "rules": {
+    "recursion": true,
+    "failurePropagation": "bubble_up_to_core_and_master",
+    "metricAggregation": "weighted_sum",
+    "defaultSpokeStyle": "radial",
+    "visualStyle": "sketch",
+    "composioFirst": {
+      "enabled": true,
+      "description": "All external integrations route through Composio MCP first"
+    },
+    "databaseException": {
+      "enabled": true,
+      "description": "Database operations use direct connections (Lovable adapter, pg client)",
+      "services": ["neon", "supabase", "firebase_firestore"]
+    }
+  },
+
+  "visualization": {
+    "layout": "radial",
+    "style": "sketch",
+    "showFailures": true,
+    "showMetrics": true,
+    "showMasterFailureHub": true,
+    "colorMapping": {
+      "core": "#FFD700",
+      "hub": "#8FD3FE",
+      "subHub": "#C2F784",
+      "failure": "#FF6B6B",
+      "fallback": "#FFA07A",
+      "masterFailure": "#DC143C",
+      "autoRepair": "#32CD32"
+    }
+  },
+
+  "meta": {
+    "framework": "IMO-Creator",
+    "paradigm": "IMO-RA (Interconnected Modular Objects: Radial Architecture)",
+    "project": "Storage Site Scout Pro",
+    "repo": "site-scout-pro",
+    "created": "2025-12-12",
+    "updated": "2025-12-12",
+    "author": "Barton Enterprises / SVG Agency",
+    "inheritance": {
+      "source": "imo-creator/global-config/imo-ra-schema.json",
+      "auto_validate": true
+    }
+  }
+}

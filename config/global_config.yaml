@@ -492,3 +492,149 @@ external_apis:
     api_key: "${FIRECRAWL_API_KEY}"
   scraper_api:
     api_key: "${SCRAPER_API_KEY}"
+
+# ============================================================================
+# IMO-RA (RADIAL ARCHITECTURE) CONFIGURATION
+# ============================================================================
+imo_ra:
+  enabled: true
+  version: "1.1"
+  paradigm: "IMO-RA (Interconnected Modular Objects: Radial Architecture)"
+  schema_file: "config/global-config/imo-ra-schema.json"
+  architecture_file: "imo-architecture.json"
+
+  # Architecture Principles
+  principles:
+    - "Every repo, service, or domain is a hub (wheel)"
+    - "Each hub can contain sub-hubs recursively (fractal wheels-within-wheels)"
+    - "Failures branch off every hub as spokes"
+    - "All failures propagate to the Master Failure Hub"
+    - "All hubs feed metrics back to central SITE_VIABILITY_INDEX"
+    - "Database operations bypass MCP (direct connections)"
+    - "Self-healing loop: Failure -> Master Hub -> Learning -> Auto-repair"
+
+  # Master Failure Hub Configuration
+  failure_system:
+    enabled: true
+    strategy: "distributed_centralized_reporting"
+    master_failure_hub:
+      name: "MASTER_FAILURE_LOG"
+      doctrine_id: "SS.00.FL"
+      table: "master_failure_log"
+      responsibilities:
+        - "Aggregate failure events from Pass-1 and Pass-2 hubs"
+        - "Classify severity and frequency patterns"
+        - "Trigger alerts via Slack/email"
+        - "Dispatch auto-repair hooks when enabled"
+        - "Feed diagnostic learning models"
+        - "Report health metrics back to SITE_VIABILITY_INDEX"
+
+    # Propagation rules
+    propagation:
+      on_failure: "report_to_parent_and_master"
+      retry_policy:
+        enabled: true
+        max_retries: 3
+        backoff_multiplier: 2
+        initial_delay_ms: 1000
+      auto_repair:
+        enabled: true
+        trigger_on:
+          - error
+          - critical
+        cooldown_seconds: 300
+
+    # Severity levels
+    severity_levels:
+      - level: "info"
+        priority: 4
+        alerting: false
+        auto_repair: false
+      - level: "warning"
+        priority: 3
+        alerting: true
+        auto_repair: false
+      - level: "error"
+        priority: 2
+        alerting: true
+        auto_repair: true
+      - level: "critical"
+        priority: 1
+        alerting: true
+        auto_repair: true
+
+    # Escalation rules
+    escalation:
+      warning_to_error:
+        after_minutes: 30
+        if_unresolved: true
+      error_to_critical:
+        after_minutes: 60
+        if_unresolved: true
+
+  # Self-healing loop
+  self_healing:
+    enabled: true
+    components:
+      - failure_aggregation
+      - pattern_detection
+      - auto_repair_dispatch
+      - learning_feedback
+      - metric_adjustment
+    feedback_cycle:
+      frequency: "continuous"
+      batch_window: "5m"
+      learning_model: "anomaly_detection"
+
+  # Visualization settings
+  visualization:
+    layout: "radial"
+    style: "sketch"
+    show_failures: true
+    show_metrics: true
+    color_scheme:
+      core: "#FFD700"
+      hub: "#8FD3FE"
+      sub_hub: "#C2F784"
+      failure: "#FF6B6B"
+      master_failure: "#DC143C"
+      auto_repair: "#32CD32"
+
+# ============================================================================
+# CTB DOCTRINE CONFIGURATION
+# ============================================================================
+ctb_doctrine:
+  enabled: true
+  version: "1.3.3"
+  enforcement_mode: "standard"
+
+  # Required doctrine acronyms
+  acronyms:
+    IMO: "Input-Middle-Output"
+    CTB: "Christmas Tree Backbone"
+    HEIR: "Hierarchy, Enforcement, Integration, Reporting"
+    ORBT: "Operate, Repair, Build, Train"
+    STAMPED: "Structured Table Architecture for Managed Persistent Enterprise Data"
+    SPVPET: "Structured Processing Vault for Persistent Event Tracking"
+    STACKED: "Structured Table Architecture for Calculated Knowledge & Event Data"
+
+  # Altitude levels
+  altitude_levels:
+    - level: 60000
+      name: "Strategic Constellation"
+      scope: "Company-wide doctrine, cross-LLC alignment"
+    - level: 40000
+      name: "Program Constellation"
+      scope: "Multi-system initiatives, capability roadmaps"
+    - level: 30000
+      name: "Engineering Hangar"
+      scope: "Architecture, repo-of-repos, standards"
+    - level: 20000
+      name: "System Blueprint"
+      scope: "Service boundaries, contracts, schemas"
+    - level: 10000
+      name: "Workflow/Module"
+      scope: "Pipelines, jobs, subagents, tool wiring"
+    - level: 5000
+      name: "Operational Runbook"
+      scope: "Concrete tasks, endpoints, migrations"
