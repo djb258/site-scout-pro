@@ -107,6 +107,7 @@ pass2_hub:
     - PricingVerification
     - Momentum
     - FusionDemand
+    - HousingPipeline
     - CompetitivePressure
     - Feasibility
     - ReverseFeasibility
