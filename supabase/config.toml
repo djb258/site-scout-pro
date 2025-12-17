@@ -29,3 +29,15 @@ verify_jwt = false
 
 [functions.syncZipsFromNeon]
 verify_jwt = false
+
+[functions.hub0_run_radar]
+verify_jwt = false
+
+[functions.hub0_abort_scan]
+verify_jwt = false
+
+[functions.hub0_promote]
+verify_jwt = false
+
+[functions.hub0_log_event]
+verify_jwt = false
