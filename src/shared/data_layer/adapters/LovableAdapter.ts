@@ -1,15 +1,39 @@
 /**
- * LOVABLE COMPATIBILITY LAYER
+ * LOVABLE ADAPTER (SUPABASE COMPATIBILITY LAYER)
+ * Doctrine ID: SS.DL.01
  *
- * Provides database abstraction for Lovable.dev's @lovable/cloud-db
- * All orchestrators and edge functions should use these helpers
- * instead of direct database calls.
+ * ============================================================================
+ * ALLOWED USAGE (DOCTRINE-LOCKED)
+ * ============================================================================
  *
- * IMPORTANT: This adapter handles the Cloudflare Worker limitations:
+ * This adapter provides database abstraction for Lovable.dev's @lovable/cloud-db
+ * which maps to Supabase as the underlying storage.
+ *
+ * ALLOWED CALLERS:
+ * - Pass 0 Radar Hub (read/write to scratchpad tables ONLY)
+ * - Pass 1 Structure Hub (read/write)
+ * - Pass 1.5 Rent Recon Hub (read/write)
+ * - Pass 2 Underwriting Hub (read/write)
+ * - Pass 3 Design Hub (read/write)
+ * - UI components (read-only queries)
+ *
+ * TABLES MANAGED:
+ * - pass1_runs, pass1_results (scratchpad)
+ * - pass2_runs, pass2_results (scratchpad)
+ * - staging_payload (intermediate storage)
+ * - engine_logs (audit trail)
+ * - rate_observations (Pass 1.5 rate data)
+ *
+ * THIS ADAPTER DOES NOT:
+ * - Write to Neon vault (use NeonAdapter via save_to_vault edge function)
+ * - Handle Firebase (Firebase is NOT used in this repository)
+ *
+ * CLOUDFLARE WORKER CONSTRAINTS:
  * - No dynamic imports
  * - No Node.js APIs
  * - All returns must be JSON-serializable
  * - No filesystem access
+ * ============================================================================
  */
 
 // Type definitions for @lovable/cloud-db

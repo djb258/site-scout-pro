@@ -6,7 +6,7 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-// import { Pass1Orchestrator } from '@/pass1_hub/orchestrator/Pass1Orchestrator';
+// import { Pass1Orchestrator } from '@/pass1/structure_hub/orchestrator/Pass1Orchestrator';
 // import { generateProcessId } from '@/shared/failures/masterFailureLogger';
 
 describe('Pass1Orchestrator', () => {

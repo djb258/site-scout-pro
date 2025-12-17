@@ -9,7 +9,13 @@
       "Bash(echo:*)",
       "Bash(node:*)",
       "Bash(npx tsc --noEmit)",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nComplete 5-Pass Hub Architecture with Documentation and System Invariants\n\nHub Architecture (5 Passes, 39 Spokes):\n- Pass-0 Radar Hub: 6 spokes for momentum signal aggregation\n- Pass-1 Structure Hub: 8 spokes for market reconnaissance  \n- Pass-1.5 Rent Recon Hub: 5 spokes for rate evidence collection\n- Pass-2 Underwriting Hub: 11 spokes for site-specific feasibility\n- Pass-3 Design/Calculator Hub: 9 spokes for pro forma modeling\n\nEdge Functions:\n- start_pass0.ts, start_pass1.ts, start_pass15.ts, start_pass2.ts, start_pass3.ts\n- All integrate with Master Failure Log\n- Support dry_run mode for testing\n\nMaster Failure Logger:\n- Dual-sink architecture (Console always ON, Supabase environment-controlled)\n- Pass 0 logs to console only (edge environment)\n- Pass 1-3 log to both sinks when configured\n- Pass-specific convenience functions\n\nDocumentation:\n- 6 PRDs (one per hub + Data Layer)\n- 17 ADRs (including FEMA, USGS, Neon, Supabase)\n- 6 compliance checklists\n- PR templates for hub and spoke changes\n- System invariants documented in FIX_REPORT\n\nSystem Invariants (Non-Negotiable):\n- Pass 0 CANNOT write to Neon under any condition\n- No Neon imports permitted in Pass 0 code\n- Edge functions MUST NOT persist, promote, or vault data\n- All promotion decisions occur in Pass 1-3 orchestrators only\n\nTest Infrastructure:\n- Vitest configuration with coverage\n- Test skeletons for all 5 passes (250+ test stubs)\n- Shared test utilities and mocks\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n)\")",
+      "Bash(chmod:*)",
+      "Bash(./scripts/check_pass0_neon_ban.sh:*)",
+      "Bash(./scripts/check_prd_ownership.sh:*)",
+      "Bash(./scripts/check_cross_pass_imports.sh:*)",
+      "Bash(npx vitest run --reporter=verbose)"
     ],
     "deny": [],
     "ask": []

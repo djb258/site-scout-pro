@@ -1,0 +1,89 @@
+# ============================================================================
+# ARCHITECTURE GUARD WORKFLOW
+# ============================================================================
+#
+# This workflow enforces architectural constraints on every push/PR:
+#
+# 1. Pass 0 Neon Ban - Ensures Pass 0 cannot access Neon database
+# 2. PRD Ownership - Ensures all hubs reference their PRD
+# 3. Cross-Pass Imports - Prevents direct imports between passes
+#
+# DOCTRINE: These are hard constraints, not guidelines.
+#           Violations block merge.
+#
+# ============================================================================
+
+name: Architecture Guards
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'src/**'
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'src/**'
+
+jobs:
+  pass0-neon-ban:
+    name: Pass 0 Neon Ban Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run Pass 0 Neon Ban Check
+        run: |
+          chmod +x scripts/check_pass0_neon_ban.sh
+          ./scripts/check_pass0_neon_ban.sh
+
+  prd-ownership:
+    name: PRD Ownership Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run PRD Ownership Check
+        run: |
+          chmod +x scripts/check_prd_ownership.sh
+          ./scripts/check_prd_ownership.sh
+
+  cross-pass-imports:
+    name: Cross-Pass Import Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run Cross-Pass Import Check
+        run: |
+          chmod +x scripts/check_cross_pass_imports.sh
+          ./scripts/check_cross_pass_imports.sh
+
+  summary:
+    name: Architecture Guard Summary
+    runs-on: ubuntu-latest
+    needs: [pass0-neon-ban, prd-ownership, cross-pass-imports]
+    if: always()
+    steps:
+      - name: Check Results
+        run: |
+          echo "=============================================="
+          echo "ARCHITECTURE GUARD SUMMARY"
+          echo "=============================================="
+          echo ""
+          echo "Pass 0 Neon Ban: ${{ needs.pass0-neon-ban.result }}"
+          echo "PRD Ownership: ${{ needs.prd-ownership.result }}"
+          echo "Cross-Pass Imports: ${{ needs.cross-pass-imports.result }}"
+          echo ""
+          if [[ "${{ needs.pass0-neon-ban.result }}" == "failure" ]] || \
+             [[ "${{ needs.prd-ownership.result }}" == "failure" ]] || \
+             [[ "${{ needs.cross-pass-imports.result }}" == "failure" ]]; then
+            echo "ARCHITECTURE VIOLATIONS DETECTED"
+            echo "Fix all violations before merging."
+            exit 1
+          else
+            echo "All architecture guards passed."
+          fi
