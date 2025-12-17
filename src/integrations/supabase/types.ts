@@ -98,6 +98,36 @@ export type Database = {
         }
         Relationships: []
       }
+      hub0_event_log: {
+        Row: {
+          action: string
+          created_at: string | null
+          error: string | null
+          id: string
+          metadata: Json | null
+          process_id: string
+          status: string
+        }
+        Insert: {
+          action: string
+          created_at?: string | null
+          error?: string | null
+          id?: string
+          metadata?: Json | null
+          process_id: string
+          status: string
+        }
+        Update: {
+          action?: string
+          created_at?: string | null
+          error?: string | null
+          id?: string
+          metadata?: Json | null
+          process_id?: string
+          status?: string
+        }
+        Relationships: []
+      }
       pass1_results: {
         Row: {
           analysis_summary: Json | null
