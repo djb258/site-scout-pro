@@ -41,3 +41,12 @@ verify_jwt = false
 
 [functions.hub0_log_event]
 verify_jwt = false
+
+[functions.hub1_run_pass1]
+verify_jwt = false
+
+[functions.hub1_log_event]
+verify_jwt = false
+
+[functions.hub1_cleanup_ttl]
+verify_jwt = false

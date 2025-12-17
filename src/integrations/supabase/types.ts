@@ -128,12 +128,97 @@ export type Database = {
         }
         Relationships: []
       }
+      hub1_pass1_error_log: {
+        Row: {
+          created_at: string | null
+          error_code: string
+          error_message: string | null
+          fatal: boolean
+          id: string
+          metadata: Json | null
+          process_id: string
+          recoverable: boolean
+          run_id: string
+          step: string
+          ttl_expires_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          error_code: string
+          error_message?: string | null
+          fatal?: boolean
+          id?: string
+          metadata?: Json | null
+          process_id?: string
+          recoverable?: boolean
+          run_id: string
+          step: string
+          ttl_expires_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          error_code?: string
+          error_message?: string | null
+          fatal?: boolean
+          id?: string
+          metadata?: Json | null
+          process_id?: string
+          recoverable?: boolean
+          run_id?: string
+          step?: string
+          ttl_expires_at?: string | null
+        }
+        Relationships: []
+      }
+      hub1_pass1_run_log: {
+        Row: {
+          competition_confidence: string | null
+          created_at: string | null
+          id: string
+          metadata: Json | null
+          process_id: string
+          run_id: string
+          schema_version: string
+          scoring_weights: Json
+          status: string
+          step: string
+          ttl_expires_at: string | null
+        }
+        Insert: {
+          competition_confidence?: string | null
+          created_at?: string | null
+          id?: string
+          metadata?: Json | null
+          process_id?: string
+          run_id: string
+          schema_version?: string
+          scoring_weights?: Json
+          status: string
+          step: string
+          ttl_expires_at?: string | null
+        }
+        Update: {
+          competition_confidence?: string | null
+          created_at?: string | null
+          id?: string
+          metadata?: Json | null
+          process_id?: string
+          run_id?: string
+          schema_version?: string
+          scoring_weights?: Json
+          status?: string
+          step?: string
+          ttl_expires_at?: string | null
+        }
+        Relationships: []
+      }
       pass1_results: {
         Row: {
           analysis_summary: Json | null
           anchors: Json | null
           competitors: Json | null
           created_at: string
+          deprecated: boolean | null
           housing_signals: Json | null
           id: string
           industrial_signals: Json | null
@@ -147,6 +232,7 @@ export type Database = {
           anchors?: Json | null
           competitors?: Json | null
           created_at?: string
+          deprecated?: boolean | null
           housing_signals?: Json | null
           id?: string
           industrial_signals?: Json | null
@@ -160,6 +246,7 @@ export type Database = {
           anchors?: Json | null
           competitors?: Json | null
           created_at?: string
+          deprecated?: boolean | null
           housing_signals?: Json | null
           id?: string
           industrial_signals?: Json | null
@@ -181,6 +268,7 @@ export type Database = {
       pass1_runs: {
         Row: {
           created_at: string
+          deprecated: boolean | null
           gemini_anchors: Json | null
           gemini_facilities: Json | null
           gemini_housing: Json | null
@@ -195,6 +283,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          deprecated?: boolean | null
           gemini_anchors?: Json | null
           gemini_facilities?: Json | null
           gemini_housing?: Json | null
@@ -209,6 +298,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          deprecated?: boolean | null
           gemini_anchors?: Json | null
           gemini_facilities?: Json | null
           gemini_housing?: Json | null
