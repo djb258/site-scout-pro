@@ -1,626 +1,339 @@
-/**
- * PASS 2 ORCHESTRATOR
- *
- * Coordinates all Pass 2 spokes in sequence using new shell interfaces:
- *   1. runZoningShell() - Fetch zoning regulations
- *   2. runPermitShell() - Fetch permit requirements
- *   3. runPricingShell() - Verify and consolidate pricing
- *   4. runMomentumShell() - Combined industrial + housing analysis
- *   5. runFusionShell() - Calculate fusion demand score
- *   6. runCompPressureShell() - Analyze competitive pressure
- *   7. runFeasibilityShell() - Calculate financial feasibility
- *   8. runReverseShell() - Calculate required rents / max land
- *   9. runVerdictShell() - Generate BUY/BUILD/WALK decision
- *  10. prepareVaultPayload() - Build vault-ready payload
- *
- * Input: OpportunityObject from Pass 1
- * Output: Pass2Output with all typed spoke results
- */
+// Pass2Orchestrator.ts - PASS 2 — UNDERWRITING HUB
+// Doctrine ID: SS.02.00
+// Purpose: Site-specific underwriting and feasibility analysis
+// Spokes: Zoning, CivilConstraints, PermitsStatic, PricingVerification, FusionDemand, CompetitivePressure, Feasibility, ReverseFeasibility, MomentumReader, Verdict, VaultMapper
 
-import type {
-  OpportunityObject,
-  Pass2Results,
-  FinalVerdict,
-} from '../../shared/OpportunityObject';
-
-// Validation import
-import {
-  validatePass1ToPass2,
-  createValidationSummary,
-  type Pass1ToPass2Validation,
-} from '../../pipeline/Pass1ToPass2Validator';
-
-// New typed imports from pass2_types
-import type {
-  Pass2Output as TypedPass2Output,
-  ZoningResult,
-  PermitResult,
-  PricingVerificationResult,
-  FusionDemandResult,
-  CompetitivePressureResult,
-  CivilConstraintResult,
-  FeasibilityResult,
-  ReverseFeasibilityResult,
-  MomentumResult,
-  VerdictResult,
-  VaultPayload,
-} from '../types/pass2_types';
-import {
-  createStubZoning,
-  createStubPermit,
-  createStubPricing,
-  createStubFusion,
-  createStubCompetitivePressure,
-  createStubCivilConstraints,
-  createStubFeasibility,
-  createStubReverseFeasibility,
-  createStubMomentum,
-  createStubVerdict,
-  createStubVaultPayload,
-} from '../types/pass2_types';
-
-// New shell imports
-import { runZoningShell, runZoning } from '../spokes/Zoning';
-import { runPermitShell, runPermits } from '../spokes/Permits';
-import { runPricingShell, runPricingVerification, checkPricingExists } from '../spokes/PricingVerification';
-import { runFusionShell, runFusionDemand } from '../spokes/FusionDemand';
-import { runCompPressureShell, runCompPressure } from '../spokes/CompetitivePressure';
-import { runCivilConstraintsShell } from '../spokes/CivilConstraints';
-import { runFeasibilityShell, runFeasibility } from '../spokes/Feasibility';
-import { runReverseShell, runReverseFeasibility } from '../spokes/ReverseFeasibility';
-import { runMomentumShell, runIndustrialMomentum } from '../spokes/Momentum';
-import { runHousingPipeline } from '../spokes/HousingPipeline';
-import { runVerdictShell, generateVerdict, prepareVaultPayload } from '../spokes/Verdict';
-import { runVaultMapperShell } from '../spokes/VaultMapper';
-import { writeLog, writeData, TABLES } from '../../shared/adapters/LovableAdapter';
-
-// Global configuration
-import {
-  getPass2Config,
-  getFeasibilityDefaults,
-  getVerdictConfig,
-  getCivilConstraintsConfig,
-} from '../../config/GlobalConfig';
+import { runZoning } from '../spokes/Zoning';
+import { runCivilConstraints } from '../spokes/CivilConstraints';
+import { runPermitsStatic } from '../spokes/PermitsStatic';
+import { runPricingVerification } from '../spokes/PricingVerification';
+import { runFusionDemand } from '../spokes/FusionDemand';
+import { runCompetitivePressure } from '../spokes/CompetitivePressure';
+import { runFeasibility } from '../spokes/Feasibility';
+import { runReverseFeasibility } from '../spokes/ReverseFeasibility';
+import { runMomentumReader } from '../spokes/MomentumReader';
+import { runVerdict } from '../spokes/Verdict';
+import { runVaultMapper } from '../spokes/VaultMapper';
 
 export interface Pass2Input {
-  opportunity: OpportunityObject;
+  pass1RunId: string;
+  pass15RunId?: string;
+  targetZip: string;
+  targetState: string;
+  parcelId?: string;
+  address?: string;
+  latitude?: number;
+  longitude?: number;
   acreage?: number;
-  land_cost_per_acre?: number;
-  /** Skip validation gate (for testing/override) */
-  skip_validation?: boolean;
 }
 
-// Legacy output type (for backwards compatibility)
 export interface Pass2Output {
-  success: boolean;
-  opportunity: OpportunityObject | null;
-  error?: string;
+  pass: 'PASS2';
+  runId: string;
+  timestamp: string;
+  input: Pass2Input;
+  zoning: ZoningOutput | null;
+  civilConstraints: CivilConstraintsOutput | null;
+  permitsStatic: PermitsStaticOutput | null;
+  pricingVerification: PricingVerificationOutput | null;
+  fusionDemand: FusionDemandOutput | null;
+  competitivePressure: CompetitivePressureOutput | null;
+  feasibility: FeasibilityOutput | null;
+  reverseFeasibility: ReverseFeasibilityOutput | null;
+  momentumReader: MomentumReaderOutput | null;
+  verdict: VerdictOutput | null;
+  vaultMapper: VaultMapperOutput | null;
+  finalVerdict: 'GO' | 'NO_GO' | 'MAYBE';
+  verdictScore: number;
+  status: 'complete' | 'partial' | 'failed';
+  errors: string[];
 }
 
-/**
- * NEW Pass 2 Orchestrator Shell
- *
- * Uses new typed shell interfaces for all spokes.
- * Includes Pass-1 → Pass-2 validation gate.
- * Civil constraints run EARLY and feed into feasibility + verdict.
- * Returns TypedPass2Output with all results.
- */
-export async function runPass2Shell(input: Pass2Input): Promise<TypedPass2Output> {
-  const { opportunity, acreage = 3, land_cost_per_acre = 150000, skip_validation = false } = input;
-  const timestamp = Date.now();
-  const runId = `p2_${opportunity.identity.zip}_${timestamp}`;
+export interface ZoningOutput {
+  spokeId: 'SS.02.01';
+  zoningCode: string | null;
+  zoningDescription: string | null;
+  storageAllowed: boolean | null;
+  conditionalUse: boolean;
+  setbacks: { front: number; side: number; rear: number } | null;
+  maxHeight: number | null;
+  maxCoverage: number | null;
+  timestamp: string;
+}
 
-  console.log(`[PASS2_ORCHESTRATOR] Starting Pass 2 Shell for ZIP: ${opportunity.identity.zip}`);
+export interface CivilConstraintsOutput {
+  spokeId: 'SS.02.02';
+  floodZone: string | null;
+  wetlands: boolean | null;
+  slope: number | null;
+  soilType: string | null;
+  utilities: { water: boolean; sewer: boolean; electric: boolean; gas: boolean };
+  constraints: string[];
+  timestamp: string;
+}
 
-  try {
-    // =========================================================================
-    // STEP 0: VALIDATION GATE - Verify Pass-1 data is complete
-    // =========================================================================
-    console.log('[PASS2_ORCHESTRATOR] Step 0: Running validation gate...');
-    const validation = validatePass1ToPass2(opportunity);
-    console.log(`[PASS2_ORCHESTRATOR] ${createValidationSummary(validation)}`);
+export interface PermitsStaticOutput {
+  spokeId: 'SS.02.03';
+  recentPermits: PermitRecord[];
+  avgPermitTime: number | null;
+  jurisdictionDifficulty: 'easy' | 'moderate' | 'difficult' | null;
+  timestamp: string;
+}
 
-    if (!validation.ok && !skip_validation) {
-      console.error('[PASS2_ORCHESTRATOR] Validation FAILED. Blockers:', validation.blockers);
+export interface PermitRecord {
+  permitNumber: string;
+  type: string;
+  status: string;
+  issuedDate: string | null;
+  value: number | null;
+}
 
-      await writeLog('pass2_validation_failed', {
-        run_id: runId,
-        zip: opportunity.identity.zip,
-        blockers: validation.blockers,
-        warnings: validation.warnings,
-        validation_score: validation.validation_meta.validation_score,
+export interface PricingVerificationOutput {
+  spokeId: 'SS.02.04';
+  verifiedRates: VerifiedRate[];
+  marketRateAvg: Record<string, number>;
+  confidenceLevel: 'high' | 'medium' | 'low';
+  timestamp: string;
+}
+
+export interface VerifiedRate {
+  unitSize: string;
+  rate: number;
+  source: string;
+}
+
+export interface FusionDemandOutput {
+  spokeId: 'SS.02.05';
+  fusedDemandScore: number;
+  populationDensity: number | null;
+  householdGrowth: number | null;
+  incomeLevel: number | null;
+  demandDrivers: string[];
+  timestamp: string;
+}
+
+export interface CompetitivePressureOutput {
+  spokeId: 'SS.02.06';
+  pressureScore: number;
+  nearestCompetitorMiles: number | null;
+  competitorsIn3Miles: number;
+  competitorsIn5Miles: number;
+  marketSaturation: 'low' | 'medium' | 'high';
+  timestamp: string;
+}
+
+export interface FeasibilityOutput {
+  spokeId: 'SS.02.07';
+  feasible: boolean;
+  estimatedUnits: number;
+  estimatedSqFt: number;
+  estimatedRevenue: number;
+  estimatedNOI: number;
+  capRate: number;
+  dscr: number;
+  timestamp: string;
+}
+
+export interface ReverseFeasibilityOutput {
+  spokeId: 'SS.02.08';
+  maxLandPrice: number;
+  breakEvenOccupancy: number;
+  sensitivityAnalysis: SensitivityResult[];
+  timestamp: string;
+}
+
+export interface SensitivityResult {
+  variable: string;
+  baseCase: number;
+  pessimistic: number;
+  optimistic: number;
+}
+
+export interface MomentumReaderOutput {
+  spokeId: 'SS.02.09';
+  momentumScore: number | null;
+  trendDirection: 'up' | 'down' | 'stable' | null;
+  pass0RunId: string | null;
+  timestamp: string;
+}
+
+export interface VerdictOutput {
+  spokeId: 'SS.02.10';
+  verdict: 'GO' | 'NO_GO' | 'MAYBE';
+  score: number;
+  weights: Record<string, number>;
+  fatalFlaws: string[];
+  strengths: string[];
+  weaknesses: string[];
+  recommendation: string;
+  timestamp: string;
+}
+
+export interface VaultMapperOutput {
+  spokeId: 'SS.02.11';
+  vaultId: string;
+  savedToVault: boolean;
+  stampedFields: string[];
+  timestamp: string;
+}
+
+export class Pass2Orchestrator {
+  private runId: string;
+  private errors: string[] = [];
+
+  constructor() {
+    this.runId = 'P2-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+  }
+
+  async run(input: Pass2Input): Promise<Pass2Output> {
+    console.log('[PASS2_UNDERWRITING_HUB] Starting run ' + this.runId);
+    const startTime = Date.now();
+
+    let zoning: ZoningOutput | null = null;
+    let civilConstraints: CivilConstraintsOutput | null = null;
+    let permitsStatic: PermitsStaticOutput | null = null;
+    let pricingVerification: PricingVerificationOutput | null = null;
+    let fusionDemand: FusionDemandOutput | null = null;
+    let competitivePressure: CompetitivePressureOutput | null = null;
+    let feasibility: FeasibilityOutput | null = null;
+    let reverseFeasibility: ReverseFeasibilityOutput | null = null;
+    let momentumReader: MomentumReaderOutput | null = null;
+    let verdict: VerdictOutput | null = null;
+    let vaultMapper: VaultMapperOutput | null = null;
+
+    // SPOKE 1: Zoning (SS.02.01)
+    try {
+      console.log('[PASS2_UNDERWRITING_HUB] Running Zoning spoke...');
+      zoning = await runZoning({ parcelId: input.parcelId, address: input.address, state: input.targetState });
+    } catch (err) {
+      this.errors.push('Zoning failed: ' + err);
+    }
+
+    // SPOKE 2: CivilConstraints (SS.02.02)
+    try {
+      console.log('[PASS2_UNDERWRITING_HUB] Running CivilConstraints spoke...');
+      civilConstraints = await runCivilConstraints({ latitude: input.latitude, longitude: input.longitude, parcelId: input.parcelId });
+    } catch (err) {
+      this.errors.push('CivilConstraints failed: ' + err);
+    }
+
+    // SPOKE 3: PermitsStatic (SS.02.03)
+    try {
+      console.log('[PASS2_UNDERWRITING_HUB] Running PermitsStatic spoke...');
+      permitsStatic = await runPermitsStatic({ address: input.address, zip: input.targetZip, state: input.targetState });
+    } catch (err) {
+      this.errors.push('PermitsStatic failed: ' + err);
+    }
+
+    // SPOKE 4: PricingVerification (SS.02.04)
+    try {
+      console.log('[PASS2_UNDERWRITING_HUB] Running PricingVerification spoke...');
+      pricingVerification = await runPricingVerification({ pass15RunId: input.pass15RunId, zip: input.targetZip });
+    } catch (err) {
+      this.errors.push('PricingVerification failed: ' + err);
+    }
+
+    // SPOKE 5: FusionDemand (SS.02.05)
+    try {
+      console.log('[PASS2_UNDERWRITING_HUB] Running FusionDemand spoke...');
+      fusionDemand = await runFusionDemand({ zip: input.targetZip, state: input.targetState, pass1RunId: input.pass1RunId });
+    } catch (err) {
+      this.errors.push('FusionDemand failed: ' + err);
+    }
+
+    // SPOKE 6: CompetitivePressure (SS.02.06)
+    try {
+      console.log('[PASS2_UNDERWRITING_HUB] Running CompetitivePressure spoke...');
+      competitivePressure = await runCompetitivePressure({ latitude: input.latitude, longitude: input.longitude, pass1RunId: input.pass1RunId });
+    } catch (err) {
+      this.errors.push('CompetitivePressure failed: ' + err);
+    }
+
+    // SPOKE 7: Feasibility (SS.02.07)
+    try {
+      console.log('[PASS2_UNDERWRITING_HUB] Running Feasibility spoke...');
+      feasibility = await runFeasibility({
+        acreage: input.acreage,
+        zoning,
+        civilConstraints,
+        pricingVerification,
+        fusionDemand,
       });
-
-      // Return error result with validation details
-      return {
-        success: false,
-        runId,
-        timestamp,
-        zoning: createStubZoning(),
-        permits: createStubPermit(),
-        pricing: createStubPricing(),
-        fusion: createStubFusion(),
-        comp: createStubCompetitivePressure(),
-        civil: createStubCivilConstraints(),
-        feasibility: createStubFeasibility(),
-        reverse: createStubReverseFeasibility(),
-        momentum: createStubMomentum(),
-        verdict: createStubVerdict(),
-        vaultPayload: createStubVaultPayload(),
-        error: `Validation failed: ${validation.blockers.join('; ')}`,
-        validation,
-      };
+    } catch (err) {
+      this.errors.push('Feasibility failed: ' + err);
     }
 
-    if (skip_validation && !validation.ok) {
-      console.warn(`[PASS2_ORCHESTRATOR] Validation skipped despite ${validation.blockers.length} blockers`);
+    // SPOKE 8: ReverseFeasibility (SS.02.08)
+    try {
+      console.log('[PASS2_UNDERWRITING_HUB] Running ReverseFeasibility spoke...');
+      reverseFeasibility = await runReverseFeasibility({ feasibility, competitivePressure });
+    } catch (err) {
+      this.errors.push('ReverseFeasibility failed: ' + err);
     }
 
-    // Log warnings even if validation passed
-    if (validation.warnings.length > 0) {
-      console.warn(`[PASS2_ORCHESTRATOR] Validation warnings: ${validation.warnings.join('; ')}`);
+    // SPOKE 9: MomentumReader (SS.02.09)
+    try {
+      console.log('[PASS2_UNDERWRITING_HUB] Running MomentumReader spoke...');
+      momentumReader = await runMomentumReader({ zip: input.targetZip, state: input.targetState });
+    } catch (err) {
+      this.errors.push('MomentumReader failed: ' + err);
     }
 
-    // =========================================================================
-    // STEP 1: Run Zoning Analysis
-    // =========================================================================
-    console.log('[PASS2_ORCHESTRATOR] Step 1: Running zoning shell...');
-    const zoning = await runZoningShell(opportunity);
+    // SPOKE 10: Verdict (SS.02.10)
+    try {
+      console.log('[PASS2_UNDERWRITING_HUB] Running Verdict spoke...');
+      verdict = await runVerdict({
+        zoning, civilConstraints, permitsStatic, pricingVerification,
+        fusionDemand, competitivePressure, feasibility, reverseFeasibility, momentumReader,
+      });
+    } catch (err) {
+      this.errors.push('Verdict failed: ' + err);
+    }
 
-    // =========================================================================
-    // STEP 2: Run Permit Analysis
-    // =========================================================================
-    console.log('[PASS2_ORCHESTRATOR] Step 2: Running permit shell...');
-    const permits = await runPermitShell(opportunity);
+    // SPOKE 11: VaultMapper (SS.02.11)
+    try {
+      console.log('[PASS2_UNDERWRITING_HUB] Running VaultMapper spoke...');
+      vaultMapper = await runVaultMapper({
+        runId: this.runId,
+        input,
+        verdict,
+        allSpokeOutputs: {
+          zoning, civilConstraints, permitsStatic, pricingVerification,
+          fusionDemand, competitivePressure, feasibility, reverseFeasibility, momentumReader,
+        },
+      });
+    } catch (err) {
+      this.errors.push('VaultMapper failed: ' + err);
+    }
 
-    // =========================================================================
-    // STEP 3: Run Civil Constraints Analysis (NEW - EARLY)
-    // Must run before feasibility to provide cost adjustments
-    // =========================================================================
-    console.log('[PASS2_ORCHESTRATOR] Step 3: Running civil constraints shell...');
-    const civil = await runCivilConstraintsShell(opportunity, acreage, zoning);
+    const elapsed = Date.now() - startTime;
+    console.log('[PASS2_UNDERWRITING_HUB] Run ' + this.runId + ' completed in ' + elapsed + 'ms');
 
-    // =========================================================================
-    // STEP 4: Run Pricing Verification
-    // =========================================================================
-    console.log('[PASS2_ORCHESTRATOR] Step 4: Running pricing shell...');
-    const pricing = await runPricingShell(opportunity);
-
-    // =========================================================================
-    // STEP 5: Run Momentum Analysis (Combined Industrial + Housing)
-    // =========================================================================
-    console.log('[PASS2_ORCHESTRATOR] Step 5: Running momentum shell...');
-    const momentum = await runMomentumShell(opportunity);
-
-    // =========================================================================
-    // STEP 6: Run Fusion Demand Analysis
-    // =========================================================================
-    console.log('[PASS2_ORCHESTRATOR] Step 6: Running fusion shell...');
-    const fusion = runFusionShell(opportunity, momentum);
-
-    // =========================================================================
-    // STEP 7: Run Competitive Pressure Analysis
-    // =========================================================================
-    console.log('[PASS2_ORCHESTRATOR] Step 7: Running comp pressure shell...');
-    const comp = await runCompPressureShell(opportunity);
-
-    // =========================================================================
-    // STEP 8: Run Feasibility Analysis (consumes civil constraints)
-    // =========================================================================
-    console.log('[PASS2_ORCHESTRATOR] Step 8: Running feasibility shell...');
-    const feasibility = runFeasibilityShell(opportunity, pricing, acreage, land_cost_per_acre, civil);
-
-    // =========================================================================
-    // STEP 9: Run Reverse Feasibility
-    // =========================================================================
-    console.log('[PASS2_ORCHESTRATOR] Step 9: Running reverse shell...');
-    const reverse = runReverseShell(opportunity, pricing, acreage);
-
-    // =========================================================================
-    // STEP 10: Generate Final Verdict (consumes civil constraints)
-    // =========================================================================
-    console.log('[PASS2_ORCHESTRATOR] Step 10: Running verdict shell...');
-    const verdict = runVerdictShell(opportunity, {
-      zoning,
-      permits,
-      pricing,
-      fusion,
-      comp,
-      civil,
-      feasibility,
-      reverse,
-      momentum,
-    });
-
-    // =========================================================================
-    // STEP 11: Build Vault Payload using Vault Mapper
-    // =========================================================================
-    console.log('[PASS2_ORCHESTRATOR] Step 11: Building vault payload...');
-    const vaultPayload = await runVaultMapperShell({
-      opportunity,
-      zoning,
-      permits,
-      pricing,
-      fusion,
-      comp,
-      civil,
-      feasibility,
-      reverse,
-      momentum,
-      verdict,
-    });
-
-    // =========================================================================
-    // STEP 12: Store intermediate results to pass2_runs scratchpad
-    // =========================================================================
-    console.log('[PASS2_ORCHESTRATOR] Step 12: Storing run results...');
-    await writeData(TABLES.PASS2_RUNS, {
-      run_id: runId,
-      opportunity_id: opportunity.id,
-      zip: opportunity.identity.zip,
-      county: opportunity.identity.county,
-      state: opportunity.identity.state,
-      decision: verdict.decision,
-      confidence: verdict.confidence,
-      cap_rate: feasibility.capRate,
-      noi: feasibility.noi,
-      is_viable: feasibility.isViable,
-      civil_score: civil.civilScore,
-      civil_rating: civil.civilRating,
-      civil_cost_adder: civil.totalCivilCostAdder,
-      timestamp,
-    });
-
-    // Store staging payload for vault save
-    await writeData(TABLES.STAGING_PAYLOAD, {
-      run_id: runId,
-      opportunity_id: opportunity.id,
-      payload: vaultPayload.payload,
-      status: 'pending',
-      created_at: new Date().toISOString(),
-    });
-
-    await writeLog('pass2_complete', {
-      run_id: runId,
-      zip: opportunity.identity.zip,
-      decision: verdict.decision,
-      confidence: verdict.confidence,
-      cap_rate: feasibility.capRate,
-      civil_score: civil.civilScore,
-      civil_rating: civil.civilRating,
-    });
-
-    console.log(`[PASS2_ORCHESTRATOR] Pass 2 Shell complete. Verdict: ${verdict.decision}, Civil: ${civil.civilRating}`);
-
-    return {
-      success: true,
-      runId,
-      timestamp,
-      zoning,
-      permits,
-      pricing,
-      fusion,
-      comp,
-      civil,
-      feasibility,
-      reverse,
-      momentum,
-      verdict,
-      vaultPayload,
+    const output: Pass2Output = {
+      pass: 'PASS2',
+      runId: this.runId,
+      timestamp: new Date().toISOString(),
+      input,
+      zoning, civilConstraints, permitsStatic, pricingVerification,
+      fusionDemand, competitivePressure, feasibility, reverseFeasibility,
+      momentumReader, verdict, vaultMapper,
+      finalVerdict: verdict?.verdict ?? 'NO_GO',
+      verdictScore: verdict?.score ?? 0,
+      status: this.determineStatus(verdict),
+      errors: this.errors,
     };
-  } catch (error) {
-    console.error('[PASS2_ORCHESTRATOR] Shell Error:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
 
-    return {
-      success: false,
-      runId,
-      timestamp,
-      zoning: createStubZoning(),
-      permits: createStubPermit(),
-      pricing: createStubPricing(),
-      fusion: createStubFusion(),
-      comp: createStubCompetitivePressure(),
-      civil: createStubCivilConstraints(),
-      feasibility: createStubFeasibility(),
-      reverse: createStubReverseFeasibility(),
-      momentum: createStubMomentum(),
-      verdict: createStubVerdict(),
-      vaultPayload: createStubVaultPayload(),
-      error: errorMessage,
-    };
+    return JSON.parse(JSON.stringify(output));
+  }
+
+  private determineStatus(verdict: VerdictOutput | null): 'complete' | 'partial' | 'failed' {
+    if (this.errors.length === 0 && verdict !== null) return 'complete';
+    if (this.errors.length > 0 && verdict !== null) return 'partial';
+    return 'failed';
   }
 }
 
-/**
- * Main Pass 2 Orchestrator (Legacy)
- */
 export async function runPass2(input: Pass2Input): Promise<Pass2Output> {
-  const { opportunity, acreage = 3, land_cost_per_acre = 150000 } = input;
-
-  console.log(`[PASS2_ORCHESTRATOR] Starting Pass 2 for ZIP: ${opportunity.identity.zip}`);
-
-  // Validate Pass 1 completion
-  if (opportunity.status !== 'pass1_complete' && opportunity.status !== 'local_scan_complete') {
-    return {
-      success: false,
-      opportunity: null,
-      error: 'Pass 1 must be complete before running Pass 2',
-    };
-  }
-
-  try {
-    // =========================================================================
-    // STEP 1: Check Pricing Data Exists
-    // =========================================================================
-    console.log('[PASS2_ORCHESTRATOR] Step 1: Checking pricing data...');
-    // Pricing verification will handle missing data with defaults
-
-    // =========================================================================
-    // STEP 2: Run Zoning Analysis
-    // =========================================================================
-    console.log('[PASS2_ORCHESTRATOR] Step 2: Running zoning analysis...');
-    const zoningResult = await runZoning({
-      state: opportunity.identity.state,
-      county: opportunity.identity.county,
-      zip: opportunity.identity.zip,
-      county_fips: opportunity.identity.county_fips,
-    });
-
-    if (!zoningResult.success || !zoningResult.zoning_intel) {
-      console.warn('[PASS2_ORCHESTRATOR] Zoning analysis failed, using defaults');
-    }
-
-    // =========================================================================
-    // STEP 3: Run Permit Analysis
-    // =========================================================================
-    console.log('[PASS2_ORCHESTRATOR] Step 3: Running permit analysis...');
-    const permitResult = await runPermits({
-      state: opportunity.identity.state,
-      county: opportunity.identity.county,
-      county_fips: opportunity.identity.county_fips,
-    });
-
-    if (!permitResult.success || !permitResult.permit_intel) {
-      console.warn('[PASS2_ORCHESTRATOR] Permit analysis failed, using defaults');
-    }
-
-    // =========================================================================
-    // STEP 4: Run Pricing Verification
-    // =========================================================================
-    console.log('[PASS2_ORCHESTRATOR] Step 4: Running pricing verification...');
-    const pricingResult = await runPricingVerification({
-      ai_caller_pricing: opportunity.ai_caller_pricing,
-      competitors: opportunity.local_scan?.local_competitors,
-      state: opportunity.identity.state,
-      county_fips: opportunity.identity.county_fips,
-    });
-
-    if (!pricingResult.success || !pricingResult.rent_benchmarks) {
-      console.warn('[PASS2_ORCHESTRATOR] Pricing verification failed, using defaults');
-    }
-
-    // Use defaults if not available
-    const rent_benchmarks = pricingResult.rent_benchmarks || {
-      climate_control_10x10: 185,
-      standard_10x10: 125,
-      outdoor_10x20: 95,
-      market_position: 'competitive' as const,
-      avg_psf: 1.25,
-      data_sources: [],
-      confidence: 'low' as const,
-    };
-
-    // =========================================================================
-    // STEP 5: Run Industrial Momentum (Deep Dive)
-    // =========================================================================
-    console.log('[PASS2_ORCHESTRATOR] Step 5: Running industrial deep dive...');
-    const industrialResult = await runIndustrialMomentum({
-      pass1_industrial: opportunity.pass1_macro.industrial_signals,
-      state: opportunity.identity.state,
-      county: opportunity.identity.county,
-      county_fips: opportunity.identity.county_fips,
-    });
-
-    const industrial_momentum = industrialResult.industrial_momentum || {
-      growth_rate_pct: 0,
-      major_employers: [],
-      logistics_score: 50,
-      warehouse_vacancy_pct: 5,
-      new_industrial_sqft: 0,
-      momentum_rating: 'weak' as const,
-    };
-
-    // =========================================================================
-    // STEP 6: Run Housing Pipeline Analysis
-    // =========================================================================
-    console.log('[PASS2_ORCHESTRATOR] Step 6: Running housing pipeline analysis...');
-    const housingResult = await runHousingPipeline({
-      pass1_housing: opportunity.pass1_macro.housing_signals,
-      state: opportunity.identity.state,
-      county: opportunity.identity.county,
-      county_fips: opportunity.identity.county_fips,
-    });
-
-    const housing_pipeline = housingResult.housing_pipeline || {
-      new_units_planned: 0,
-      construction_timeline: 'unknown',
-      density_trend: 'stable' as const,
-      multifamily_share_pct: 35,
-      demand_projection_sqft: 0,
-      timeline_alignment: 'neutral' as const,
-    };
-
-    // =========================================================================
-    // STEP 7: Run Fusion Demand Analysis
-    // =========================================================================
-    console.log('[PASS2_ORCHESTRATOR] Step 7: Running fusion demand analysis...');
-    const fusion_demand = runFusionDemand({
-      pass1_macro: opportunity.pass1_macro,
-      industrial_momentum,
-      housing_pipeline,
-    });
-
-    // =========================================================================
-    // STEP 8: Run Competitive Pressure Analysis
-    // =========================================================================
-    console.log('[PASS2_ORCHESTRATOR] Step 8: Running competitive pressure analysis...');
-    const compPressureResult = await runCompPressure({
-      competitors: opportunity.pass1_macro.competitors,
-      macro_demand: opportunity.pass1_macro.macro_demand,
-      state: opportunity.identity.state,
-      county_fips: opportunity.identity.county_fips,
-    });
-
-    const competitive_pressure = compPressureResult.competitive_pressure || {
-      competitor_count_5mi: 0,
-      competitor_count_10mi: 0,
-      sqft_per_capita: 0,
-      market_saturation: 'balanced' as const,
-      new_supply_pipeline: 0,
-      pressure_score: 50,
-    };
-
-    // =========================================================================
-    // STEP 9: Run Feasibility Analysis
-    // =========================================================================
-    console.log('[PASS2_ORCHESTRATOR] Step 9: Running feasibility analysis...');
-    const feasibility = runFeasibility({
-      rent_benchmarks,
-      acreage,
-      land_cost_per_acre,
-    });
-
-    // =========================================================================
-    // STEP 10: Run Reverse Feasibility
-    // =========================================================================
-    console.log('[PASS2_ORCHESTRATOR] Step 10: Running reverse feasibility...');
-    const reverse_feasibility = runReverseFeasibility({
-      acreage,
-      rent_benchmarks,
-    });
-
-    // =========================================================================
-    // STEP 11: Generate Final Verdict
-    // =========================================================================
-    console.log('[PASS2_ORCHESTRATOR] Step 11: Generating verdict...');
-
-    const zoning_intel = zoningResult.zoning_intel || {
-      primary_zone: 'Unknown',
-      storage_allowed: true,
-      by_right: false,
-      conditional_use_required: true,
-      variance_needed: false,
-      classification: 'conditional' as const,
-      score: 60,
-    };
-
-    const permit_intel = permitResult.permit_intel || {
-      estimated_timeline: '90-120 days',
-      total_fees: 15000,
-      complexity: 'moderate' as const,
-      key_requirements: [],
-      critical_path: [],
-    };
-
-    const final_verdict = generateVerdict({
-      feasibility,
-      fusion_demand,
-      zoning_intel,
-      permit_intel,
-      competitive_pressure,
-      toggles: opportunity.toggles,
-    });
-
-    // =========================================================================
-    // STEP 12: Assemble Pass 2 Results
-    // =========================================================================
-    console.log('[PASS2_ORCHESTRATOR] Step 12: Assembling results...');
-
-    const pass2_results: Pass2Results = {
-      zoning_intel,
-      permit_intel,
-      rent_benchmarks,
-      rent_curve_model: pricingResult.rent_curve_model || undefined,
-      fusion_demand,
-      competitive_pressure,
-      feasibility,
-      reverse_feasibility,
-      industrial_momentum,
-      housing_pipeline,
-    };
-
-    // Update opportunity object
-    opportunity.pass2_results = pass2_results;
-    opportunity.final_verdict = final_verdict;
-    opportunity.pass2_completed_at = new Date().toISOString();
-    opportunity.status = 'pass2_complete';
-
-    console.log(`[PASS2_ORCHESTRATOR] Pass 2 complete. Verdict: ${final_verdict.decision}`);
-
-    return {
-      success: true,
-      opportunity,
-    };
-  } catch (error) {
-    console.error('[PASS2_ORCHESTRATOR] Error:', error);
-    return {
-      success: false,
-      opportunity: null,
-      error: error instanceof Error ? error.message : 'Unknown error',
-    };
-  }
+  const orchestrator = new Pass2Orchestrator();
+  return orchestrator.run(input);
 }
-
-/**
- * Prepare opportunity for vault save
- */
-export function prepareForVault(opportunity: OpportunityObject): {
-  vault_payload: any;
-  ready: boolean;
-  missing: string[];
-} {
-  const missing: string[] = [];
-
-  if (opportunity.status !== 'pass2_complete') {
-    missing.push('Pass 2 not complete');
-  }
-
-  if (!opportunity.final_verdict) {
-    missing.push('Final verdict not generated');
-  }
-
-  if (!opportunity.pass2_results) {
-    missing.push('Pass 2 results not available');
-  }
-
-  if (missing.length > 0) {
-    return {
-      vault_payload: null,
-      ready: false,
-      missing,
-    };
-  }
-
-  return {
-    vault_payload: prepareVaultPayload(opportunity),
-    ready: true,
-    missing: [],
-  };
-}
-
-// Re-export types for convenience
-export type {
-  TypedPass2Output,
-  ZoningResult,
-  PermitResult,
-  PricingVerificationResult,
-  FusionDemandResult,
-  CompetitivePressureResult,
-  CivilConstraintResult,
-  FeasibilityResult,
-  ReverseFeasibilityResult,
-  MomentumResult,
-  VerdictResult,
-  VaultPayload,
-};
