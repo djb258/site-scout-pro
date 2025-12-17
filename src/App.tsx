@@ -2,52 +2,34 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { AdminModeProvider } from "@/contexts/AdminModeContext";
-import { HiveLayout } from "@/components/hive/HiveLayout";
-import Landing from "@/pages/hive/Landing";
-import Cockpit from "@/pages/hive/Cockpit";
-import Screener from "@/pages/hive/Screener";
-import HiveMap from "@/pages/hive/Map";
-import NotFound from "./pages/NotFound";
-import EngineHome from "./pages/engine/Home";
-import EngineScreener from "./pages/engine/Screener";
-import Pass1Results from "./pages/engine/Pass1Results";
-import Pass2Results from "./pages/engine/Pass2Results";
-import Vault from "./pages/engine/Vault";
-import VaultDeepDive from "./pages/engine/VaultDeepDive";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import SystemOverview from "@/pages/SystemOverview";
+import Pass0Hub from "@/pages/hub/Pass0Hub";
+import Pass1Hub from "@/pages/hub/Pass1Hub";
+import Pass15Hub from "@/pages/hub/Pass15Hub";
+import Pass2Hub from "@/pages/hub/Pass2Hub";
+import Pass3Hub from "@/pages/hub/Pass3Hub";
+import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <AdminModeProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            {/* Engine Routes (Primary) */}
-            <Route path="/" element={<Navigate to="/engine" replace />} />
-            <Route path="/engine" element={<EngineHome />} />
-            <Route path="/engine/screener" element={<EngineScreener />} />
-            <Route path="/engine/pass1/:runId" element={<Pass1Results />} />
-            <Route path="/engine/pass2/:runId" element={<Pass2Results />} />
-            <Route path="/engine/vault" element={<Vault />} />
-            <Route path="/engine/vault/:id" element={<VaultDeepDive />} />
-            
-            {/* Hive UI Routes */}
-            <Route element={<HiveLayout />}>
-              <Route path="/hive" element={<Landing />} />
-              <Route path="/hive/cockpit" element={<Cockpit />} />
-              <Route path="/hive/screener" element={<Screener />} />
-              <Route path="/hive/map" element={<HiveMap />} />
-            </Route>
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </TooltipProvider>
-    </AdminModeProvider>
+    <TooltipProvider>
+      <Toaster />
+      <Sonner />
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<SystemOverview />} />
+          <Route path="/hub/pass0" element={<Pass0Hub />} />
+          <Route path="/hub/pass1" element={<Pass1Hub />} />
+          <Route path="/hub/pass15" element={<Pass15Hub />} />
+          <Route path="/hub/pass2" element={<Pass2Hub />} />
+          <Route path="/hub/pass3" element={<Pass3Hub />} />
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </BrowserRouter>
+    </TooltipProvider>
   </QueryClientProvider>
 );
 

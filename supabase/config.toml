@@ -1,5 +1,8 @@
 project_id = "vxjidpggoemouqrjtkpt"
 
+[functions.getSystemConfig]
+verify_jwt = false
+
 [functions.genericRelay]
 verify_jwt = false
 
