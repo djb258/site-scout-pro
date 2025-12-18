@@ -212,6 +212,125 @@ export type Database = {
         }
         Relationships: []
       }
+      pass_1_5_attempt_log: {
+        Row: {
+          attempt_number: number
+          cost_cents: number | null
+          created_at: string | null
+          duration_ms: number | null
+          error_code: string | null
+          error_message: string | null
+          gap_queue_id: string | null
+          id: string
+          metadata: Json | null
+          run_id: string
+          source_url: string | null
+          status: string
+          transcript_hash: string | null
+          worker_type: string
+        }
+        Insert: {
+          attempt_number: number
+          cost_cents?: number | null
+          created_at?: string | null
+          duration_ms?: number | null
+          error_code?: string | null
+          error_message?: string | null
+          gap_queue_id?: string | null
+          id?: string
+          metadata?: Json | null
+          run_id: string
+          source_url?: string | null
+          status: string
+          transcript_hash?: string | null
+          worker_type: string
+        }
+        Update: {
+          attempt_number?: number
+          cost_cents?: number | null
+          created_at?: string | null
+          duration_ms?: number | null
+          error_code?: string | null
+          error_message?: string | null
+          gap_queue_id?: string | null
+          id?: string
+          metadata?: Json | null
+          run_id?: string
+          source_url?: string | null
+          status?: string
+          transcript_hash?: string | null
+          worker_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pass_1_5_attempt_log_gap_queue_id_fkey"
+            columns: ["gap_queue_id"]
+            isOneToOne: false
+            referencedRelation: "pass_1_5_gap_queue"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pass_1_5_gap_queue: {
+        Row: {
+          assigned_worker: string | null
+          attempt_count: number | null
+          competitor_address: string | null
+          competitor_id: string
+          competitor_name: string
+          created_at: string | null
+          gap_type: string
+          id: string
+          max_attempts: number | null
+          pass1_run_id: string
+          phone_number: string | null
+          priority: string | null
+          run_id: string
+          status: string | null
+          target_unit_sizes: string[] | null
+          ttl_expires_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          assigned_worker?: string | null
+          attempt_count?: number | null
+          competitor_address?: string | null
+          competitor_id: string
+          competitor_name: string
+          created_at?: string | null
+          gap_type: string
+          id?: string
+          max_attempts?: number | null
+          pass1_run_id: string
+          phone_number?: string | null
+          priority?: string | null
+          run_id: string
+          status?: string | null
+          target_unit_sizes?: string[] | null
+          ttl_expires_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          assigned_worker?: string | null
+          attempt_count?: number | null
+          competitor_address?: string | null
+          competitor_id?: string
+          competitor_name?: string
+          created_at?: string | null
+          gap_type?: string
+          id?: string
+          max_attempts?: number | null
+          pass1_run_id?: string
+          phone_number?: string | null
+          priority?: string | null
+          run_id?: string
+          status?: string | null
+          target_unit_sizes?: string[] | null
+          ttl_expires_at?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       pass1_census_snapshot: {
         Row: {
           created_at: string | null

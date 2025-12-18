@@ -68,3 +68,31 @@ verify_jwt = false
 
 [functions.hub1_pass1_orchestrator_v1_1]
 verify_jwt = false
+
+# ================================================================
+# Hub 1.5 — Remediation Worker Functions (v0.1.0 SHELL)
+# ================================================================
+
+[functions.hub15_orchestrator]
+verify_jwt = false
+
+[functions.hub15_enqueue_gaps]
+verify_jwt = false
+
+[functions.hub15_rate_scraper]
+verify_jwt = false
+
+[functions.hub15_ai_caller]
+verify_jwt = false
+
+[functions.hub15_resolve_gap]
+verify_jwt = false
+
+[functions.hub15_kill_switch]
+verify_jwt = false
+
+[functions.hub15_log_attempt]
+verify_jwt = false
+
+[functions.hub15_get_dashboard]
+verify_jwt = false
