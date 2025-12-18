@@ -1,26 +1,19 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import postgres from "https://deno.land/x/postgresjs@v3.4.4/mod.js";
 
 /**
- * START_PASS2 Edge Function
- *
- * Initiates Pass-2 Underwriting Hub analysis.
- * Pass-2 performs site-specific underwriting and feasibility analysis.
- *
- * Request body:
- *   - pass1_id: string (required) - The Pass-1 run ID
- *   - pass15_id: string (optional) - The Pass-1.5 run ID (for rate verification)
- *   - zip: string (required) - Target ZIP code
- *   - state: string (required) - Target state
- *   - parcel_id: string (optional) - Specific parcel ID
- *   - address: string (optional) - Site address
- *   - latitude: number (optional) - Site latitude
- *   - longitude: number (optional) - Site longitude
- *   - acreage: number (optional) - Site acreage
- *
- * Response:
- *   - Success: { pass2_id, run_id, status, final_verdict, verdict_score }
- *   - Error: { error }
+ * START_PASS2 Edge Function — Constraint Compiler
+ * 
+ * DOCTRINE: This is a RELAY, not an ENGINE.
+ * - Lovable.dev is a cockpit, not an engine
+ * - All authoritative data comes from Neon
+ * - No local computation, no inference, no guessing
+ * 
+ * process_id: start_pass2
+ * version: v2.0.0
+ * 
+ * DO NOT MODIFY — downstream depends on this shape
  */
 
 const corsHeaders = {
@@ -29,182 +22,292 @@ const corsHeaders = {
 };
 
 // ============================================================================
-// INLINE ORCHESTRATOR TYPES (for Deno edge function compatibility)
+// RESPONSE CONTRACT (UI-SAFE PAYLOAD)
 // ============================================================================
 
-interface Pass2Input {
-  pass1RunId: string;
-  pass15RunId?: string;
-  targetZip: string;
-  targetState: string;
-  parcelId?: string;
-  address?: string;
-  latitude?: number;
-  longitude?: number;
-  acreage?: number;
-}
-
-interface Pass2Output {
-  pass: 'PASS2';
-  runId: string;
+interface Pass2Response {
+  status: 'ELIGIBLE' | 'HOLD_INCOMPLETE' | 'NO_GO' | 'SCHEMA_INCOMPLETE';
+  jurisdiction_card_complete: boolean;
+  missing_required_fields: string[];
+  blocked_fields: string[];
+  fatal_prohibitions: string[];
+  county_capability: {
+    automation_viable: boolean;
+    permit_system: string;
+    zoning_model: string;
+    county_name: string;
+    state: string;
+  } | null;
+  next_actions: string[];
+  zip_metadata: {
+    zip: string;
+    city: string | null;
+    county: string | null;
+    state: string | null;
+    population: number | null;
+  } | null;
+  schema_status: {
+    jurisdiction_cards_exists: boolean;
+    jurisdiction_constraints_exists: boolean;
+    jurisdiction_prohibitions_exists: boolean;
+    ref_county_capability_exists: boolean;
+  };
   timestamp: string;
-  input: Pass2Input;
-  zoning: any | null;
-  civilConstraints: any | null;
-  permitsStatic: any | null;
-  pricingVerification: any | null;
-  fusionDemand: any | null;
-  competitivePressure: any | null;
-  feasibility: any | null;
-  reverseFeasibility: any | null;
-  momentumReader: any | null;
-  verdict: any | null;
-  vaultMapper: any | null;
-  finalVerdict: 'GO' | 'NO_GO' | 'MAYBE';
-  verdictScore: number;
-  status: 'complete' | 'partial' | 'failed';
-  errors: string[];
+}
+
+// Required fields for a complete jurisdiction card
+const REQUIRED_JURISDICTION_FIELDS = [
+  'front_setback_ft',
+  'side_setback_ft', 
+  'rear_setback_ft',
+  'max_lot_coverage_pct',
+  'max_building_height_ft',
+  'min_parking_spaces',
+  'zoning_code',
+  'storage_permitted',
+];
+
+// Fields that cannot be automated
+const NON_AUTOMATABLE_FIELDS = [
+  'fire_lane_width_ft',
+  'stormwater_requirements',
+  'conditional_use_process',
+  'variance_history',
+];
+
+// ============================================================================
+// NEON CONNECTION HELPER
+// ============================================================================
+
+async function getNeonConnection() {
+  const neonUrl = Deno.env.get('NEON_DATABASE_URL');
+  if (!neonUrl) {
+    throw new Error('NEON_DATABASE_URL not configured');
+  }
+  return postgres(neonUrl, { ssl: 'require' });
 }
 
 // ============================================================================
-// INLINE ORCHESTRATOR (simplified for edge function)
+// TABLE EXISTENCE CHECK
 // ============================================================================
 
-async function runPass2Orchestrator(input: Pass2Input): Promise<Pass2Output> {
-  const runId = `P2-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-  console.log(`[PASS2_UNDERWRITING_HUB] Starting run ${runId}`);
+async function checkTableExists(sql: any, schema: string, tableName: string): Promise<boolean> {
+  try {
+    const result = await sql`
+      SELECT EXISTS (
+        SELECT FROM information_schema.tables 
+        WHERE table_schema = ${schema} 
+        AND table_name = ${tableName}
+      ) as exists
+    `;
+    return result[0]?.exists ?? false;
+  } catch (error) {
+    console.error(`[start_pass2] Error checking table ${schema}.${tableName}:`, error);
+    return false;
+  }
+}
 
-  // Placeholder spoke outputs (would call actual spokes in production)
-  const zoning = {
-    spokeId: 'SS.02.01',
-    zoningCode: 'C-2',
-    zoningDescription: 'General Commercial',
-    storageAllowed: true,
-    conditionalUse: false,
-    setbacks: { front: 25, side: 10, rear: 10 },
-    maxHeight: 35,
-    maxCoverage: 0.7,
-    timestamp: new Date().toISOString(),
-  };
+// ============================================================================
+// DATA FETCHERS (READ-ONLY)
+// ============================================================================
 
-  const civilConstraints = {
-    spokeId: 'SS.02.02',
-    floodZone: 'X',
-    wetlands: false,
-    slope: 2.5,
-    soilType: 'Sandy Loam',
-    utilities: { water: true, sewer: true, electric: true, gas: true },
-    constraints: [],
-    timestamp: new Date().toISOString(),
-  };
+async function fetchZipMetadata(sql: any, zip: string) {
+  try {
+    const result = await sql`
+      SELECT zip, city, county_name as county, state_id as state, population
+      FROM zips_master
+      WHERE zip = ${zip}
+      LIMIT 1
+    `;
+    return result[0] || null;
+  } catch (error) {
+    console.error('[start_pass2] Error fetching ZIP metadata:', error);
+    return null;
+  }
+}
 
-  const permitsStatic = {
-    spokeId: 'SS.02.03',
-    recentPermits: [],
-    avgPermitTime: 90,
-    jurisdictionDifficulty: 'moderate' as const,
-    timestamp: new Date().toISOString(),
-  };
+async function fetchCountyCapability(sql: any, countyName: string, state: string) {
+  try {
+    // Check if table exists first
+    const tableExists = await checkTableExists(sql, 'ref', 'ref_county_capability');
+    if (!tableExists) {
+      return null;
+    }
+    
+    const result = await sql`
+      SELECT 
+        county_name,
+        state,
+        automation_viable,
+        permit_system,
+        zoning_model
+      FROM ref.ref_county_capability
+      WHERE county_name ILIKE ${countyName}
+      AND state = ${state}
+      LIMIT 1
+    `;
+    return result[0] || null;
+  } catch (error) {
+    console.error('[start_pass2] Error fetching county capability:', error);
+    return null;
+  }
+}
 
-  const pricingVerification = {
-    spokeId: 'SS.02.04',
-    verifiedRates: [
-      { unitSize: '10x10', rate: 125, source: 'market' },
-      { unitSize: '10x20', rate: 195, source: 'market' },
-    ],
-    marketRateAvg: { '10x10': 125, '10x20': 195 },
-    confidenceLevel: 'medium' as const,
-    timestamp: new Date().toISOString(),
-  };
+async function fetchJurisdictionCard(sql: any, countyName: string, state: string) {
+  try {
+    const tableExists = await checkTableExists(sql, 'pass2', 'jurisdiction_cards');
+    if (!tableExists) {
+      return { exists: false, data: null };
+    }
+    
+    const result = await sql`
+      SELECT *
+      FROM pass2.jurisdiction_cards
+      WHERE county_name ILIKE ${countyName}
+      AND state = ${state}
+      LIMIT 1
+    `;
+    return { exists: true, data: result[0] || null };
+  } catch (error) {
+    console.error('[start_pass2] Error fetching jurisdiction card:', error);
+    return { exists: false, data: null };
+  }
+}
 
-  const fusionDemand = {
-    spokeId: 'SS.02.05',
-    fusedDemandScore: 74,
-    populationDensity: 2500,
-    householdGrowth: 0.028,
-    incomeLevel: 68000,
-    demandDrivers: ['population growth', 'multifamily development'],
-    timestamp: new Date().toISOString(),
-  };
+async function fetchJurisdictionProhibitions(sql: any, countyName: string, state: string) {
+  try {
+    const tableExists = await checkTableExists(sql, 'pass2', 'jurisdiction_prohibitions');
+    if (!tableExists) {
+      return { exists: false, data: [] };
+    }
+    
+    const result = await sql`
+      SELECT prohibition_type, description, severity
+      FROM pass2.jurisdiction_prohibitions
+      WHERE county_name ILIKE ${countyName}
+      AND state = ${state}
+      AND severity = 'fatal'
+    `;
+    return { exists: true, data: result || [] };
+  } catch (error) {
+    console.error('[start_pass2] Error fetching prohibitions:', error);
+    return { exists: false, data: [] };
+  }
+}
 
-  const competitivePressure = {
-    spokeId: 'SS.02.06',
-    pressureScore: 62,
-    nearestCompetitorMiles: 1.8,
-    competitorsIn3Miles: 4,
-    competitorsIn5Miles: 8,
-    marketSaturation: 'medium' as const,
-    timestamp: new Date().toISOString(),
-  };
+// ============================================================================
+// CONSTRAINT ANALYSIS (NO COMPUTATION - JUST DATA TRANSFORMATION)
+// ============================================================================
 
-  const feasibility = {
-    spokeId: 'SS.02.07',
-    feasible: true,
-    estimatedUnits: 450,
-    estimatedSqFt: 52000,
-    estimatedRevenue: 780000,
-    estimatedNOI: 520000,
-    capRate: 0.065,
-    dscr: 1.35,
-    timestamp: new Date().toISOString(),
-  };
-
-  const reverseFeasibility = {
-    spokeId: 'SS.02.08',
-    maxLandPrice: 850000,
-    breakEvenOccupancy: 0.72,
-    sensitivityAnalysis: [],
-    timestamp: new Date().toISOString(),
-  };
-
-  const momentumReader = {
-    spokeId: 'SS.02.09',
-    momentumScore: 68,
-    trendDirection: 'up' as const,
-    pass0RunId: null,
-    timestamp: new Date().toISOString(),
-  };
-
-  const verdict = {
-    spokeId: 'SS.02.10',
-    verdict: 'GO' as const,
-    score: 76,
-    weights: { zoning: 0.15, feasibility: 0.3, demand: 0.25, competition: 0.2, momentum: 0.1 },
-    fatalFlaws: [],
-    strengths: ['Strong demand drivers', 'Favorable zoning', 'Good feasibility metrics'],
-    weaknesses: ['Moderate competition within 3 miles'],
-    recommendation: 'Proceed to Pass-3 for detailed pro forma analysis',
-    timestamp: new Date().toISOString(),
-  };
-
-  const vaultMapper = {
-    spokeId: 'SS.02.11',
-    vaultId: `vault_${runId}`,
-    savedToVault: false,
-    stampedFields: ['zoning', 'feasibility', 'verdict'],
-    timestamp: new Date().toISOString(),
-  };
-
+function analyzeConstraints(
+  jurisdictionCard: any | null,
+  prohibitions: any[],
+  countyCapability: any | null
+): { 
+  status: 'ELIGIBLE' | 'HOLD_INCOMPLETE' | 'NO_GO';
+  missing_required_fields: string[];
+  blocked_fields: string[];
+  fatal_prohibitions: string[];
+  next_actions: string[];
+  jurisdiction_card_complete: boolean;
+} {
+  const missing_required_fields: string[] = [];
+  const blocked_fields: string[] = [];
+  const fatal_prohibitions: string[] = [];
+  const next_actions: string[] = [];
+  
+  // Check for fatal prohibitions first
+  if (prohibitions.length > 0) {
+    prohibitions.forEach(p => {
+      fatal_prohibitions.push(`${p.prohibition_type}: ${p.description}`);
+    });
+  }
+  
+  // If fatal prohibitions exist, immediate NO_GO
+  if (fatal_prohibitions.length > 0) {
+    return {
+      status: 'NO_GO',
+      missing_required_fields,
+      blocked_fields,
+      fatal_prohibitions,
+      next_actions: ['Review prohibition details before proceeding'],
+      jurisdiction_card_complete: false,
+    };
+  }
+  
+  // Check jurisdiction card completeness
+  if (!jurisdictionCard) {
+    // No card at all
+    missing_required_fields.push(...REQUIRED_JURISDICTION_FIELDS);
+    next_actions.push('Manual research required: county planning department');
+    next_actions.push('Contact jurisdiction for zoning and setback requirements');
+  } else {
+    // Check each required field
+    REQUIRED_JURISDICTION_FIELDS.forEach(field => {
+      if (jurisdictionCard[field] === null || jurisdictionCard[field] === undefined) {
+        missing_required_fields.push(field);
+      }
+    });
+    
+    // Check storage permission
+    if (jurisdictionCard.storage_permitted === false) {
+      fatal_prohibitions.push('ZONING_PROHIBITED: Self-storage not permitted in this jurisdiction');
+    }
+  }
+  
+  // Add non-automatable fields that need manual work
+  NON_AUTOMATABLE_FIELDS.forEach(field => {
+    if (!jurisdictionCard || jurisdictionCard[field] === null || jurisdictionCard[field] === undefined) {
+      blocked_fields.push(field);
+    }
+  });
+  
+  // Add next actions based on county capability
+  if (countyCapability) {
+    if (!countyCapability.automation_viable) {
+      next_actions.push(`Manual research required: ${countyCapability.permit_system || 'manual_only'} permit system`);
+    }
+    if (countyCapability.zoning_model === 'no_zoning') {
+      next_actions.push('No formal zoning - verify county building requirements');
+    }
+  } else {
+    next_actions.push('County capability data not available - assume manual research required');
+  }
+  
+  // Add specific next actions for missing fields
+  if (missing_required_fields.includes('front_setback_ft') || 
+      missing_required_fields.includes('side_setback_ft') ||
+      missing_required_fields.includes('rear_setback_ft')) {
+    next_actions.push('Obtain setback requirements from planning department');
+  }
+  
+  if (missing_required_fields.includes('max_lot_coverage_pct')) {
+    next_actions.push('Verify lot coverage limits from zoning ordinance');
+  }
+  
+  if (blocked_fields.includes('fire_lane_width_ft')) {
+    next_actions.push('Retell call queued for fire access requirements');
+  }
+  
+  // Determine final status
+  const jurisdiction_card_complete = missing_required_fields.length === 0;
+  
+  let status: 'ELIGIBLE' | 'HOLD_INCOMPLETE' | 'NO_GO';
+  if (fatal_prohibitions.length > 0) {
+    status = 'NO_GO';
+  } else if (missing_required_fields.length > 0 || blocked_fields.length > 0) {
+    status = 'HOLD_INCOMPLETE';
+  } else {
+    status = 'ELIGIBLE';
+  }
+  
   return {
-    pass: 'PASS2',
-    runId,
-    timestamp: new Date().toISOString(),
-    input,
-    zoning,
-    civilConstraints,
-    permitsStatic,
-    pricingVerification,
-    fusionDemand,
-    competitivePressure,
-    feasibility,
-    reverseFeasibility,
-    momentumReader,
-    verdict,
-    vaultMapper,
-    finalVerdict: verdict.verdict,
-    verdictScore: verdict.score,
-    status: 'complete',
-    errors: [],
+    status,
+    missing_required_fields,
+    blocked_fields,
+    fatal_prohibitions,
+    next_actions,
+    jurisdiction_card_complete,
   };
 }
 
@@ -217,119 +320,213 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  let sql: any = null;
+  
   try {
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    const {
-      pass1_id,
-      pass15_id,
-      zip,
-      state,
-      parcel_id,
-      address,
-      latitude,
-      longitude,
-      acreage,
-    } = await req.json();
+    const { zip, asset_class = 'self_storage' } = await req.json();
 
-    if (!pass1_id || !zip || !state) {
+    if (!zip) {
       return new Response(
-        JSON.stringify({ error: 'pass1_id, zip, and state are required' }),
+        JSON.stringify({ error: 'zip is required' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    console.log(`[start_pass2] Starting underwriting for pass1_id: ${pass1_id}, ZIP: ${zip}`);
+    console.log(`[start_pass2] Constraint compilation for ZIP: ${zip}, asset_class: ${asset_class}`);
 
     // =========================================================================
-    // STEP 1: Run Pass-2 Orchestrator
+    // STEP 1: Connect to Neon
     // =========================================================================
-    const pass2Input: Pass2Input = {
-      pass1RunId: pass1_id,
-      pass15RunId: pass15_id,
-      targetZip: zip,
-      targetState: state,
-      parcelId: parcel_id,
-      address,
-      latitude,
-      longitude,
-      acreage,
-    };
-
-    const pass2Output = await runPass2Orchestrator(pass2Input);
-
-    // =========================================================================
-    // STEP 2: Store Pass-2 Results
-    // =========================================================================
-    const { data: pass2Run, error: insertError } = await supabase
-      .from('pass2_runs')
-      .insert({
-        pass1_id,
-        pass15_id: pass15_id || null,
-        zip,
-        state,
-        run_id: pass2Output.runId,
-        results: pass2Output,
-        final_verdict: pass2Output.finalVerdict,
-        verdict_score: pass2Output.verdictScore,
-        status: pass2Output.status,
-        // Map to OpportunityObject segments
-        zoning: pass2Output.zoning,
-        feasibility: pass2Output.feasibility,
-        reverse_feasibility: pass2Output.reverseFeasibility,
-        fusion_demand: pass2Output.fusionDemand,
-        verdict: pass2Output.verdict,
-      })
-      .select()
-      .single();
-
-    if (insertError) {
-      console.error('[start_pass2] Insert error:', insertError);
-      throw insertError;
+    try {
+      sql = await getNeonConnection();
+    } catch (error) {
+      console.error('[start_pass2] Neon connection failed:', error);
+      
+      // Return schema incomplete response
+      const response: Pass2Response = {
+        status: 'SCHEMA_INCOMPLETE',
+        jurisdiction_card_complete: false,
+        missing_required_fields: REQUIRED_JURISDICTION_FIELDS,
+        blocked_fields: NON_AUTOMATABLE_FIELDS,
+        fatal_prohibitions: [],
+        county_capability: null,
+        next_actions: ['Neon database connection not available', 'Configure NEON_DATABASE_URL secret'],
+        zip_metadata: null,
+        schema_status: {
+          jurisdiction_cards_exists: false,
+          jurisdiction_constraints_exists: false,
+          jurisdiction_prohibitions_exists: false,
+          ref_county_capability_exists: false,
+        },
+        timestamp: new Date().toISOString(),
+      };
+      
+      return new Response(
+        JSON.stringify(response),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     // =========================================================================
-    // STEP 3: Log Engine Event
+    // STEP 2: Resolve ZIP → County
+    // =========================================================================
+    const zipMetadata = await fetchZipMetadata(sql, zip);
+    
+    if (!zipMetadata) {
+      console.log(`[start_pass2] ZIP ${zip} not found in Neon`);
+      
+      const response: Pass2Response = {
+        status: 'HOLD_INCOMPLETE',
+        jurisdiction_card_complete: false,
+        missing_required_fields: REQUIRED_JURISDICTION_FIELDS,
+        blocked_fields: NON_AUTOMATABLE_FIELDS,
+        fatal_prohibitions: [],
+        county_capability: null,
+        next_actions: [`ZIP ${zip} not found in database`, 'Verify ZIP code and retry'],
+        zip_metadata: null,
+        schema_status: {
+          jurisdiction_cards_exists: true,
+          jurisdiction_constraints_exists: true,
+          jurisdiction_prohibitions_exists: true,
+          ref_county_capability_exists: true,
+        },
+        timestamp: new Date().toISOString(),
+      };
+      
+      await sql.end();
+      return new Response(
+        JSON.stringify(response),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const countyName = zipMetadata.county;
+    const state = zipMetadata.state;
+
+    console.log(`[start_pass2] Resolved to county: ${countyName}, state: ${state}`);
+
+    // =========================================================================
+    // STEP 3: Check Schema Status
+    // =========================================================================
+    const schemaStatus = {
+      jurisdiction_cards_exists: await checkTableExists(sql, 'pass2', 'jurisdiction_cards'),
+      jurisdiction_constraints_exists: await checkTableExists(sql, 'pass2', 'jurisdiction_constraints'),
+      jurisdiction_prohibitions_exists: await checkTableExists(sql, 'pass2', 'jurisdiction_prohibitions'),
+      ref_county_capability_exists: await checkTableExists(sql, 'ref', 'ref_county_capability'),
+    };
+
+    console.log('[start_pass2] Schema status:', schemaStatus);
+
+    // =========================================================================
+    // STEP 4: Fetch Data from Neon (READ-ONLY)
+    // =========================================================================
+    const [countyCapability, jurisdictionCardResult, prohibitionsResult] = await Promise.all([
+      fetchCountyCapability(sql, countyName, state),
+      fetchJurisdictionCard(sql, countyName, state),
+      fetchJurisdictionProhibitions(sql, countyName, state),
+    ]);
+
+    // =========================================================================
+    // STEP 5: Analyze Constraints (NO COMPUTATION)
+    // =========================================================================
+    const analysis = analyzeConstraints(
+      jurisdictionCardResult.data,
+      prohibitionsResult.data,
+      countyCapability
+    );
+
+    // =========================================================================
+    // STEP 6: Build Response
+    // =========================================================================
+    const response: Pass2Response = {
+      status: analysis.status,
+      jurisdiction_card_complete: analysis.jurisdiction_card_complete,
+      missing_required_fields: analysis.missing_required_fields,
+      blocked_fields: analysis.blocked_fields,
+      fatal_prohibitions: analysis.fatal_prohibitions,
+      county_capability: countyCapability ? {
+        automation_viable: countyCapability.automation_viable ?? false,
+        permit_system: countyCapability.permit_system ?? 'unknown',
+        zoning_model: countyCapability.zoning_model ?? 'unknown',
+        county_name: countyName,
+        state: state,
+      } : {
+        automation_viable: false,
+        permit_system: 'unknown',
+        zoning_model: 'unknown',
+        county_name: countyName,
+        state: state,
+      },
+      next_actions: analysis.next_actions,
+      zip_metadata: {
+        zip: zipMetadata.zip,
+        city: zipMetadata.city,
+        county: zipMetadata.county,
+        state: zipMetadata.state,
+        population: zipMetadata.population,
+      },
+      schema_status: schemaStatus,
+      timestamp: new Date().toISOString(),
+    };
+
+    // =========================================================================
+    // STEP 7: Log Event
     // =========================================================================
     await supabase.from('engine_logs').insert({
       engine: 'start_pass2',
-      event: 'underwriting_complete',
+      event: 'constraint_compilation',
       payload: {
-        pass2_id: pass2Run.id,
-        pass1_id,
-        run_id: pass2Output.runId,
         zip,
+        county: countyName,
         state,
-        final_verdict: pass2Output.finalVerdict,
-        verdict_score: pass2Output.verdictScore,
+        status: response.status,
+        missing_fields_count: response.missing_required_fields.length,
+        blocked_fields_count: response.blocked_fields.length,
+        fatal_prohibitions_count: response.fatal_prohibitions.length,
       },
-      status: pass2Output.status,
+      status: response.status,
     });
 
-    console.log(`[start_pass2] Completed with verdict: ${pass2Output.finalVerdict} (score: ${pass2Output.verdictScore})`);
+    console.log(`[start_pass2] Completed with status: ${response.status}`);
 
-    // =========================================================================
-    // STEP 4: Return Response
-    // =========================================================================
+    await sql.end();
+
     return new Response(
-      JSON.stringify({
-        pass2_id: pass2Run.id,
-        run_id: pass2Output.runId,
-        status: pass2Output.status,
-        final_verdict: pass2Output.finalVerdict,
-        verdict_score: pass2Output.verdictScore,
-        results: pass2Output,
-      }),
+      JSON.stringify(response),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
   } catch (error) {
     console.error('[start_pass2] Error:', error);
+    
+    if (sql) {
+      await sql.end();
+    }
+    
     return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' }),
+      JSON.stringify({ 
+        error: error instanceof Error ? error.message : 'Unknown error',
+        status: 'SCHEMA_INCOMPLETE',
+        jurisdiction_card_complete: false,
+        missing_required_fields: REQUIRED_JURISDICTION_FIELDS,
+        blocked_fields: NON_AUTOMATABLE_FIELDS,
+        fatal_prohibitions: [],
+        county_capability: null,
+        next_actions: ['System error occurred', 'Check logs for details'],
+        zip_metadata: null,
+        schema_status: {
+          jurisdiction_cards_exists: false,
+          jurisdiction_constraints_exists: false,
+          jurisdiction_prohibitions_exists: false,
+          ref_county_capability_exists: false,
+        },
+        timestamp: new Date().toISOString(),
+      }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
