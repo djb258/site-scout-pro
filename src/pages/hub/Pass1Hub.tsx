@@ -106,6 +106,14 @@ interface Pass1Result {
     saturation_level: string;
     confidence: "low" | "medium";
   };
+  competitors?: Array<{
+    name: string;
+    address: string;
+    city: string;
+    distance_miles: number;
+    estimated_sqft: number | null;
+    phone: string | null;
+  }>;
   scoring: {
     raw_scores: { demand: number; supply: number; constraints: number };
     weights: { demand: number; supply: number; constraints: number };
@@ -207,6 +215,42 @@ const Pass1Hub = () => {
     } else {
       setCountySortColumn(column);
       setCountySortDirection('asc');
+    }
+  };
+  
+  // Competitor Sorting State
+  const [competitorSortColumn, setCompetitorSortColumn] = useState<'name' | 'city' | 'distance' | 'sqft'>('distance');
+  const [competitorSortDirection, setCompetitorSortDirection] = useState<'asc' | 'desc'>('asc');
+  
+  // Sort competitors helper
+  const getSortedCompetitors = () => {
+    if (!result?.competitors) return [];
+    return [...result.competitors].sort((a, b) => {
+      let comparison = 0;
+      switch (competitorSortColumn) {
+        case 'name':
+          comparison = a.name.localeCompare(b.name);
+          break;
+        case 'city':
+          comparison = a.city.localeCompare(b.city);
+          break;
+        case 'distance':
+          comparison = a.distance_miles - b.distance_miles;
+          break;
+        case 'sqft':
+          comparison = (a.estimated_sqft || 0) - (b.estimated_sqft || 0);
+          break;
+      }
+      return competitorSortDirection === 'asc' ? comparison : -comparison;
+    });
+  };
+  
+  const toggleCompetitorSort = (column: 'name' | 'city' | 'distance' | 'sqft') => {
+    if (competitorSortColumn === column) {
+      setCompetitorSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
+    } else {
+      setCompetitorSortColumn(column);
+      setCompetitorSortDirection('asc');
     }
   };
 
@@ -746,47 +790,108 @@ const Pass1Hub = () => {
                   )}
 
 
-                  {/* Competition Summary */}
+                  {/* Competition Analysis */}
                   {result.competition_summary && (
-                  <Card className="border-border bg-card">
+                  <Card className="border-border bg-card col-span-1 md:col-span-2">
                     <CardHeader className="pb-2">
                       <CardTitle className="text-sm flex items-center gap-2">
                         <Building2 className="h-4 w-4 text-amber-500" />
-                        Competition Summary
+                        Competition Analysis
                         {getConfidenceBadge(result.competition_summary.confidence)}
                       </CardTitle>
                     </CardHeader>
-                    <CardContent className="space-y-2 text-sm">
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Est. Competitors</span>
-                        <span>{result.competition_summary.estimated_count}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Saturation Level</span>
-                        <Badge variant="outline" className={
-                          result.competition_summary.saturation_level === 'undersaturated' ? 'border-emerald-500/50 text-emerald-400' :
-                          result.competition_summary.saturation_level === 'moderate' ? 'border-amber-500/50 text-amber-400' :
-                          'border-red-500/50 text-red-400'
-                        }>
-                          {result.competition_summary.saturation_level}
-                        </Badge>
-                      </div>
-                      <Separator />
-                      <p className="text-xs text-muted-foreground">Estimated Rent Bands:</p>
-                      <div className="grid grid-cols-3 gap-2 text-center">
-                        <div className="p-2 rounded bg-muted/30">
-                          <p className="text-xs text-muted-foreground">Low</p>
-                          <p className="font-mono">${result.competition_summary.rent_bands.low}</p>
+                    <CardContent className="space-y-3 text-sm">
+                      {/* Header Stats */}
+                      <div className="grid grid-cols-2 md:grid-cols-5 gap-4 p-3 bg-muted/30 rounded-lg">
+                        <div>
+                          <p className="text-xs text-muted-foreground">Competitors</p>
+                          <p className="font-semibold">{result.competitors?.length || result.competition_summary.estimated_count}</p>
                         </div>
-                        <div className="p-2 rounded bg-muted/30">
-                          <p className="text-xs text-muted-foreground">Med</p>
-                          <p className="font-mono">${result.competition_summary.rent_bands.medium}</p>
+                        <div>
+                          <p className="text-xs text-muted-foreground">Saturation</p>
+                          <Badge variant="outline" className={
+                            result.competition_summary.saturation_level === 'undersaturated' ? 'border-emerald-500/50 text-emerald-400' :
+                            result.competition_summary.saturation_level === 'moderate' ? 'border-amber-500/50 text-amber-400' :
+                            'border-red-500/50 text-red-400'
+                          }>
+                            {result.competition_summary.saturation_level}
+                          </Badge>
                         </div>
-                        <div className="p-2 rounded bg-muted/30">
-                          <p className="text-xs text-muted-foreground">High</p>
-                          <p className="font-mono">${result.competition_summary.rent_bands.high}</p>
+                        <div>
+                          <p className="text-xs text-muted-foreground">Rent (Low)</p>
+                          <p className="font-semibold font-mono">${result.competition_summary.rent_bands.low}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-muted-foreground">Rent (Med)</p>
+                          <p className="font-semibold font-mono">${result.competition_summary.rent_bands.medium}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-muted-foreground">Rent (High)</p>
+                          <p className="font-semibold font-mono">${result.competition_summary.rent_bands.high}</p>
                         </div>
                       </div>
+                      
+                      {/* Competitors Table */}
+                      {result.competitors && result.competitors.length > 0 ? (
+                        <div className="border border-border rounded-lg overflow-hidden">
+                          <div className="grid grid-cols-4 gap-2 p-2 bg-muted/50 text-xs font-medium border-b border-border">
+                            <button 
+                              onClick={() => toggleCompetitorSort('name')}
+                              className="flex items-center gap-1 text-left hover:text-foreground text-muted-foreground"
+                            >
+                              Facility
+                              {competitorSortColumn === 'name' && (
+                                <span className="text-amber-500">{competitorSortDirection === 'asc' ? '↑' : '↓'}</span>
+                              )}
+                            </button>
+                            <button 
+                              onClick={() => toggleCompetitorSort('city')}
+                              className="flex items-center gap-1 text-left hover:text-foreground text-muted-foreground"
+                            >
+                              City
+                              {competitorSortColumn === 'city' && (
+                                <span className="text-amber-500">{competitorSortDirection === 'asc' ? '↑' : '↓'}</span>
+                              )}
+                            </button>
+                            <button 
+                              onClick={() => toggleCompetitorSort('distance')}
+                              className="flex items-center gap-1 justify-end hover:text-foreground text-muted-foreground"
+                            >
+                              Distance
+                              {competitorSortColumn === 'distance' && (
+                                <span className="text-amber-500">{competitorSortDirection === 'asc' ? '↑' : '↓'}</span>
+                              )}
+                            </button>
+                            <button 
+                              onClick={() => toggleCompetitorSort('sqft')}
+                              className="flex items-center gap-1 justify-end hover:text-foreground text-muted-foreground"
+                            >
+                              Est. SqFt
+                              {competitorSortColumn === 'sqft' && (
+                                <span className="text-amber-500">{competitorSortDirection === 'asc' ? '↑' : '↓'}</span>
+                              )}
+                            </button>
+                          </div>
+                          <ScrollArea className="h-64">
+                            <div className="divide-y divide-border">
+                              {getSortedCompetitors().map((comp, i) => (
+                                <div key={i} className="grid grid-cols-4 gap-2 p-2 text-xs hover:bg-muted/20">
+                                  <span className="font-medium truncate" title={comp.name}>{comp.name}</span>
+                                  <span className="text-muted-foreground truncate">{comp.city}</span>
+                                  <span className="text-right text-muted-foreground">{comp.distance_miles} mi</span>
+                                  <span className="text-right font-mono">{comp.estimated_sqft?.toLocaleString() || 'N/A'}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </ScrollArea>
+                        </div>
+                      ) : (
+                        <div className="border border-border rounded-lg p-8 text-center text-muted-foreground">
+                          <Building2 className="h-8 w-8 mx-auto mb-2 opacity-30" />
+                          <p className="text-sm">No competitor data available yet</p>
+                          <p className="text-xs mt-1">Competitor list will be populated when data source is connected</p>
+                        </div>
+                      )}
                     </CardContent>
                   </Card>
                   )}
