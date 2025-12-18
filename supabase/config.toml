@@ -65,3 +65,6 @@ verify_jwt = false
 
 [functions.hub1_pass1_supply]
 verify_jwt = false
+
+[functions.hub1_pass1_orchestrator_v1_1]
+verify_jwt = false
