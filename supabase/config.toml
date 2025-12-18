@@ -110,6 +110,9 @@ verify_jwt = false
 [functions.pass0_source_fetcher]
 verify_jwt = false
 
+[functions.pass0_content_parser]
+verify_jwt = false
+
 [functions.pass0_geo_resolver]
 verify_jwt = false
 

@@ -7,7 +7,8 @@
       "geo_scope": "state",
       "enabled": true,
       "cadence": "6h",
-      "description": "Google News local business RSS"
+      "description": "Google News - Self storage & warehouse news",
+      "rss_url": "https://news.google.com/rss/search?q=self+storage+facility+OR+warehouse+OR+distribution+center&hl=en-US&gl=US&ceid=US:en"
     },
     {
       "source_id": "bizjournals",
@@ -15,7 +16,8 @@
       "geo_scope": "metro",
       "enabled": true,
       "cadence": "12h",
-      "description": "Regional business journal feeds"
+      "description": "Commercial real estate development news",
+      "rss_url": "https://news.google.com/rss/search?q=commercial+real+estate+development&hl=en-US&gl=US&ceid=US:en"
     },
     {
       "source_id": "local_gov_permits",
@@ -27,19 +29,21 @@
     },
     {
       "source_id": "press_releases",
-      "type": "scrape",
+      "type": "rss",
       "geo_scope": "national",
       "enabled": true,
       "cadence": "4h",
-      "description": "Corporate press release aggregators"
+      "description": "Construction & permit approvals",
+      "rss_url": "https://news.google.com/rss/search?q=new+construction+permits+approved&hl=en-US&gl=US&ceid=US:en"
     },
     {
       "source_id": "economic_dev",
-      "type": "api",
+      "type": "rss",
       "geo_scope": "state",
       "enabled": true,
       "cadence": "24h",
-      "description": "State economic development announcements"
+      "description": "Economic development & industrial park news",
+      "rss_url": "https://news.google.com/rss/search?q=economic+development+industrial+park&hl=en-US&gl=US&ceid=US:en"
     }
   ]
 }

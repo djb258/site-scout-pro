@@ -8,51 +8,41 @@ const corsHeaders = {
 interface WorkerInput {
   run_id: string;
   dry_run?: boolean;
+  items: MappedItem[];
+  ttl_days?: number;
+  confidence_threshold?: 'high' | 'medium' | 'low';
 }
 
-// Mock final pins to emit
-const MOCK_PINS = [
-  {
-    source_id: 'google_news_local',
-    raw_title: 'Amazon announces new distribution center in Bedford County, PA',
-    raw_url: 'https://example.com/news/1',
-    lat: 40.0064,
-    lon: -78.4895,
-    zip_id: '15522',
-    confidence: 'high',
-    resolution_tier: 'county'
-  },
-  {
-    source_id: 'bizjournals',
-    raw_title: 'Major housing development approved for Frederick, MD',
-    raw_url: 'https://example.com/news/2',
-    lat: 39.4143,
-    lon: -77.4105,
-    zip_id: '21701',
-    confidence: 'high',
-    resolution_tier: 'city'
-  },
-  {
-    source_id: 'press_releases',
-    raw_title: 'Tesla expands manufacturing to West Virginia Eastern Panhandle',
-    raw_url: 'https://example.com/news/3',
-    lat: 39.4562,
-    lon: -77.9639,
-    zip_id: '25401',
-    confidence: 'high',
-    resolution_tier: 'city'
-  },
-  {
-    source_id: 'google_news_local',
-    raw_title: 'New self-storage facility planned for growing suburb',
-    raw_url: 'https://example.com/news/5',
-    lat: 39.6418,
-    lon: -77.7200,
-    zip_id: '21740',
-    confidence: 'high',
-    resolution_tier: 'city'
-  }
-];
+interface MappedItem {
+  source_id: string;
+  raw_title: string;
+  raw_url: string;
+  lat: number | null;
+  lon: number | null;
+  zip_id: string | null;
+  distance_miles: number | null;
+  resolution_tier: string;
+  resolution_explain: Record<string, any>;
+  confidence: 'high' | 'medium' | 'low';
+}
+
+interface PinRecord {
+  run_id: string;
+  source_id: string;
+  raw_title: string;
+  raw_url: string;
+  lat: number | null;
+  lon: number | null;
+  zip_id: string | null;
+  distance_miles: number | null;
+  resolution_tier: string;
+  resolution_explain: Record<string, any>;
+  confidence: string;
+  ttl: string;
+}
+
+const DEFAULT_TTL_DAYS = 7;
+const CONFIDENCE_ORDER = ['high', 'medium', 'low'];
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -66,35 +56,118 @@ Deno.serve(async (req) => {
 
   try {
     const input: WorkerInput = await req.json();
-    console.log(`[PASS0_PIN_EMITTER] Starting for run ${input.run_id}`);
+    const ttlDays = input.ttl_days ?? DEFAULT_TTL_DAYS;
+    const confidenceThreshold = input.confidence_threshold ?? 'medium';
+    
+    console.log(`[PASS0_PIN_EMITTER] Starting for run ${input.run_id} with ${input.items?.length || 0} items`);
+    console.log(`[PASS0_PIN_EMITTER] TTL: ${ttlDays} days, Confidence threshold: ${confidenceThreshold}`);
 
-    // Prepare pins with run_id
-    const pinsToInsert = MOCK_PINS.map(pin => ({
-      ...pin,
+    if (!input.items || input.items.length === 0) {
+      return new Response(
+        JSON.stringify({
+          status: 'success',
+          run_id: input.run_id,
+          item_count: 0,
+          items: [],
+          logs: [{ level: 'warn', message: 'No items to emit' }]
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const logs: Array<{level: string; message: string}> = [];
+    
+    // Filter by confidence threshold
+    const thresholdIndex = CONFIDENCE_ORDER.indexOf(confidenceThreshold);
+    const filteredItems = input.items.filter(item => {
+      const itemIndex = CONFIDENCE_ORDER.indexOf(item.confidence);
+      return itemIndex <= thresholdIndex;
+    });
+    
+    const rejectedByConfidence = input.items.length - filteredItems.length;
+    if (rejectedByConfidence > 0) {
+      logs.push({ level: 'info', message: `Filtered out ${rejectedByConfidence} items below confidence threshold` });
+    }
+
+    // Calculate TTL timestamp
+    const ttlDate = new Date(Date.now() + ttlDays * 24 * 60 * 60 * 1000);
+    
+    // Prepare pins for insertion
+    const pinsToInsert: PinRecord[] = filteredItems.map(item => ({
       run_id: input.run_id,
-      ttl: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
+      source_id: item.source_id,
+      raw_title: item.raw_title,
+      raw_url: item.raw_url,
+      lat: item.lat,
+      lon: item.lon,
+      zip_id: item.zip_id,
+      distance_miles: item.distance_miles,
+      resolution_tier: item.resolution_tier,
+      resolution_explain: {
+        ...item.resolution_explain,
+        emitted_at: new Date().toISOString(),
+        ttl_days: ttlDays
+      },
+      confidence: item.confidence,
+      ttl: ttlDate.toISOString()
     }));
 
     let insertedCount = 0;
+    let errorCount = 0;
 
-    if (!input.dry_run) {
-      const { data, error } = await supabase
-        .from('pass0_narrative_pins')
-        .insert(pinsToInsert)
-        .select();
+    if (!input.dry_run && pinsToInsert.length > 0) {
+      // Insert in batches to avoid timeouts
+      const batchSize = 50;
+      for (let i = 0; i < pinsToInsert.length; i += batchSize) {
+        const batch = pinsToInsert.slice(i, i + batchSize);
+        
+        const { data, error } = await supabase
+          .from('pass0_narrative_pins')
+          .insert(batch)
+          .select('id');
 
-      if (error) {
-        console.error('[PASS0_PIN_EMITTER] Insert error:', error);
-        throw error;
+        if (error) {
+          console.error('[PIN_EMITTER] Batch insert error:', error);
+          errorCount += batch.length;
+          logs.push({ level: 'error', message: `Batch ${i / batchSize + 1} failed: ${error.message}` });
+        } else {
+          insertedCount += data?.length ?? 0;
+        }
       }
-
-      insertedCount = data?.length ?? 0;
-    } else {
+      
+      logs.push({ level: 'info', message: `Inserted ${insertedCount} pins to database` });
+      
+    } else if (input.dry_run) {
       insertedCount = pinsToInsert.length;
-      console.log('[PASS0_PIN_EMITTER] Dry run - skipping insert');
+      logs.push({ level: 'info', message: `Dry run: would insert ${insertedCount} pins` });
     }
 
-    console.log(`[PASS0_PIN_EMITTER] Emitted ${insertedCount} pins`);
+    // Clean up expired pins (TTL enforcement)
+    if (!input.dry_run) {
+      const { data: expiredData, error: cleanupError } = await supabase
+        .from('pass0_narrative_pins')
+        .delete()
+        .lt('ttl', new Date().toISOString())
+        .select('id');
+      
+      if (!cleanupError && expiredData && expiredData.length > 0) {
+        logs.push({ level: 'info', message: `Cleaned up ${expiredData.length} expired pins` });
+        console.log(`[PIN_EMITTER] Cleaned up ${expiredData.length} expired pins`);
+      }
+    }
+
+    // Mark manual queue items as processed
+    if (!input.dry_run) {
+      await supabase
+        .from('pass0_url_queue')
+        .update({ status: 'processed', processed_at: new Date().toISOString() })
+        .eq('processed_run_id', input.run_id)
+        .eq('status', 'processing');
+    }
+
+    logs.push({ level: 'info', message: `TTL set to ${ttlDays} days` });
+
+    console.log(`[PASS0_PIN_EMITTER] Complete: ${insertedCount} pins emitted, ${errorCount} errors`);
 
     return new Response(
       JSON.stringify({
@@ -102,11 +175,11 @@ Deno.serve(async (req) => {
         run_id: input.run_id,
         item_count: insertedCount,
         dry_run: input.dry_run ?? false,
-        pins: pinsToInsert,
-        logs: [
-          { level: 'info', message: `Emitted ${insertedCount} narrative pins` },
-          { level: 'info', message: `TTL set to 7 days` }
-        ]
+        filtered_by_confidence: rejectedByConfidence,
+        error_count: errorCount,
+        ttl_days: ttlDays,
+        ttl_expires: ttlDate.toISOString(),
+        logs
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
