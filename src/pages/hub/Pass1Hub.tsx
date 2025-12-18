@@ -996,52 +996,6 @@ const Pass1Hub = () => {
                   </Card>
                 )}
 
-
-                {/* Evidence Drawer */}
-                <Sheet>
-                  <SheetTrigger asChild>
-                    <Button variant="outline" className="w-full">
-                      <FileText className="mr-2 h-4 w-4" />
-                      View Execution Log ({logs.length} entries)
-                    </Button>
-                  </SheetTrigger>
-                  <SheetContent className="w-[400px] sm:w-[540px]">
-                    <SheetHeader>
-                      <SheetTitle>Execution Log</SheetTitle>
-                    </SheetHeader>
-                    <ScrollArea className="h-[calc(100vh-120px)] mt-4">
-                      <div className="space-y-3">
-                        {logs.map((log) => (
-                          <div key={log.id} className="p-3 rounded bg-muted/30 border border-border text-sm">
-                            <div className="flex items-center justify-between mb-2">
-                              <Badge variant="outline" className="text-xs">
-                                {log.step}
-                              </Badge>
-                              <span className="text-xs text-muted-foreground">
-                                {new Date(log.created_at).toLocaleTimeString()}
-                              </span>
-                            </div>
-                            <div className="flex items-center gap-2 mb-2">
-                              {log.status === 'completed' && <CheckCircle2 className="h-3 w-3 text-emerald-400" />}
-                              {log.status === 'started' && <Clock className="h-3 w-3 text-amber-400" />}
-                              {log.status === 'failed' && <XCircle className="h-3 w-3 text-red-400" />}
-                              {log.status === 'rejected' && <AlertCircle className="h-3 w-3 text-red-400" />}
-                              <span className="text-xs capitalize">{log.status}</span>
-                            </div>
-                            {log.metadata && Object.keys(log.metadata).length > 0 && (
-                              <pre className="text-[10px] font-mono text-muted-foreground overflow-auto max-h-24">
-                                {JSON.stringify(log.metadata, null, 2)}
-                              </pre>
-                            )}
-                          </div>
-                        ))}
-                        {logs.length === 0 && (
-                          <p className="text-center text-muted-foreground py-8">No logs available</p>
-                        )}
-                      </div>
-                    </ScrollArea>
-                  </SheetContent>
-                </Sheet>
               </>
             )}
           </div>
