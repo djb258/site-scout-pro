@@ -327,7 +327,7 @@ serve(async (req) => {
 
     const derivedCounties = Array.from(countiesMap.values())
       .sort((a, b) => a.distance_miles - b.distance_miles)
-      .slice(0, 20);
+      ; // Show all counties in radius for jurisdiction cards
 
     await logStep(run_id, 'radius_analysis', 'completed', {
       counties_count: derivedCounties.length,
