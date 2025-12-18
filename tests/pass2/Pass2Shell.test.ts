@@ -274,6 +274,56 @@ describe('Doctrine Compliance', () => {
     // Should have unknowns since no jurisdiction card
     expect(Array.isArray(output.unknowns)).toBe(true);
   });
+
+  // -------------------------------------------------------------------------
+  // ADR-019: Pass 2 Really Is — Jurisdiction Card Completion Engine
+  // -------------------------------------------------------------------------
+
+  it('should have jurisdiction_card_complete as primary signal', async () => {
+    const input = createValidInput();
+    const output = await runPass2ConstraintCompiler(input);
+
+    // DOCTRINE: jurisdiction_card_complete is the PRIMARY signal
+    expect(typeof output.jurisdiction_card_complete).toBe('boolean');
+  });
+
+  it('should have required_fields_missing array', async () => {
+    const input = createValidInput();
+    const output = await runPass2ConstraintCompiler(input);
+
+    // DOCTRINE: Must track what fields are missing
+    expect(Array.isArray(output.required_fields_missing)).toBe(true);
+  });
+
+  it('should have fatal_prohibitions array', async () => {
+    const input = createValidInput();
+    const output = await runPass2ConstraintCompiler(input);
+
+    // DOCTRINE: Must track fatal prohibitions (e.g., storage not allowed)
+    expect(Array.isArray(output.fatal_prohibitions)).toBe(true);
+  });
+
+  it('should set jurisdiction_card_complete=false when HOLD_INCOMPLETE', async () => {
+    const input = createMinimalInput(); // No state/county
+    const output = await runPass2ConstraintCompiler(input);
+
+    // DOCTRINE: HOLD_INCOMPLETE means card is NOT complete
+    if (output.status === 'HOLD_INCOMPLETE') {
+      expect(output.jurisdiction_card_complete).toBe(false);
+    }
+  });
+
+  it('should answer "Do we know enough to model?" not "Is this a good deal?"', async () => {
+    const input = createValidInput();
+    const output = await runPass2ConstraintCompiler(input);
+
+    // DOCTRINE: Pass 2 answers knowledge questions, not deal quality
+    // Verify no deal-quality fields exist
+    expect((output as any).dealScore).toBeUndefined();
+    expect((output as any).recommendation).toBeUndefined();
+    expect((output as any).goNoGo).toBeUndefined();
+    expect((output as any).investmentGrade).toBeUndefined();
+  });
 });
 
 // =============================================================================

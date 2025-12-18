@@ -1,13 +1,23 @@
 // =============================================================================
-// PASS 2 OUTPUT CONTRACT — Constraint Compiler Result
+// PASS 2 OUTPUT CONTRACT — Jurisdiction Card Completion Result
 // =============================================================================
 // Doctrine ID: SS.02.00.OUT
 // Purpose: Define the ONLY outputs from Pass 2 Constraint Compiler
 //
-// DOCTRINE: Pass 2 outputs a buildability envelope + execution checklist.
-// NO dollars. NO NOI. NO timelines. NO revenue projections.
+// DOCTRINE (ADR-019): Pass 2 = Jurisdiction Card Completion Engine
 //
-// This contract is FROZEN. Do not add financial fields.
+// Pass 2 returns NO conclusions, only FACTS:
+// - jurisdiction_card_complete: boolean
+// - required_fields_missing[]
+// - manual_research_required: boolean
+// - geometry_constraints (if complete)
+// - approval_checklist
+// - fatal_prohibitions
+//
+// NO dollars. NO NOI. NO timelines. NO revenue projections.
+// If you feel tempted to add financial math, STOP.
+//
+// Reference: docs/doctrine/Pass2ReallyIs.md
 // =============================================================================
 
 import type { Pass2Input } from './pass2_input';
@@ -168,9 +178,10 @@ export interface UnknownItem {
   research_method: string;
 
   /**
-   * Is this critical for envelope calculation?
+   * Does this block Pass 3 from running?
+   * DOCTRINE: Unknown ≠ false. Missing data must propagate forward.
    */
-  blocks_envelope: boolean;
+  blocks_pass3: boolean;
 }
 
 /**
@@ -212,8 +223,11 @@ export interface Provenance {
 /**
  * Pass 2 Output Contract — FROZEN
  *
+ * DOCTRINE (ADR-019): Pass 2 returns NO conclusions, only facts.
  * This interface defines the ONLY outputs from Pass 2.
  * NO financial fields. NO revenue. NO timelines.
+ *
+ * A good Pass 2 makes Pass 3 boring.
  */
 export interface Pass2Output {
   /**
@@ -240,6 +254,28 @@ export interface Pass2Output {
    * Pass 2 Status
    */
   status: Pass2Status;
+
+  // ===========================================================================
+  // DOCTRINE: Primary outputs — "Do we know enough to model this site?"
+  // ===========================================================================
+
+  /**
+   * Is the jurisdiction card complete enough for Pass 3?
+   * DOCTRINE: This is the PRIMARY signal from Pass 2.
+   */
+  jurisdiction_card_complete: boolean;
+
+  /**
+   * Which required fields are missing?
+   * Pass 3 needs these before it can run.
+   */
+  required_fields_missing: string[];
+
+  /**
+   * Fatal prohibitions that make the site un-developable.
+   * e.g., "Storage use is prohibited in this jurisdiction"
+   */
+  fatal_prohibitions: string[];
 
   /**
    * Buildability Envelope (physical limits)
@@ -288,7 +324,10 @@ export interface Pass2Output {
 }
 
 /**
- * Create a default Pass 2 output for initialization
+ * Create a default Pass 2 output for initialization.
+ *
+ * DOCTRINE: Default state is HOLD_INCOMPLETE with jurisdiction_card_complete: false.
+ * Pass 2 must PROVE completeness, not assume it.
  */
 export function createDefaultPass2Output(input: Pass2Input): Pass2Output {
   return {
@@ -297,6 +336,12 @@ export function createDefaultPass2Output(input: Pass2Input): Pass2Output {
     timestamp: new Date().toISOString(),
     input,
     status: 'HOLD_INCOMPLETE',
+
+    // DOCTRINE: Primary signals — default to incomplete
+    jurisdiction_card_complete: false,
+    required_fields_missing: ['ALL — card not yet researched'],
+    fatal_prohibitions: [],
+
     buildability: {
       gross_acres: input.requested_acres ?? 0,
       net_buildable_acres: null,

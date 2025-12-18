@@ -301,12 +301,25 @@ export class Pass2ConstraintCompiler {
         output.unknowns = verdict.unknowns;
         output.manual_research_required = verdict.manual_research_required;
         output.summary = verdict.summary;
+
+        // DOCTRINE: Populate primary signals
+        output.jurisdiction_card_complete = verdict.status === 'ELIGIBLE';
+        output.required_fields_missing = verdict.unknowns
+          .filter(u => u.blocks_pass3)
+          .map(u => u.field);
+        output.fatal_prohibitions = verdict.fatal_flaws.filter(f =>
+          f.includes('PROHIBITED') || f.includes('not allowed')
+        );
       } catch (err) {
         this.errors.push(`ConstraintVerdict failed: ${err}`);
       }
     } else {
       output.status = 'HOLD_INCOMPLETE';
       output.summary = 'Constraint compilation incomplete - missing required spoke outputs';
+
+      // DOCTRINE: Incomplete = card not ready
+      output.jurisdiction_card_complete = false;
+      output.required_fields_missing = ['Multiple spokes failed — cannot determine completeness'];
     }
 
     // -------------------------------------------------------------------------
@@ -315,6 +328,9 @@ export class Pass2ConstraintCompiler {
 
     output.errors = this.errors;
     output.provenance.compiled_at = new Date().toISOString();
+
+    // DOCTRINE: Log primary signal
+    console.log(`[PASS2_CONSTRAINT_COMPILER] jurisdiction_card_complete: ${output.jurisdiction_card_complete}`);
 
     const elapsed = Date.now() - startTime;
     console.log(`[PASS2_CONSTRAINT_COMPILER] Completed in ${elapsed}ms. Status: ${output.status}`);
