@@ -176,6 +176,39 @@ const Pass1Hub = () => {
   // Promotion State
   const [promotionPayload, setPromotionPayload] = useState<Record<string, unknown> | null>(null);
   const [isPromoting, setIsPromoting] = useState(false);
+  
+  // County Sorting State
+  const [countySortColumn, setCountySortColumn] = useState<'name' | 'distance' | 'population'>('distance');
+  const [countySortDirection, setCountySortDirection] = useState<'asc' | 'desc'>('asc');
+  
+  // Sort counties helper
+  const getSortedCounties = () => {
+    if (!result?.derived_counties) return [];
+    return [...result.derived_counties].sort((a, b) => {
+      let comparison = 0;
+      switch (countySortColumn) {
+        case 'name':
+          comparison = a.name.localeCompare(b.name);
+          break;
+        case 'distance':
+          comparison = a.distance_miles - b.distance_miles;
+          break;
+        case 'population':
+          comparison = (a.population || 0) - (b.population || 0);
+          break;
+      }
+      return countySortDirection === 'asc' ? comparison : -comparison;
+    });
+  };
+  
+  const toggleCountySort = (column: 'name' | 'distance' | 'population') => {
+    if (countySortColumn === column) {
+      setCountySortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
+    } else {
+      setCountySortColumn(column);
+      setCountySortDirection('asc');
+    }
+  };
 
   // Timer effect
   useEffect(() => {
@@ -701,14 +734,38 @@ const Pass1Hub = () => {
                       
                       {/* Counties Table */}
                       <div className="border border-border rounded-lg overflow-hidden">
-                        <div className="grid grid-cols-3 gap-2 p-2 bg-muted/50 text-xs font-medium text-muted-foreground border-b border-border">
-                          <span>County</span>
-                          <span className="text-right">Distance</span>
-                          <span className="text-right">Population</span>
+                        <div className="grid grid-cols-3 gap-2 p-2 bg-muted/50 text-xs font-medium border-b border-border">
+                          <button 
+                            onClick={() => toggleCountySort('name')}
+                            className="flex items-center gap-1 text-left hover:text-foreground text-muted-foreground"
+                          >
+                            County
+                            {countySortColumn === 'name' && (
+                              <span className="text-amber-500">{countySortDirection === 'asc' ? '↑' : '↓'}</span>
+                            )}
+                          </button>
+                          <button 
+                            onClick={() => toggleCountySort('distance')}
+                            className="flex items-center gap-1 justify-end hover:text-foreground text-muted-foreground"
+                          >
+                            Distance
+                            {countySortColumn === 'distance' && (
+                              <span className="text-amber-500">{countySortDirection === 'asc' ? '↑' : '↓'}</span>
+                            )}
+                          </button>
+                          <button 
+                            onClick={() => toggleCountySort('population')}
+                            className="flex items-center gap-1 justify-end hover:text-foreground text-muted-foreground"
+                          >
+                            Population
+                            {countySortColumn === 'population' && (
+                              <span className="text-amber-500">{countySortDirection === 'asc' ? '↑' : '↓'}</span>
+                            )}
+                          </button>
                         </div>
                         <ScrollArea className="h-64">
                           <div className="divide-y divide-border">
-                            {result.derived_counties.map((county, i) => (
+                            {getSortedCounties().map((county, i) => (
                               <div key={i} className="grid grid-cols-3 gap-2 p-2 text-xs hover:bg-muted/20">
                                 <span className="font-medium">{county.name}</span>
                                 <span className="text-right text-muted-foreground">{county.distance_miles} mi</span>
