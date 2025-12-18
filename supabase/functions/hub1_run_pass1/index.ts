@@ -266,46 +266,63 @@ serve(async (req) => {
 
     console.log(`[HUB1_PASS1] Bounding box: lat ${minLat.toFixed(2)}-${maxLat.toFixed(2)}, lng ${minLng.toFixed(2)}-${maxLng.toFixed(2)}`);
 
-    // Get ZIPs within bounding box (much smaller result set)
-    const { data: nearbyZips, error: zipsError } = await supabase
-      .from('us_zip_codes')
-      .select('county_name, county_fips, population, lat, lng')
-      .gte('lat', minLat)
-      .lte('lat', maxLat)
-      .gte('lng', minLng)
-      .lte('lng', maxLng)
-      .not('lat', 'is', null)
-      .not('lng', 'is', null)
-      .limit(5000);
+    // Get ZIPs within bounding box using pagination to get all results
+    let allNearbyZips: Array<{county_name: string | null, county_fips: string | null, population: number | null, lat: number, lng: number}> = [];
+    let offset = 0;
+    const pageSize = 1000;
+    let hasMore = true;
 
-    console.log(`[HUB1_PASS1] Found ${nearbyZips?.length || 0} ZIPs in bounding box`);
+    while (hasMore) {
+      const { data: pageZips, error: pageError } = await supabase
+        .from('us_zip_codes')
+        .select('county_name, county_fips, population, lat, lng')
+        .gte('lat', minLat)
+        .lte('lat', maxLat)
+        .gte('lng', minLng)
+        .lte('lng', maxLng)
+        .not('lat', 'is', null)
+        .not('lng', 'is', null)
+        .range(offset, offset + pageSize - 1);
+
+      if (pageError) {
+        console.error(`[HUB1_PASS1] Error fetching ZIPs page: ${pageError.message}`);
+        break;
+      }
+
+      if (pageZips && pageZips.length > 0) {
+        allNearbyZips = allNearbyZips.concat(pageZips);
+        offset += pageSize;
+        hasMore = pageZips.length === pageSize;
+      } else {
+        hasMore = false;
+      }
+    }
+
+    const nearbyZips = allNearbyZips;
+    console.log(`[HUB1_PASS1] Found ${nearbyZips.length} ZIPs in bounding box (paginated)`);
 
     const countiesMap = new Map<string, County>();
     let totalPopulationInRadius = 0;
 
-    if (nearbyZips && !zipsError) {
-      for (const z of nearbyZips) {
-        if (z.lat && z.lng) {
-          const distance = haversineDistance(centerLat, centerLng, z.lat, z.lng);
-          if (distance <= radius_miles && z.county_name) {
-            totalPopulationInRadius += z.population || 0;
-            
-            if (!countiesMap.has(z.county_name)) {
-              countiesMap.set(z.county_name, {
-                name: z.county_name,
-                fips: z.county_fips || 'unknown',
-                population: z.population || 0,
-                distance_miles: Math.round(distance * 10) / 10
-              });
-            } else {
-              const existing = countiesMap.get(z.county_name)!;
-              existing.population += z.population || 0;
-            }
+    for (const z of nearbyZips) {
+      if (z.lat && z.lng) {
+        const distance = haversineDistance(centerLat, centerLng, z.lat, z.lng);
+        if (distance <= radius_miles && z.county_name) {
+          totalPopulationInRadius += z.population || 0;
+          
+          if (!countiesMap.has(z.county_name)) {
+            countiesMap.set(z.county_name, {
+              name: z.county_name,
+              fips: z.county_fips || 'unknown',
+              population: z.population || 0,
+              distance_miles: Math.round(distance * 10) / 10
+            });
+          } else {
+            const existing = countiesMap.get(z.county_name)!;
+            existing.population += z.population || 0;
           }
         }
       }
-    } else if (zipsError) {
-      console.error(`[HUB1_PASS1] Error fetching nearby ZIPs: ${zipsError.message}`);
     }
 
     const derivedCounties = Array.from(countiesMap.values())
