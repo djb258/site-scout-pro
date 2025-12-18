@@ -1,15 +1,34 @@
 # County Capability Asset (CCA)
 
-## What This Is
+## Cross-Pass Reference Primitive
 
-The County Capability Asset (CCA) is a lightweight, reusable, annually-expiring asset that answers **how** information can be obtained from a county, **not what** the rules are.
+The County Capability Asset (CCA) is a **cross-pass reference primitive** that sits **ABOVE Pass 0**, not inside any pass.
+
+It answers **how** information can be obtained from a county, **not what** the rules are.
 
 ## What This Is NOT
 
 - This is NOT Pass 2
+- This is NOT inside Pass 0
 - This is NOT jurisdiction constraints
 - This is NOT financial modeling
-- This is NOT zoning rules
+
+## Schema Placement
+
+```
+ref
+├── ref_country
+├── ref_state
+├── ref_county
+├── ref_zip
+└── ref_county_capability   ← CCA lives here
+```
+
+**Why ref schema:**
+- Shared across ALL passes (Pass 0, Pass 2, future passes)
+- Slow-changing institutional memory
+- Auditable and versionable
+- Avoids Pass 0 writing into Pass 2 land (doctrinally wrong)
 
 ## Purpose
 
@@ -18,7 +37,8 @@ The CCA exists to:
 1. **Decide automation vs manual research** — before committing resources
 2. **Control cost** — prevent expensive scraping on counties that can't be automated
 3. **Prevent impossible automation attempts** — don't try to scrape what can't be scraped
-4. **Feed Pass 2 hydration routing** — route to the right data gathering method
+4. **Feed Pass 0 signal viability** — throttle confidence based on capability
+5. **Feed Pass 2 hydration routing** — route to the right data gathering method
 
 ## Core Doctrine
 
@@ -50,6 +70,88 @@ If the probe cannot determine a value with confidence, it returns `unknown`. The
 - Assume defaults
 - Infer from neighboring counties
 - Estimate based on state patterns
+
+---
+
+## Cross-Pass Integration Rules
+
+### Who Reads CCA
+
+| Pass | Question CCA Answers |
+|------|---------------------|
+| Pass 0 | "Can I trust signals from here?" |
+| Pass 2 | "How do I fill the jurisdiction card?" |
+| Future Passes | Reuse institutional knowledge |
+
+### Who Writes CCA
+
+**Only CapabilityProbe updates CCA.**
+
+No pass mutates CCA directly. This prevents:
+- Pass 0 writing into Pass 2 land
+- Cross-pass coupling
+- State divergence
+
+---
+
+## Pass 0 Integration
+
+### Pass 0 Does NOT Need Rules
+
+It needs **expectations**.
+
+Before Pass 0 tries to:
+- scrape permits
+- infer inspections
+- read zoning headlines
+- trust "permit activity" signals
+
+It asks:
+```ts
+can_automate_permits?
+can_scrape_documents?
+is_manual_only?
+```
+
+### Pass 0 Behavior Matrix
+
+| County Capability | Pass 0 Behavior |
+|-------------------|-----------------|
+| api / portal_scrape | Full automation allowed |
+| pdf_logs | Weak signal only |
+| manual_only | Human-only signal (low confidence) |
+| unknown | Try cheap probe first |
+
+### DOCTRINE GUARANTEE (Critical)
+
+> **Pass 0 may NOT emit high-confidence signals from counties whose capability is `manual_only` or `unknown`.**
+
+This single rule prevents months of downstream garbage data.
+
+### CCA is a Throttle, Not a Gate
+
+Pass 0 can still surface ideas from low-capability counties, but with:
+- Lower confidence
+- Clear provenance
+- No false precision
+
+---
+
+## Pass 2 Integration
+
+Pass 2 reads CCA to determine hydration strategy:
+
+| automation_viable | Hydration Strategy |
+|-------------------|-------------------|
+| true | Firecrawl scraping |
+| false | Retell voice calls or manual queue |
+
+Retell/manual research is **ONLY** allowed if:
+- `permit_system = 'manual_only'`
+- OR `document_quality = 'scanned_pdf'`
+- OR `automation_viable = false`
+
+---
 
 ## Schema
 
@@ -93,6 +195,8 @@ automation_viable =
 
 This is a **computed column** — do not set it manually.
 
+---
+
 ## CapabilityProbe
 
 The CapabilityProbe is a **cheap, deterministic** function that classifies counties.
@@ -117,63 +221,28 @@ The CapabilityProbe is a **cheap, deterministic** function that classifies count
 
 Same inputs → same outputs. The probe has no external dependencies that could cause non-determinism.
 
-## Integration Rules
-
-### Pass 2
-
-Pass 2 **READS** capability but does not mutate it.
-
-```typescript
-// Pass 2 checks capability before routing
-const capability = await getCountyCapability(countyId);
-
-if (capability.automation_viable) {
-  // Route to Firecrawl scraping
-} else if (capability.permit_system === 'manual_only') {
-  // Route to Retell voice call
-} else {
-  // Queue for manual research
-}
-```
-
-### JurisdictionCardHydrator
-
-The hydrator **MUST** consult capability before attempting automation.
-
-```typescript
-// ADR-021: Hydration Router
-if (!capability.automation_viable) {
-  // DO NOT attempt Firecrawl
-  // Route to Retell or manual queue
-}
-```
-
-### Retell / Manual Research
-
-Retell and manual research are **ONLY** allowed if:
-
-- `permit_system = 'manual_only'`
-- OR `document_quality = 'scanned_pdf'`
-- OR `automation_viable = false`
+---
 
 ## Database Table
 
 ```sql
-ref_county_capability.county_capability_profiles
+ref.ref_county_capability
 ├── county_id (PK, FK to ref_county)
-├── zoning_model (enum)
-├── permit_system (enum)
-├── document_quality (enum)
+├── zoning_model (cca_zoning_model enum)
+├── permit_system (cca_permit_system enum)
+├── document_quality (cca_document_quality enum)
 ├── inspections_linked (boolean)
 ├── automation_viable (computed boolean)
 ├── last_verified_at (timestamptz)
 ├── expires_at (timestamptz, auto-calculated)
-├── confidence_level (enum: low/medium/high)
+├── confidence_level (cca_confidence_level enum)
 ├── detected_vendor (text)
 ├── planning_url (text)
 ├── permits_url (text)
 └── notes (text)
 ```
+
+---
 
 ## Testing Requirements
 
@@ -185,6 +254,8 @@ Tests must verify:
 4. CapabilityProbe never scrapes PDFs
 5. Determinism: same inputs → same outputs
 
+---
+
 ## Files
 
 | File | Purpose |
@@ -192,8 +263,10 @@ Tests must verify:
 | `src/capability/types.ts` | Type definitions |
 | `src/capability/CapabilityProbe.ts` | Main probe orchestrator |
 | `src/capability/detectors/` | Individual detector modules |
-| `src/capability/__tests__/` | Test suite |
+| `tests/capability/` | Test suite |
 | `supabase/migrations/20251218_county_capability_profiles.sql` | Database migration |
+
+---
 
 ## Non-Goals (Explicit)
 
@@ -209,6 +282,8 @@ Tests must verify:
 
 **This is infrastructure, not a feature.**
 
-Assume it will be reused for 10+ years. Do not invent data. Do not infer rules. Do not optimize prematurely.
+CCA is a **spine asset** that will be reused for 10+ years.
+
+Do not invent data. Do not infer rules. Do not optimize prematurely.
 
 If capability is unknown, say **unknown**.
