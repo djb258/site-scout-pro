@@ -46,13 +46,14 @@ const connectionConfig = {
 
 ```
 neondb/
-├── Tables
+├── public schema (Application Data)
 │   ├── site_candidate          -- Main opportunity tracking
 │   ├── rent_comps              -- Rent comparison data
 │   ├── population_metrics      -- Census/demographic data
 │   ├── county_score            -- County difficulty scores
 │   ├── parcel_screening        -- Parcel analysis results
 │   ├── saturation_matrix       -- Market saturation data
+│   ├── zips_master             -- All US ZIP codes (41,551)
 │   ├── process_log             -- Audit trail
 │   ├── error_log               -- Legacy error log
 │   └── master_failure_log      -- Centralized failure tracking (ADR-013)
@@ -62,9 +63,37 @@ neondb/
 │   ├── pass15_runs             -- Pass-1.5 execution records
 │   ├── pass2_runs              -- Pass-2 execution records
 │   └── pass3_runs              -- Pass-3 execution records
+├── ref schema (Static Reference - Immutable)
+│   ├── ref_country             -- Country root (USA)
+│   ├── ref_state               -- US states (50 + DC)
+│   ├── ref_county              -- Counties with FIPS codes
+│   ├── ref_zip (VIEW)          -- Links to zips_master
+│   ├── ref_asset_class         -- Storage asset classifications
+│   ├── ref_unit_type           -- Unit types (climate/non-climate)
+│   └── ref_unit_size           -- Standard unit dimensions
 └── Indexes
     └── [See schema.sql for full index list]
 ```
+
+### Static Reference Schema (ref)
+
+The `ref` schema contains immutable reference data that remains stable for years:
+
+| Table | Records | Purpose |
+|-------|---------|---------|
+| ref_country | 1 | Country geography root |
+| ref_state | 51 | US states + DC |
+| ref_county | TBD | Counties with FIPS |
+| ref_zip | 41,551 | VIEW on zips_master |
+| ref_asset_class | 4 | SSF, CSS, RV, MIXED |
+| ref_unit_type | 5 | STD, CC, DU, INT, INT-CC |
+| ref_unit_size | 9 | 5x5 through 20x20 |
+
+**Design Principles:**
+- Geography (where) + Asset intent (what) = ref schema
+- Passes decide (whether)
+- Calculators compute (how)
+- Parcels come later (commit)
 
 ### Usage Patterns
 

@@ -5,16 +5,18 @@
 - **System Name:** Storage Site Scout
 - **Hub Name:** DATA_LAYER_HUB
 - **Owner:** Barton Enterprises / SVG Agency
-- **Version:** 1.0.0
-- **Doctrine ID:** SS.03.00
+- **Version:** 1.1.0
+- **Doctrine ID:** SS.DL.00
 
 ---
 
 ## 2. Purpose
 
-The Data Layer Hub manages all database connections and persistence operations across the Storage Site Scout system. It provides unified adapters for Supabase (Lovable.DB), Neon PostgreSQL (STAMPED vault), and Firebase (SPVPET realtime working memory).
+The Data Layer Hub manages all database connections and persistence operations across the Storage Site Scout system. It provides unified adapters for Supabase (Lovable.DB) and Neon PostgreSQL (STAMPED vault + static reference schema).
 
 **Boundary:** This hub owns all database connections, schema management, and data persistence. It does NOT own business logic, calculations, or verdicts (those belong to Pass-1 and Pass-2).
+
+**NOTE:** Firebase is NOT used in this system. All persistence goes through Supabase or Neon.
 
 **Input:** Data objects from Pass-1 and Pass-2 spokes
 **Output:** Persisted records, query results, connection health status
@@ -25,9 +27,9 @@ The Data Layer Hub manages all database connections and persistence operations a
 
 | Component Name | Doctrine ID | Capability | Tools |
 |----------------|-------------|------------|-------|
-| SUPABASE_ADAPTER | SS.03.01 | Supabase/Lovable.DB adapter for pass1_runs, pass2_runs, staging | supabase_client |
-| NEON_VAULT | SS.03.02 | Neon PostgreSQL for STAMPED vault data | neon_client, pg_client |
-| FIREBASE_REALTIME | SS.03.03 | Firebase for SPVPET realtime working memory | firebase_client |
+| SUPABASE_ADAPTER | SS.DL.01 | Supabase/Lovable.DB adapter for pass runs, staging | supabase_client |
+| NEON_VAULT | SS.DL.02 | Neon PostgreSQL for STAMPED vault data | neon_client, pg_client |
+| NEON_REF_SCHEMA | SS.DL.03 | Static reference tables (geography, asset types) | neon_client |
 
 ---
 
@@ -37,8 +39,8 @@ The Data Layer Hub manages all database connections and persistence operations a
 |-----------|------|-----------|----------|
 | Supabase REST | API | Bidirectional | PostgREST endpoints for all tables |
 | Neon PostgreSQL | Direct | Bidirectional | pg connection string, SQL queries |
-| Firebase Realtime DB | API | Bidirectional | JSON read/write, listeners |
-| Pass-1 Hub | Internal | Inbound | Write pass1_runs, staging_payload |
+| Pass-0 Hub | Internal | Inbound | Read ref schema (momentum signals) |
+| Pass-1 Hub | Internal | Inbound | Read ref schema, write pass1_runs |
 | Pass-2 Hub | Internal | Inbound | Write pass2_runs, vault |
 
 ---
@@ -47,11 +49,10 @@ The Data Layer Hub manages all database connections and persistence operations a
 
 | Tool | Doctrine ID | Owner | ADR |
 |------|-------------|-------|-----|
-| supabase_client | SS.03.T01 | This Hub | ADR-008 |
-| neon_client | SS.03.T02 | This Hub | ADR-009 |
-| pg_client | SS.03.T03 | This Hub | - |
-| firebase_client | SS.03.T04 | This Hub | ADR-010 |
-| lovable_adapter | SS.03.T05 | This Hub | - |
+| supabase_client | SS.DL.T01 | This Hub | ADR-017 |
+| neon_client | SS.DL.T02 | This Hub | ADR-016 |
+| pg_client | SS.DL.T03 | This Hub | ADR-016 |
+| lovable_adapter | SS.DL.T04 | This Hub | - |
 
 ---
 
@@ -155,12 +156,19 @@ The Data Layer Hub manages all database connections and persistence operations a
 | vault | Final underwriting records | id (uuid) |
 | vault_history | Versioned vault records | id (uuid), version |
 
-### Firebase (SPVPET)
+### Neon PostgreSQL (ref schema - Static Reference)
 
-| Path | Purpose |
-|------|---------|
-| /working_memory/{session_id} | Active session state |
-| /pipeline_status/{run_id} | Real-time pipeline progress |
+| Table/View | Purpose | Primary Key |
+|------------|---------|-------------|
+| ref.ref_country | Country geography root | country_id |
+| ref.ref_state | US states (50 + DC) | state_id |
+| ref.ref_county | Counties with FIPS codes | county_id |
+| ref.ref_zip (VIEW) | ZIP codes (links to zips_master) | zip_code |
+| ref.ref_asset_class | Storage asset classifications | asset_class_id |
+| ref.ref_unit_type | Unit types (climate/non-climate) | unit_type_id |
+| ref.ref_unit_size | Standard unit dimensions | unit_size_id |
+
+**Note:** The `ref` schema is immutable static reference data. It defines geography (where) and asset intent (what). Passes decide (whether), calculators compute (how), and parcels come later (commit).
 
 ---
 
@@ -169,26 +177,33 @@ The Data Layer Hub manages all database connections and persistence operations a
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │                    DATA_LAYER_HUB                           │
-│                     (SS.03.00)                              │
+│                     (SS.DL.00)                              │
 ├─────────────────────────────────────────────────────────────┤
 │                                                             │
 │  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────┐ │
-│  │ SUPABASE_ADAPTER│  │   NEON_VAULT    │  │  FIREBASE   │ │
-│  │   (SS.03.01)    │  │   (SS.03.02)    │  │ (SS.03.03)  │ │
+│  │ SUPABASE_ADAPTER│  │   NEON_VAULT    │  │  NEON_REF   │ │
+│  │   (SS.DL.01)    │  │   (SS.DL.02)    │  │ (SS.DL.03)  │ │
 │  └────────┬────────┘  └────────┬────────┘  └──────┬──────┘ │
 │           │                    │                   │        │
 └───────────┼────────────────────┼───────────────────┼────────┘
             │                    │                   │
-            ▼                    ▼                   ▼
-    ┌───────────────┐    ┌───────────────┐   ┌─────────────┐
-    │   Supabase    │    │     Neon      │   │  Firebase   │
-    │  (Lovable.DB) │    │  PostgreSQL   │   │  Realtime   │
-    │               │    │               │   │             │
-    │ - pass1_runs  │    │ - vault       │   │ - working   │
-    │ - pass2_runs  │    │ - vault_hist  │   │   memory    │
-    │ - staging     │    │               │   │ - pipeline  │
-    │ - engine_logs │    │               │   │   status    │
-    └───────────────┘    └───────────────┘   └─────────────┘
+            ▼                    └─────────┬─────────┘
+    ┌───────────────┐              ┌───────▼───────┐
+    │   Supabase    │              │     Neon      │
+    │  (Lovable.DB) │              │  PostgreSQL   │
+    │               │              │               │
+    │ - pass1_runs  │              │ public schema │
+    │ - pass2_runs  │              │ - vault       │
+    │ - staging     │              │ - zips_master │
+    │ - engine_logs │              │               │
+    │               │              │ ref schema    │
+    │               │              │ - ref_country │
+    │               │              │ - ref_state   │
+    │               │              │ - ref_county  │
+    │               │              │ - ref_zip     │
+    │               │              │ - ref_asset   │
+    │               │              │ - ref_unit_*  │
+    └───────────────┘              └───────────────┘
 ```
 
 ---
@@ -196,23 +211,23 @@ The Data Layer Hub manages all database connections and persistence operations a
 ## 14. Data Flow
 
 ```
-Pass-1 Hub                          Pass-2 Hub
-    │                                   │
-    │ write pass1_runs                  │ write pass2_runs
-    │ write staging_payload             │ write vault
-    ▼                                   ▼
+Pass-0 Hub                Pass-1 Hub                Pass-2 Hub
+    │                         │                         │
+    │ read ref schema         │ read ref schema         │ write pass2_runs
+    │                         │ write pass1_runs        │ write vault
+    ▼                         ▼                         ▼
 ┌─────────────────────────────────────────────────────────┐
 │                    DATA_LAYER_HUB                       │
 │                                                         │
-│  ┌──────────────┐                                       │
-│  │ LovableAdapter│◀─────────────────────────────────┐   │
-│  └──────┬───────┘                                   │   │
-│         │                                           │   │
-│         ▼                                           │   │
-│  ┌──────────────┐     ┌──────────────┐     ┌───────┴─┐ │
-│  │   Supabase   │     │     Neon     │     │ Firebase│ │
-│  │    Client    │     │    Client    │     │  Client │ │
-│  └──────────────┘     └──────────────┘     └─────────┘ │
+│  ┌──────────────┐     ┌──────────────┐                 │
+│  │LovableAdapter│     │  NeonAdapter │                 │
+│  └──────┬───────┘     └──────┬───────┘                 │
+│         │                    │                          │
+│         ▼                    ▼                          │
+│  ┌──────────────┐     ┌──────────────┐                 │
+│  │   Supabase   │     │     Neon     │                 │
+│  │    Client    │     │    Client    │                 │
+│  └──────────────┘     └──────────────┘                 │
 └─────────────────────────────────────────────────────────┘
 ```
 
