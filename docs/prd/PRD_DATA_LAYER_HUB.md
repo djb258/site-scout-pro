@@ -251,10 +251,12 @@ Pass-0 Hub                Pass-1 Hub                Pass-2 Hub
 | Document | Path | Description |
 |----------|------|-------------|
 | ERD Hub-Spoke | [docs/ERD_HUB_SPOKE.md](../ERD_HUB_SPOKE.md) | Full entity relationship diagram with all passes |
+| ZIP Replica Doctrine | [docs/doctrine/ZIP_REPLICA_SYNC_DOCTRINE.md](../doctrine/ZIP_REPLICA_SYNC_DOCTRINE.md) | Neon→Lovable replica sync rules |
 | ADR-016 | [docs/adr/ADR-016-neon-database.md](../adr/ADR-016-neon-database.md) | Neon PostgreSQL database decision |
 | ADR-013 | [docs/adr/ADR-013-master-failure-log.md](../adr/ADR-013-master-failure-log.md) | Master failure log architecture |
 | Ref Schema SQL | [scripts/create_ref_schema.sql](../../scripts/create_ref_schema.sql) | Static reference schema definition |
 | Hardening SQL | [scripts/harden_ref_schema.sql](../../scripts/harden_ref_schema.sql) | Ref schema hardening (geography-only) |
+| Replica Sync SQL | [supabase/migrations/20251218_zip_replica_sync.sql](../../supabase/migrations/20251218_zip_replica_sync.sql) | Lovable replica tables and policies |
 
 ---
 

@@ -228,8 +228,11 @@ try {
 ## Related Documents
 
 - [ERD_HUB_SPOKE.md](../ERD_HUB_SPOKE.md) - Full hub-and-spoke entity relationship diagram
+- [ZIP_REPLICA_SYNC_DOCTRINE.md](../doctrine/ZIP_REPLICA_SYNC_DOCTRINE.md) - Neon→Lovable replica sync doctrine
 - [PRD_DATA_LAYER_HUB.md](../prd/PRD_DATA_LAYER_HUB.md) - Data Layer Hub PRD
 - [ADR-013-master-failure-log.md](ADR-013-master-failure-log.md) - Master failure log architecture
 - [scripts/create_ref_schema.sql](../../scripts/create_ref_schema.sql) - Ref schema creation
 - [scripts/harden_ref_schema.sql](../../scripts/harden_ref_schema.sql) - Ref schema hardening
 - [scripts/validate_ref_schema.py](../../scripts/validate_ref_schema.py) - Validation script
+- [scripts/sync_zip_replica.py](../../scripts/sync_zip_replica.py) - ZIP replica sync script
+- [supabase/migrations/20251218_zip_replica_sync.sql](../../supabase/migrations/20251218_zip_replica_sync.sql) - Lovable replica migration
