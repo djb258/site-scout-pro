@@ -2,35 +2,51 @@
 
 **Date:** 2025-12-18
 **Doctrine:** SS.REF.SYNC.01
-**Status:** VIOLATIONS IDENTIFIED
+**Status:** REMEDIATED
 
 ---
 
 ## Summary
 
-The following files violate the ZIP Replica Sync Doctrine by referencing unauthorized tables or performing unauthorized operations.
+The following files have been remediated to comply with the ZIP Replica Sync Doctrine.
 
 ---
 
-## Violations
+## Remediation Status
 
-### CRITICAL: Direct `us_zip_codes` Access
+### Pass 1 Function — MIGRATED
 
-| File | Violation | Required Action |
-|------|-----------|-----------------|
-| `supabase/functions/startPass1/index.ts` | Reads from `us_zip_codes` | Must use `ref.ref_zip_replica` |
-| `supabase/functions/syncZipsFromNeon/index.ts` | Writes to `us_zip_codes` with demographics | DEPRECATED - use `sync_zip_replica.py` |
-| `supabase/functions/bulkLoadZips/index.ts` | Bulk loads to `us_zip_codes` | DEPRECATED - use `sync_zip_replica.py` |
-| `supabase/functions/uploadZipCodes/index.ts` | Uploads to `us_zip_codes` | DEPRECATED - use `sync_zip_replica.py` |
+| File | Status | Changes |
+|------|--------|---------|
+| `supabase/functions/startPass1/index.ts` | **COMPLIANT** | Uses `ref.ref_zip_replica` for geography, `pass1_census_snapshot` for census data |
 
-### CRITICAL: Census/Demographic Data in ZIP Table
+**Implementation Details:**
+- Geography from `ref.ref_zip_replica` (zip_id, state_id, lat, lon)
+- State info from `ref.ref_state_replica` (state_code, state_name)
+- Census data from `pass1_census_snapshot` (population, income, etc.)
+- Version check via `check_replica_version()` RPC before execution
+- Logs to `master_failure_log` on validation failures
 
-| File | Violation |
-|------|-----------|
-| `syncZipsFromNeon/index.ts` | Syncs population, income, age, etc. to `us_zip_codes` |
-| `bulkLoadZips/index.ts` | Loads 30+ demographic columns |
+### Deprecated Functions — MARKED
 
-**Doctrine Rule:** ZIP replica contains GEOGRAPHY ONLY (zip_id, state_id, lat, lon)
+| File | Status | Reason |
+|------|--------|--------|
+| `supabase/functions/syncZipsFromNeon/index.ts` | **DEPRECATED** | Writes demographics to `us_zip_codes` |
+| `supabase/functions/bulkLoadZips/index.ts` | **DEPRECATED** | Bulk loads 30+ demographic columns |
+| `supabase/functions/uploadZipCodes/index.ts` | **DEPRECATED** | Uploads demographics to `us_zip_codes` |
+
+**Replacement:** Use `scripts/sync_zip_replica.py` for all ZIP replica sync operations.
+
+---
+
+## New Tables Created
+
+| Table | Purpose | Migration |
+|-------|---------|-----------|
+| `ref.ref_zip_replica` | Geography only (lat, lon, state_id) | `20251218_zip_replica_sync.sql` |
+| `ref.ref_state_replica` | State reference data | `20251218_zip_replica_sync.sql` |
+| `ref.ref_sync_manifest` | Sync version tracking | `20251218_zip_replica_sync.sql` |
+| `public.pass1_census_snapshot` | Time-variant census data | `20251218_pass1_census_snapshot.sql` |
 
 ---
 
@@ -38,55 +54,48 @@ The following files violate the ZIP Replica Sync Doctrine by referencing unautho
 
 | Table | Status | Replacement |
 |-------|--------|-------------|
-| `us_zip_codes` | DEPRECATED | `ref.ref_zip_replica` |
+| `us_zip_codes` | DEPRECATED | `ref.ref_zip_replica` + `pass1_census_snapshot` |
 | `zips_master` (Lovable) | FORBIDDEN | `ref.ref_zip_replica` |
 
 ---
 
-## Required Migrations
+## Version Check Implementation
 
-### 1. Pass 1 Function Update
+Pass 1 now validates replica version before execution:
 
 ```typescript
-// BEFORE (VIOLATION)
-const { data: zipData } = await supabase
-  .from('us_zip_codes')
-  .select('*')
-  .eq('zip', zip_code);
+// STEP 0: Validate replica version (Doctrine Requirement)
+const { data: versionCheck, error: versionError } = await supabase
+  .rpc('check_replica_version', {
+    p_expected_version: EXPECTED_REPLICA_VERSION,
+    p_table_name: 'ref_zip_replica'
+  });
 
-// AFTER (COMPLIANT)
-const { data: zipData } = await supabase
-  .from('ref_zip_replica')
-  .select('zip_id, state_id, lat, lon')
-  .eq('zip_id', zip_code);
-
-// Census data must come from pass1_census_snapshot
-const { data: censusData } = await supabase
-  .from('pass1_census_snapshot')
-  .select('*')
-  .eq('zip_code', zip_code)
-  .order('vintage_year', { ascending: false })
-  .limit(1);
+if (versionCheck && !versionCheck.valid) {
+  // Returns 503 Service Unavailable with hint to sync
+  return new Response(
+    JSON.stringify({
+      error: 'ZIP replica validation failed',
+      code: versionCheck.error_code,
+      hint: 'Run scripts/sync_zip_replica.py to sync replica from Neon'
+    }),
+    { status: 503 }
+  );
+}
 ```
-
-### 2. Deprecated Functions
-
-These functions should be marked deprecated and eventually removed:
-
-- `syncZipsFromNeon` → Use `scripts/sync_zip_replica.py`
-- `bulkLoadZips` → Use `scripts/sync_zip_replica.py`
-- `uploadZipCodes` → Use `scripts/sync_zip_replica.py`
 
 ---
 
 ## Enforcement Checklist
 
 - [x] Add TODO comments to violating files (2025-12-18)
-- [x] Update Pass 1 to use `ref.ref_zip_replica` (TODO added)
+- [x] Update Pass 1 to use `ref.ref_zip_replica` (2025-12-18) — **MIGRATED**
 - [x] Update Pass 1.5 to use `ref.ref_zip_replica` (TODO added)
-- [ ] Add version check before execution
+- [x] Add version check before execution (2025-12-18) — **IMPLEMENTED**
 - [x] Deprecate old sync functions (headers added)
-- [ ] Remove `us_zip_codes` table (after migration)
+- [x] Create `pass1_census_snapshot` table (2025-12-18)
+- [ ] Remove `us_zip_codes` table (after full migration verification)
+- [ ] Populate `pass1_census_snapshot` with Census API data
 
 ---
 
@@ -94,3 +103,5 @@ These functions should be marked deprecated and eventually removed:
 
 - [ZIP_REPLICA_SYNC_DOCTRINE.md](ZIP_REPLICA_SYNC_DOCTRINE.md)
 - [supabase/migrations/20251218_zip_replica_sync.sql](../../supabase/migrations/20251218_zip_replica_sync.sql)
+- [supabase/migrations/20251218_pass1_census_snapshot.sql](../../supabase/migrations/20251218_pass1_census_snapshot.sql)
+- [scripts/sync_zip_replica.py](../../scripts/sync_zip_replica.py)
