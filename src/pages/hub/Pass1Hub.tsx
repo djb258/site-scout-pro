@@ -671,35 +671,52 @@ const Pass1Hub = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {/* Radius Analysis */}
                   {result.derived_counties && (
-                  <Card className="border-border bg-card">
+                  <Card className="border-border bg-card col-span-1 md:col-span-2">
                     <CardHeader className="pb-2">
                       <CardTitle className="text-sm flex items-center gap-2">
                         <Target className="h-4 w-4 text-amber-500" />
                         Radius Analysis
                       </CardTitle>
                     </CardHeader>
-                    <CardContent className="space-y-2 text-sm">
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Radius</span>
-                        <span>{result.radius_miles} miles</span>
+                    <CardContent className="space-y-3 text-sm">
+                      {/* Header Stats */}
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-3 bg-muted/30 rounded-lg">
+                        <div>
+                          <p className="text-xs text-muted-foreground">Origin ZIP</p>
+                          <p className="font-semibold">{result.zip_metadata?.city || 'Unknown'}, {result.zip_metadata?.state_id || 'PA'} {result.zip}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-muted-foreground">Radius</p>
+                          <p className="font-semibold">{result.radius_miles} miles</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-muted-foreground">Counties</p>
+                          <p className="font-semibold">{result.derived_counties.length}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-muted-foreground">Total Population</p>
+                          <p className="font-semibold">{result.total_population_in_radius?.toLocaleString() || 'N/A'}</p>
+                        </div>
                       </div>
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Counties</span>
-                        <span>{result.derived_counties.length}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Total Population</span>
-                        <span>{result.total_population_in_radius?.toLocaleString() || 'N/A'}</span>
-                      </div>
-                      <Separator />
-                      <div className="max-h-24 overflow-auto">
-                        <p className="text-xs text-muted-foreground mb-1">Nearby Counties:</p>
-                        {result.derived_counties.slice(0, 5).map((county, i) => (
-                          <div key={i} className="text-xs flex justify-between">
-                            <span>{county.name}</span>
-                            <span className="text-muted-foreground">{county.distance_miles} mi</span>
+                      
+                      {/* Counties Table */}
+                      <div className="border border-border rounded-lg overflow-hidden">
+                        <div className="grid grid-cols-3 gap-2 p-2 bg-muted/50 text-xs font-medium text-muted-foreground border-b border-border">
+                          <span>County</span>
+                          <span className="text-right">Distance</span>
+                          <span className="text-right">Population</span>
+                        </div>
+                        <ScrollArea className="h-64">
+                          <div className="divide-y divide-border">
+                            {result.derived_counties.map((county, i) => (
+                              <div key={i} className="grid grid-cols-3 gap-2 p-2 text-xs hover:bg-muted/20">
+                                <span className="font-medium">{county.name}</span>
+                                <span className="text-right text-muted-foreground">{county.distance_miles} mi</span>
+                                <span className="text-right font-mono">{county.population?.toLocaleString() || 'N/A'}</span>
+                              </div>
+                            ))}
                           </div>
-                        ))}
+                        </ScrollArea>
                       </div>
                     </CardContent>
                   </Card>
