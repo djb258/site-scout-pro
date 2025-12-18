@@ -212,6 +212,75 @@ export type Database = {
         }
         Relationships: []
       }
+      pass1_census_snapshot: {
+        Row: {
+          created_at: string | null
+          housing_units: number | null
+          id: string
+          population: number | null
+          run_id: string
+          vacancy_rate: number | null
+          vintage_year: number | null
+          zip_code: string
+        }
+        Insert: {
+          created_at?: string | null
+          housing_units?: number | null
+          id?: string
+          population?: number | null
+          run_id: string
+          vacancy_rate?: number | null
+          vintage_year?: number | null
+          zip_code: string
+        }
+        Update: {
+          created_at?: string | null
+          housing_units?: number | null
+          id?: string
+          population?: number | null
+          run_id?: string
+          vacancy_rate?: number | null
+          vintage_year?: number | null
+          zip_code?: string
+        }
+        Relationships: []
+      }
+      pass1_demand_agg: {
+        Row: {
+          baseline_demand_sqft: number
+          created_at: string | null
+          demand_per_acre_sqft: number | null
+          distance_band: string
+          id: string
+          origin_zip: string
+          population_total: number
+          run_id: string
+          zip_count: number
+        }
+        Insert: {
+          baseline_demand_sqft: number
+          created_at?: string | null
+          demand_per_acre_sqft?: number | null
+          distance_band: string
+          id?: string
+          origin_zip: string
+          population_total: number
+          run_id: string
+          zip_count: number
+        }
+        Update: {
+          baseline_demand_sqft?: number
+          created_at?: string | null
+          demand_per_acre_sqft?: number | null
+          distance_band?: string
+          id?: string
+          origin_zip?: string
+          population_total?: number
+          run_id?: string
+          zip_count?: number
+        }
+        Relationships: []
+      }
       pass1_radius_zip: {
         Row: {
           created_at: string | null
