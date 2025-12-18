@@ -27,7 +27,8 @@ import {
   Target,
   TrendingUp,
   AlertCircle,
-  Info
+  Info,
+  Database
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Pass1PipelineCard } from "@/components/Pass1PipelineCard";
@@ -111,8 +112,8 @@ interface Pass1Result {
     final_score: number;
   };
   viability_score: number;
-  decision: "advance" | "reject" | "insufficient_data";
-  kill_reason: string | null;
+  decision: "data_collected" | "advance" | "reject" | "insufficient_data";
+  warning_flags?: string[];
   confidence_flags: {
     competition: "low" | "medium";
   };
@@ -352,6 +353,8 @@ const Pass1Hub = () => {
         return { bg: "bg-emerald-500/20", border: "border-emerald-500/50", text: "text-emerald-400", icon: CheckCircle2 };
       case "reject":
         return { bg: "bg-red-500/20", border: "border-red-500/50", text: "text-red-400", icon: XCircle };
+      case "data_collected":
+        return { bg: "bg-blue-500/20", border: "border-blue-500/50", text: "text-blue-400", icon: Database };
       default:
         return { bg: "bg-amber-500/20", border: "border-amber-500/50", text: "text-amber-400", icon: AlertTriangle };
     }
@@ -628,8 +631,8 @@ const Pass1Hub = () => {
                           <h2 className={`text-2xl font-bold uppercase ${getDecisionStyles(result.decision).text}`}>
                             {result.decision.replace("_", " ")}
                           </h2>
-                          {result.kill_reason && (
-                            <p className="text-sm text-muted-foreground">Kill Reason: {result.kill_reason}</p>
+                          {result.warning_flags && result.warning_flags.length > 0 && (
+                            <p className="text-sm text-muted-foreground">Warnings: {result.warning_flags.join(", ")}</p>
                           )}
                         </div>
                       </div>

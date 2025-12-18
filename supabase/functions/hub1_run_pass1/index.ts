@@ -235,44 +235,14 @@ serve(async (req) => {
 
     const typedZipData = zipData as ZipData;
 
-    // KILL SWITCH: Population below threshold
+    // Note: No early rejection - Pass 1 gathers data for all ZIPs
+    // Thresholds are tracked as flags but don't block data collection
+    const warningFlags: string[] = [];
     if ((typedZipData.population || 0) < MIN_POPULATION) {
-      await logError(run_id, 'zip_hydration', 'POPULATION_TOO_LOW', 
-        `Population ${typedZipData.population} below threshold ${MIN_POPULATION}`, true, {
-        actual: typedZipData.population,
-        threshold: MIN_POPULATION
-      });
-      await logStep(run_id, 'complete', 'rejected', { kill_reason: 'POPULATION_TOO_LOW' });
-      return new Response(JSON.stringify({
-        run_id,
-        process_id: PROCESS_ID,
-        schema_version: SCHEMA_VERSION,
-        zip,
-        zip_metadata: typedZipData,
-        decision: 'reject',
-        kill_reason: 'POPULATION_TOO_LOW',
-        generated_at: new Date().toISOString()
-      }), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      warningFlags.push('LOW_POPULATION');
     }
-
-    // KILL SWITCH: Density below threshold
     if ((typedZipData.density || 0) < MIN_DENSITY_THRESHOLD) {
-      await logError(run_id, 'zip_hydration', 'DENSITY_TOO_LOW', 
-        `Density ${typedZipData.density} below threshold ${MIN_DENSITY_THRESHOLD}`, true, {
-        actual: typedZipData.density,
-        threshold: MIN_DENSITY_THRESHOLD
-      });
-      await logStep(run_id, 'complete', 'rejected', { kill_reason: 'DENSITY_TOO_LOW' });
-      return new Response(JSON.stringify({
-        run_id,
-        process_id: PROCESS_ID,
-        schema_version: SCHEMA_VERSION,
-        zip,
-        zip_metadata: typedZipData,
-        decision: 'reject',
-        kill_reason: 'DENSITY_TOO_LOW',
-        generated_at: new Date().toISOString()
-      }), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      warningFlags.push('LOW_DENSITY');
     }
 
     await logStep(run_id, 'zip_hydration', 'completed', { zip_metadata: typedZipData });
@@ -438,26 +408,10 @@ serve(async (req) => {
     if (isExtremeDensity) constraintScore -= 15;
     constraintScore = Math.max(0, Math.min(100, constraintScore));
 
-    // KILL SWITCH: Viability threshold failure
+    // Note: No viability rejection - Pass 1 gathers data
+    // Low viability is tracked as a warning flag
     if (constraintScore < 20) {
-      await logError(run_id, 'constraints', 'VIABILITY_THRESHOLD_FAILED', 
-        `Constraint score ${constraintScore} below minimum`, true, {
-        constraint_score: constraintScore,
-        viability_ratio: viabilityRatio
-      });
-      await logStep(run_id, 'complete', 'rejected', { kill_reason: 'VIABILITY_THRESHOLD_FAILED' });
-      return new Response(JSON.stringify({
-        run_id,
-        process_id: PROCESS_ID,
-        schema_version: SCHEMA_VERSION,
-        zip,
-        zip_metadata: typedZipData,
-        demand_proxies: demandProxies,
-        competition_summary: competitionSummary,
-        decision: 'reject',
-        kill_reason: 'VIABILITY_THRESHOLD_FAILED',
-        generated_at: new Date().toISOString()
-      }), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      warningFlags.push('LOW_VIABILITY');
     }
 
     await logStep(run_id, 'constraints', 'completed', {
@@ -484,10 +438,9 @@ serve(async (req) => {
       rawScores.constraints * SCORING_WEIGHTS.constraints
     );
 
-    // Decision classification
-    const decision = finalScore >= ADVANCE_THRESHOLD ? "advance" :
-                    finalScore < REJECT_THRESHOLD ? "reject" : 
-                    "insufficient_data";
+    // Pass 1 always returns "data_collected" - no rejections
+    // Score is computed for informational purposes only
+    const decision = "data_collected";
 
     await logStep(run_id, 'scoring', 'completed', {
       raw_scores: rawScores,
@@ -537,7 +490,7 @@ serve(async (req) => {
       },
       viability_score: finalScore,
       decision,
-      kill_reason: null,
+      warning_flags: warningFlags,
       confidence_flags: {
         competition: competition_confidence
       },
