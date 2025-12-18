@@ -1,12 +1,19 @@
 import { useEffect, useRef, useState } from "react";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
-import { CompetitorData, calculateCompetitorMetrics } from "./CompetitorCard";
+import { 
+  CompetitorData, 
+  calculateCompetitorMetrics, 
+  AssetType, 
+  ASSET_TYPE_LABELS, 
+  ASSET_TYPE_COLORS 
+} from "./CompetitorCard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { MapPin, X } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 
 type RentTier = "low" | "medium" | "high" | "unknown";
 
@@ -30,9 +37,17 @@ interface CompetitorMapProps {
   competitors: CompetitorData[];
   centerZip?: { lat: number; lng: number };
   mapboxToken?: string;
+  selectedAssetType?: AssetType | null;
+  onAssetTypeChange?: (assetType: AssetType | null) => void;
 }
 
-export function CompetitorMap({ competitors, centerZip, mapboxToken: propToken }: CompetitorMapProps) {
+export function CompetitorMap({ 
+  competitors, 
+  centerZip, 
+  mapboxToken: propToken,
+  selectedAssetType,
+  onAssetTypeChange
+}: CompetitorMapProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const markersRef = useRef<mapboxgl.Marker[]>([]);
@@ -41,9 +56,33 @@ export function CompetitorMap({ competitors, centerZip, mapboxToken: propToken }
   const [token, setToken] = useState(propToken || "");
   const [isTokenSet, setIsTokenSet] = useState(!!propToken);
   const [selectedCompetitor, setSelectedCompetitor] = useState<CompetitorData | null>(null);
+  const [internalAssetFilter, setInternalAssetFilter] = useState<AssetType | null>(null);
+
+  // Use external or internal asset filter
+  const activeAssetFilter = selectedAssetType !== undefined ? selectedAssetType : internalAssetFilter;
+  const handleAssetFilterChange = (assetType: AssetType | null) => {
+    if (onAssetTypeChange) {
+      onAssetTypeChange(assetType);
+    } else {
+      setInternalAssetFilter(assetType);
+    }
+  };
+
+  // Filter competitors by asset type
+  const filteredCompetitors = activeAssetFilter 
+    ? competitors.filter(c => c.asset_type === activeAssetFilter)
+    : competitors;
 
   // Filter competitors with valid coordinates
-  const mappableCompetitors = competitors.filter(c => c.lat !== null && c.lng !== null);
+  const mappableCompetitors = filteredCompetitors.filter(c => c.lat !== null && c.lng !== null);
+
+  // Count by asset type
+  const assetTypeCounts = competitors.reduce((acc, c) => {
+    if (c.lat !== null && c.lng !== null) {
+      acc[c.asset_type] = (acc[c.asset_type] || 0) + 1;
+    }
+    return acc;
+  }, {} as Record<AssetType, number>);
 
   // Initialize map
   useEffect(() => {
@@ -201,8 +240,37 @@ export function CompetitorMap({ competitors, centerZip, mapboxToken: propToken }
     <div className="relative w-full h-[400px] rounded-lg overflow-hidden border border-border">
       <div ref={mapContainer} className="absolute inset-0" />
       
+      {/* Asset Type Filter */}
+      <div className="absolute top-3 right-16 flex flex-wrap gap-1 max-w-[200px]">
+        <Button
+          variant={activeAssetFilter === null ? "default" : "outline"}
+          size="sm"
+          onClick={() => handleAssetFilterChange(null)}
+          className="text-[10px] h-6 px-2 bg-background/90 backdrop-blur-sm"
+        >
+          All
+        </Button>
+        {(Object.keys(ASSET_TYPE_LABELS) as AssetType[]).map(assetType => {
+          const count = assetTypeCounts[assetType] || 0;
+          if (count === 0) return null;
+          const styles = ASSET_TYPE_COLORS[assetType];
+          const isActive = activeAssetFilter === assetType;
+          return (
+            <Button
+              key={assetType}
+              variant="outline"
+              size="sm"
+              onClick={() => handleAssetFilterChange(isActive ? null : assetType)}
+              className={`text-[10px] h-6 px-2 bg-background/90 backdrop-blur-sm ${isActive ? `${styles.bg} ${styles.text} ${styles.border}` : ''}`}
+            >
+              {ASSET_TYPE_LABELS[assetType].split(" ")[0]}
+            </Button>
+          );
+        })}
+      </div>
+
       {/* Legend */}
-      <div className="absolute top-3 left-3 bg-background/90 backdrop-blur-sm rounded-md p-2 text-xs space-y-1">
+      <div className="absolute bottom-3 right-3 bg-background/90 backdrop-blur-sm rounded-md p-2 text-xs space-y-1">
         <div className="flex items-center gap-2">
           <span className="w-3 h-3 rounded-full bg-emerald-500" />
           <span>Low Rent</span>
@@ -219,14 +287,22 @@ export function CompetitorMap({ competitors, centerZip, mapboxToken: propToken }
 
       {/* Selected Competitor Popup */}
       {selectedCompetitor && (
-        <div className="absolute bottom-3 left-3 right-3 bg-background/95 backdrop-blur-sm rounded-md p-3 border border-border">
+        <div className="absolute bottom-3 left-3 right-24 bg-background/95 backdrop-blur-sm rounded-md p-3 border border-border">
           <button 
             onClick={() => setSelectedCompetitor(null)}
             className="absolute top-2 right-2 text-muted-foreground hover:text-foreground"
           >
             <X className="h-4 w-4" />
           </button>
-          <h4 className="font-semibold text-sm">{selectedCompetitor.name}</h4>
+          <div className="flex items-center gap-2">
+            <h4 className="font-semibold text-sm">{selectedCompetitor.name}</h4>
+            <Badge 
+              variant="outline" 
+              className={`text-[10px] ${ASSET_TYPE_COLORS[selectedCompetitor.asset_type].bg} ${ASSET_TYPE_COLORS[selectedCompetitor.asset_type].text} ${ASSET_TYPE_COLORS[selectedCompetitor.asset_type].border}`}
+            >
+              {ASSET_TYPE_LABELS[selectedCompetitor.asset_type]}
+            </Badge>
+          </div>
           <p className="text-xs text-muted-foreground mt-1">{selectedCompetitor.address}</p>
           <div className="flex gap-4 mt-2 text-xs">
             <span>ZIP: {selectedCompetitor.zip}</span>
@@ -241,7 +317,12 @@ export function CompetitorMap({ competitors, centerZip, mapboxToken: propToken }
       {/* No data overlay */}
       {mappableCompetitors.length === 0 && (
         <div className="absolute inset-0 flex items-center justify-center bg-background/80">
-          <p className="text-sm text-muted-foreground">No competitors with coordinates to display</p>
+          <p className="text-sm text-muted-foreground">
+            {activeAssetFilter 
+              ? `No ${ASSET_TYPE_LABELS[activeAssetFilter]} competitors with coordinates`
+              : "No competitors with coordinates to display"
+            }
+          </p>
         </div>
       )}
     </div>

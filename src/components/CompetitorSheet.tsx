@@ -12,7 +12,13 @@ import {
   ChevronDown,
   ChevronUp
 } from "lucide-react";
-import { CompetitorData, calculateCompetitorMetrics } from "./CompetitorCard";
+import { 
+  CompetitorData, 
+  calculateCompetitorMetrics, 
+  AssetType, 
+  ASSET_TYPE_LABELS, 
+  ASSET_TYPE_COLORS 
+} from "./CompetitorCard";
 
 type SortColumn = "name" | "zip" | "avg_price_sqft" | "units" | "total_sqft";
 type SortDirection = "asc" | "desc";
@@ -43,12 +49,30 @@ function getRentTierStyles(tier: RentTier) {
 interface CompetitorSheetProps {
   competitors: CompetitorData[];
   trigger?: React.ReactNode;
+  selectedAssetType?: AssetType | null;
+  onAssetTypeChange?: (assetType: AssetType | null) => void;
 }
 
-export function CompetitorSheet({ competitors, trigger }: CompetitorSheetProps) {
+export function CompetitorSheet({ 
+  competitors, 
+  trigger, 
+  selectedAssetType,
+  onAssetTypeChange 
+}: CompetitorSheetProps) {
   const [sortColumn, setSortColumn] = useState<SortColumn>("avg_price_sqft");
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [internalAssetFilter, setInternalAssetFilter] = useState<AssetType | null>(null);
+
+  // Use external or internal asset filter
+  const activeAssetFilter = selectedAssetType !== undefined ? selectedAssetType : internalAssetFilter;
+  const handleAssetFilterChange = (assetType: AssetType | null) => {
+    if (onAssetTypeChange) {
+      onAssetTypeChange(assetType);
+    } else {
+      setInternalAssetFilter(assetType);
+    }
+  };
 
   // Enrich competitors with calculated metrics
   const enrichedCompetitors = useMemo(() => {
@@ -59,9 +83,23 @@ export function CompetitorSheet({ competitors, trigger }: CompetitorSheetProps) 
     }));
   }, [competitors]);
 
+  // Filter by asset type
+  const filteredCompetitors = useMemo(() => {
+    if (!activeAssetFilter) return enrichedCompetitors;
+    return enrichedCompetitors.filter(c => c.asset_type === activeAssetFilter);
+  }, [enrichedCompetitors, activeAssetFilter]);
+
+  // Count by asset type
+  const assetTypeCounts = useMemo(() => {
+    return enrichedCompetitors.reduce((acc, c) => {
+      acc[c.asset_type] = (acc[c.asset_type] || 0) + 1;
+      return acc;
+    }, {} as Record<AssetType, number>);
+  }, [enrichedCompetitors]);
+
   // Sort competitors
   const sortedCompetitors = useMemo(() => {
-    return [...enrichedCompetitors].sort((a, b) => {
+    return [...filteredCompetitors].sort((a, b) => {
       let comparison = 0;
       switch (sortColumn) {
         case "name":
@@ -84,15 +122,15 @@ export function CompetitorSheet({ competitors, trigger }: CompetitorSheetProps) 
       }
       return sortDirection === "asc" ? comparison : -comparison;
     });
-  }, [enrichedCompetitors, sortColumn, sortDirection]);
+  }, [filteredCompetitors, sortColumn, sortDirection]);
 
-  // Group by rent tier for summary
+  // Group by rent tier for summary (from filtered)
   const tierCounts = useMemo(() => {
-    return enrichedCompetitors.reduce((acc, c) => {
+    return filteredCompetitors.reduce((acc, c) => {
       acc[c.rentTier] = (acc[c.rentTier] || 0) + 1;
       return acc;
     }, {} as Record<RentTier, number>);
-  }, [enrichedCompetitors]);
+  }, [filteredCompetitors]);
 
   const toggleSort = (column: SortColumn) => {
     if (sortColumn === column) {
@@ -132,12 +170,43 @@ export function CompetitorSheet({ competitors, trigger }: CompetitorSheetProps) 
         <SheetHeader>
           <SheetTitle className="flex items-center gap-2">
             <Building2 className="h-5 w-5 text-primary" />
-            Competitors ({competitors.length})
+            Competitors ({sortedCompetitors.length}{activeAssetFilter ? ` of ${competitors.length}` : ''})
           </SheetTitle>
         </SheetHeader>
 
-        {/* Tier Summary */}
-        <div className="flex gap-2 mt-4">
+        {/* Asset Type Filter */}
+        <div className="flex flex-wrap gap-2 mt-4">
+          <Button
+            variant={activeAssetFilter === null ? "default" : "outline"}
+            size="sm"
+            onClick={() => handleAssetFilterChange(null)}
+            className="text-xs h-7"
+          >
+            All ({competitors.length})
+          </Button>
+          {(Object.keys(ASSET_TYPE_LABELS) as AssetType[]).map(assetType => {
+            const count = assetTypeCounts[assetType] || 0;
+            if (count === 0) return null;
+            const styles = ASSET_TYPE_COLORS[assetType];
+            const isActive = activeAssetFilter === assetType;
+            return (
+              <Button
+                key={assetType}
+                variant="outline"
+                size="sm"
+                onClick={() => handleAssetFilterChange(isActive ? null : assetType)}
+                className={`text-xs h-7 ${isActive ? `${styles.bg} ${styles.text} ${styles.border}` : ''}`}
+              >
+                {ASSET_TYPE_LABELS[assetType]} ({count})
+              </Button>
+            );
+          })}
+        </div>
+
+        <Separator className="my-3" />
+
+        {/* Rent Tier Summary */}
+        <div className="flex gap-2">
           {(["low", "medium", "high"] as RentTier[]).map(tier => {
             const styles = getRentTierStyles(tier);
             const count = tierCounts[tier] || 0;
