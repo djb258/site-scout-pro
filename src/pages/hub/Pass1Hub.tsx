@@ -519,14 +519,14 @@ const Pass1Hub = () => {
                   <Slider
                     value={[radiusMiles]}
                     onValueChange={(v) => setRadiusMiles(v[0])}
-                    min={50}
-                    max={200}
-                    step={10}
+                    min={5}
+                    max={120}
+                    step={5}
                     disabled={isRunning}
                   />
                   <div className="flex justify-between text-xs text-muted-foreground">
-                    <span>50 mi</span>
-                    <span>200 mi</span>
+                    <span>5 mi</span>
+                    <span>120 mi</span>
                   </div>
                 </div>
 
