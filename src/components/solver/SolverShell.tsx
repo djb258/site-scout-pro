@@ -41,6 +41,8 @@ interface CalculationStep {
   warnings: string[];
 }
 
+type BindingConstraint = 'SETBACK' | 'STORMWATER' | 'CIRCULATION' | 'COVERAGE' | 'FOOTPRINT';
+
 interface SolverArtifact {
   solver_artifact_id: string;
   mode: 'FORWARD' | 'REVERSE';
@@ -53,14 +55,15 @@ interface SolverArtifact {
     utilization_pct: number;
     phase1_viable: boolean;
     forward_parcel_spec?: {
-      min_width_ft: number;
-      min_depth_ft: number;
       min_acreage: number;
+      max_acreage: number;
+      geometry_unresolved: boolean;
     };
     reverse_capacity?: {
       max_units: number;
       max_rentable_sf: number;
       max_buildings: number;
+      binding_constraint: BindingConstraint;
     };
   };
   warnings: string[];
@@ -244,6 +247,7 @@ export const SolverShell = () => {
           <SolverWaterfall 
             steps={artifact?.calculation_steps || []} 
             isLoading={isLoading}
+            circulationPct={tunables.circulation_pct}
           />
         </div>
 
@@ -257,6 +261,7 @@ export const SolverShell = () => {
             blockedReason={artifact?.blocked_reason || null}
             artifactId={artifact?.solver_artifact_id || null}
             timestamp={artifact?.timestamp || null}
+            circulationPct={tunables.circulation_pct}
           />
         </div>
       </div>

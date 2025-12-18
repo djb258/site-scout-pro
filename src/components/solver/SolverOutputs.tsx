@@ -1,6 +1,8 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle, XCircle, TrendingUp, Building2, LayoutGrid, Percent, AlertTriangle } from "lucide-react";
+import { CheckCircle, XCircle, TrendingUp, Building2, LayoutGrid, Percent, AlertTriangle, Lock } from "lucide-react";
+
+type BindingConstraint = 'SETBACK' | 'STORMWATER' | 'CIRCULATION' | 'COVERAGE' | 'FOOTPRINT';
 
 interface SolverOutputsProps {
   mode: 'FORWARD' | 'REVERSE';
@@ -11,14 +13,15 @@ interface SolverOutputsProps {
     utilization_pct: number;
     phase1_viable: boolean;
     forward_parcel_spec?: {
-      min_width_ft: number;
-      min_depth_ft: number;
       min_acreage: number;
+      max_acreage: number;
+      geometry_unresolved: boolean;
     };
     reverse_capacity?: {
       max_units: number;
       max_rentable_sf: number;
       max_buildings: number;
+      binding_constraint: BindingConstraint;
     };
   } | null;
   warnings: string[];
@@ -26,7 +29,16 @@ interface SolverOutputsProps {
   blockedReason: string | null;
   artifactId: string | null;
   timestamp: string | null;
+  circulationPct?: number;
 }
+
+const BINDING_CONSTRAINT_LABELS: Record<BindingConstraint, string> = {
+  SETBACK: 'Setback Requirements',
+  STORMWATER: 'Stormwater Reserve',
+  CIRCULATION: 'Circulation Space',
+  COVERAGE: 'Lot Coverage Cap',
+  FOOTPRINT: 'Building Footprint',
+};
 
 export const SolverOutputs = ({
   mode,
@@ -36,6 +48,7 @@ export const SolverOutputs = ({
   blockedReason,
   artifactId,
   timestamp,
+  circulationPct = 0,
 }: SolverOutputsProps) => {
   if (!outputs && !blocked) {
     return (
@@ -76,6 +89,19 @@ export const SolverOutputs = ({
         )}
       </CardHeader>
       <CardContent className="flex-1 overflow-y-auto space-y-4">
+        {/* Persistent Circulation Approximation Banner - NOT dismissible */}
+        {circulationPct > 0 && outputs && (
+          <div className="bg-amber-500/20 border-2 border-amber-500 rounded-lg p-3 sticky top-0 z-10">
+            <div className="flex items-center gap-2 text-amber-700 dark:text-amber-300 font-semibold">
+              <AlertTriangle className="h-5 w-5 shrink-0" />
+              APPROXIMATION IN USE
+            </div>
+            <p className="text-sm text-amber-600 dark:text-amber-400 mt-1">
+              circulation_pct is a placeholder until aisle packing geometry is modeled.
+            </p>
+          </div>
+        )}
+
         {/* Blocked State */}
         {blocked && (
           <div className="bg-destructive/10 border border-destructive/30 rounded-lg p-3">
@@ -91,6 +117,22 @@ export const SolverOutputs = ({
 
         {outputs && (
           <>
+            {/* Binding Constraint (Reverse Mode) */}
+            {mode === 'REVERSE' && outputs.reverse_capacity?.binding_constraint && (
+              <div className="bg-primary/10 border-2 border-primary rounded-lg p-3">
+                <div className="flex items-center gap-2 text-primary font-semibold">
+                  <Lock className="h-5 w-5 shrink-0" />
+                  BINDING CONSTRAINT
+                </div>
+                <p className="text-lg font-bold mt-1">
+                  {BINDING_CONSTRAINT_LABELS[outputs.reverse_capacity.binding_constraint]}
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  This constraint caps site capacity
+                </p>
+              </div>
+            )}
+
             {/* Main Outputs */}
             <div className="grid grid-cols-2 gap-2">
               <div className="bg-secondary/50 p-3 rounded-lg">
@@ -157,18 +199,21 @@ export const SolverOutputs = ({
                 <h4 className="text-sm font-medium mb-2">Parcel Specification (Shopping List)</h4>
                 <div className="space-y-1.5 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Min Width:</span>
-                    <span className="font-mono">{outputs.forward_parcel_spec.min_width_ft.toLocaleString()} ft</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Min Depth:</span>
-                    <span className="font-mono">{outputs.forward_parcel_spec.min_depth_ft.toLocaleString()} ft</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Min Acreage:</span>
-                    <span className="font-mono">{outputs.forward_parcel_spec.min_acreage} acres</span>
+                    <span className="text-muted-foreground">Acreage Range:</span>
+                    <span className="font-mono">
+                      {outputs.forward_parcel_spec.min_acreage} – {outputs.forward_parcel_spec.max_acreage} acres
+                    </span>
                   </div>
                 </div>
+                {/* Geometry Unresolved Warning */}
+                {outputs.forward_parcel_spec.geometry_unresolved && (
+                  <div className="mt-3 bg-warning/10 border border-warning/30 rounded p-2">
+                    <div className="flex items-center gap-2 text-warning text-sm">
+                      <AlertTriangle className="h-4 w-4 shrink-0" />
+                      <span>Geometry unresolved — parcel dimensions not inferred</span>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 
