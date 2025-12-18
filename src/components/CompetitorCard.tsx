@@ -27,6 +27,8 @@ export interface CompetitorData {
   name: string;
   address: string;
   zip: string;
+  lat: number | null;             // Latitude for map
+  lng: number | null;             // Longitude for map
   phone: string | null;
   url: string | null;             // Competitor website URL
   units: UnitSize[];              // All unit sizes with prices
