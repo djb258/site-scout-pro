@@ -56,6 +56,7 @@ export type Database = {
       competitor_facilities: {
         Row: {
           address: string | null
+          call_verified_at: string | null
           city: string | null
           climate_controlled: boolean | null
           confidence_score: number | null
@@ -71,6 +72,7 @@ export type Database = {
           count_rv_boat: number | null
           county: string
           created_at: string
+          data_completeness: number | null
           dominant_unit_size: string | null
           facility_name: string
           has_rv_boat: boolean | null
@@ -78,8 +80,12 @@ export type Database = {
           last_verified_at: string | null
           lat: number | null
           lng: number | null
+          missing_fields: string[] | null
+          needs_call_verification: boolean | null
+          pass15_queue_id: string | null
           phone: string | null
           price_per_sqft: number | null
+          promoted_to_pass15: boolean | null
           rent_10x10: number | null
           rent_10x10_cc: number | null
           rent_10x15: number | null
@@ -98,11 +104,13 @@ export type Database = {
           total_sqft: number | null
           unit_count: number | null
           updated_at: string
+          verified_by_call: boolean | null
           website_url: string | null
           zip_code: string
         }
         Insert: {
           address?: string | null
+          call_verified_at?: string | null
           city?: string | null
           climate_controlled?: boolean | null
           confidence_score?: number | null
@@ -118,6 +126,7 @@ export type Database = {
           count_rv_boat?: number | null
           county: string
           created_at?: string
+          data_completeness?: number | null
           dominant_unit_size?: string | null
           facility_name: string
           has_rv_boat?: boolean | null
@@ -125,8 +134,12 @@ export type Database = {
           last_verified_at?: string | null
           lat?: number | null
           lng?: number | null
+          missing_fields?: string[] | null
+          needs_call_verification?: boolean | null
+          pass15_queue_id?: string | null
           phone?: string | null
           price_per_sqft?: number | null
+          promoted_to_pass15?: boolean | null
           rent_10x10?: number | null
           rent_10x10_cc?: number | null
           rent_10x15?: number | null
@@ -145,11 +158,13 @@ export type Database = {
           total_sqft?: number | null
           unit_count?: number | null
           updated_at?: string
+          verified_by_call?: boolean | null
           website_url?: string | null
           zip_code: string
         }
         Update: {
           address?: string | null
+          call_verified_at?: string | null
           city?: string | null
           climate_controlled?: boolean | null
           confidence_score?: number | null
@@ -165,6 +180,7 @@ export type Database = {
           count_rv_boat?: number | null
           county?: string
           created_at?: string
+          data_completeness?: number | null
           dominant_unit_size?: string | null
           facility_name?: string
           has_rv_boat?: boolean | null
@@ -172,8 +188,12 @@ export type Database = {
           last_verified_at?: string | null
           lat?: number | null
           lng?: number | null
+          missing_fields?: string[] | null
+          needs_call_verification?: boolean | null
+          pass15_queue_id?: string | null
           phone?: string | null
           price_per_sqft?: number | null
+          promoted_to_pass15?: boolean | null
           rent_10x10?: number | null
           rent_10x10_cc?: number | null
           rent_10x15?: number | null
@@ -192,6 +212,7 @@ export type Database = {
           total_sqft?: number | null
           unit_count?: number | null
           updated_at?: string
+          verified_by_call?: boolean | null
           website_url?: string | null
           zip_code?: string
         }
