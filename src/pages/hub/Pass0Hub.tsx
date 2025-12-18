@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -12,7 +11,6 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { 
-  ArrowLeft, 
   Radio, 
   Play, 
   Power, 
@@ -26,7 +24,6 @@ import {
   List,
   Rss,
   Link as LinkIcon,
-  FileText,
   Globe,
   Target
 } from "lucide-react";
@@ -315,16 +312,10 @@ const Pass0Hub = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="border-b border-border bg-card">
+    <div className="flex-1 bg-background">
+      {/* Page Header */}
+      <div className="border-b border-border bg-card">
         <div className="container mx-auto px-6 py-6">
-          <Button variant="ghost" asChild className="mb-4">
-            <Link to="/">
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Back to Overview
-            </Link>
-          </Button>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="h-12 w-12 rounded-full bg-blue-500 flex items-center justify-center">
@@ -335,22 +326,14 @@ const Pass0Hub = () => {
                 <p className="text-muted-foreground">Waterfall Intake • News → Permits → Geo Output</p>
               </div>
             </div>
-            <div className="flex items-center gap-3">
-              <Link to="/pass0">
-                <Button variant="outline" size="sm">
-                  <FileText className="h-4 w-4 mr-2" />
-                  Dashboard
-                </Button>
-              </Link>
-              <Badge variant="outline" className="bg-amber-500/10 text-amber-400 border-amber-500/30 font-mono">
-                Ephemeral / Cloud-Only
-              </Badge>
-            </div>
+            <Badge variant="outline" className="bg-amber-500/10 text-amber-400 border-amber-500/30 font-mono">
+              Ephemeral / Cloud-Only
+            </Badge>
           </div>
         </div>
-      </header>
+      </div>
 
-      <main className="container mx-auto px-6 py-8 space-y-6">
+      <div className="container mx-auto px-6 py-8 space-y-6">
         {/* Pipeline Waterfall */}
         <Card className="border-border bg-card/50">
           <CardHeader className="pb-4">
@@ -565,7 +548,7 @@ const Pass0Hub = () => {
             </span>
           </div>
         </div>
-      </main>
+      </div>
     </div>
   );
 };
