@@ -51,6 +51,8 @@ interface CalculationStep {
   warnings: string[];
 }
 
+type BindingConstraint = 'SETBACK' | 'STORMWATER' | 'CIRCULATION' | 'COVERAGE' | 'FOOTPRINT';
+
 interface SolverArtifact {
   solver_artifact_id: string;
   mode: 'FORWARD' | 'REVERSE';
@@ -66,14 +68,15 @@ interface SolverArtifact {
     utilization_pct: number;
     phase1_viable: boolean;
     forward_parcel_spec?: {
-      min_width_ft: number;
-      min_depth_ft: number;
       min_acreage: number;
+      max_acreage: number;
+      geometry_unresolved: boolean;
     };
     reverse_capacity?: {
       max_units: number;
       max_rentable_sf: number;
       max_buildings: number;
+      binding_constraint: BindingConstraint;
     };
   };
   diff?: {
@@ -190,6 +193,9 @@ function runForwardSolver(input: SolverRunInput): { steps: CalculationStep[]; ou
   const totalRentableSF = targetBuildings * tunables.archetype_rentable_sf;
   const totalUnits = targetBuildings * tunables.archetype_units;
 
+  // Add geometry unresolved warning
+  warnings.push('Geometry unresolved — parcel dimensions not inferred');
+
   return {
     steps,
     outputs: {
@@ -199,9 +205,9 @@ function runForwardSolver(input: SolverRunInput): { steps: CalculationStep[]; ou
       utilization_pct: 100, // Forward mode doesn't have utilization
       phase1_viable: targetBuildings >= 1,
       forward_parcel_spec: {
-        min_width_ft: Math.ceil(Math.sqrt(requiredWithOverhead) * 1.5),
-        min_depth_ft: Math.ceil(Math.sqrt(requiredWithOverhead) * 1.5),
         min_acreage: Math.round(requiredAcres * 100) / 100,
+        max_acreage: Math.round(requiredAcres * 1.25 * 100) / 100, // 25% buffer
+        geometry_unresolved: true,
       },
     },
     warnings,
@@ -365,6 +371,20 @@ function runReverseSolver(input: SolverRunInput): { steps: CalculationStep[]; ou
     warnings: maxBuildings === 0 ? ['No buildings fit on this parcel'] : [],
   });
 
+  // Determine binding constraint by checking what limited capacity first
+  let bindingConstraint: BindingConstraint = 'FOOTPRINT';
+  
+  // Check in order of the calculation pipeline
+  if (netArea < tunables.archetype_footprint_sf) {
+    bindingConstraint = 'SETBACK';
+  } else if (afterStormwater < tunables.archetype_footprint_sf && stormwaterReserve > 0) {
+    bindingConstraint = 'STORMWATER';
+  } else if (buildableArea < tunables.archetype_footprint_sf && circulationReserve > 0) {
+    bindingConstraint = 'CIRCULATION';
+  } else if (isCapped) {
+    bindingConstraint = 'COVERAGE';
+  }
+
   const utilizationPct = netArea > 0 ? (footprintUsed / netArea) * 100 : 0;
 
   return {
@@ -379,6 +399,7 @@ function runReverseSolver(input: SolverRunInput): { steps: CalculationStep[]; ou
         max_units: maxUnits,
         max_rentable_sf: maxRentableSF,
         max_buildings: maxBuildings,
+        binding_constraint: bindingConstraint,
       },
     },
     warnings,
