@@ -185,6 +185,33 @@ export interface UnknownItem {
 }
 
 /**
+ * Authority scope types for constraint values.
+ */
+export type AuthorityScope =
+  | 'county'
+  | 'municipality'
+  | 'watershed'
+  | 'state'
+  | 'fire_district'
+  | 'dot'
+  | 'utility'
+  | 'unknown';
+
+/**
+ * Record of which authorities were consulted.
+ * GUARDRAIL: Completeness must be checked per authority, not global.
+ */
+export interface AuthoritiesConsulted {
+  county: boolean;
+  municipality: boolean;
+  watershed: boolean;
+  state: boolean;
+  fire_district: boolean;
+  dot: boolean;
+  utility: boolean;
+}
+
+/**
  * Provenance — Where did the constraint data come from?
  */
 export interface Provenance {
@@ -204,6 +231,12 @@ export interface Provenance {
   jurisdiction_cards_used: string[];
 
   /**
+   * GUARDRAIL: Which authority scopes were consulted?
+   * Completeness checks must be per authority, not global.
+   */
+  authorities_consulted: AuthoritiesConsulted;
+
+  /**
    * Whether Pass 0/1 data was used
    */
   derived_from_pass0: boolean;
@@ -218,6 +251,11 @@ export interface Provenance {
    * Data freshness warning if jurisdiction card is old
    */
   data_freshness_warning?: string;
+
+  /**
+   * GUARDRAIL: Fields that require revalidation (stale data).
+   */
+  stale_fields: string[];
 }
 
 /**
@@ -392,9 +430,19 @@ export function createDefaultPass2Output(input: Pass2Input): Pass2Output {
       zip_code: input.zip_code,
       counties_consulted: [],
       jurisdiction_cards_used: [],
+      authorities_consulted: {
+        county: false,
+        municipality: false,
+        watershed: false,
+        state: false,
+        fire_district: false,
+        dot: false,
+        utility: false,
+      },
       derived_from_pass0: false,
       derived_from_pass1: false,
       compiled_at: new Date().toISOString(),
+      stale_fields: [],
     },
     summary: 'Constraint compilation pending',
     errors: [],

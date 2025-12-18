@@ -14,6 +14,7 @@ export * from './contracts/pass2_output';
 // Types
 export * from './types/constraint_types';
 export * from './types/jurisdiction_card';
+export * from './types/guardrails';
 
 // Orchestrator
 export { Pass2ConstraintCompiler, runPass2ConstraintCompiler } from './orchestrator/Pass2ConstraintCompiler';

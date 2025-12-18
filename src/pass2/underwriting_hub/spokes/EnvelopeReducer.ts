@@ -6,6 +6,10 @@
 //
 // This is GEOMETRY ONLY. No financial calculations.
 // Reduces gross acres to net buildable sqft based on constraints.
+//
+// GUARDRAIL: EnvelopeReducer MUST REFUSE to calculate if any
+// REQUIRED_FOR_ENVELOPE field is unknown, blocked, or stale.
+// No silent partial envelopes.
 // =============================================================================
 
 import type {
@@ -16,6 +20,76 @@ import type {
   StormwaterConstraintsResult,
   FireAccessConstraintsResult,
 } from '../types/constraint_types';
+
+// =============================================================================
+// GUARDRAIL: REQUIRED FIELDS FOR ENVELOPE
+// =============================================================================
+
+/**
+ * Fields required for envelope calculation.
+ * If ANY of these are null (unknown), EnvelopeReducer MUST refuse.
+ */
+interface RequiredFieldCheck {
+  field: string;
+  value: any;
+  source: string;
+  revalidation_required?: boolean;
+}
+
+/**
+ * Check if required fields are present and not stale.
+ * Returns list of missing/stale fields, or empty array if all OK.
+ */
+function checkRequiredFields(input: EnvelopeReducerInput): {
+  missing: string[];
+  stale: string[];
+} {
+  const missing: string[] = [];
+  const stale: string[] = [];
+
+  const checks: RequiredFieldCheck[] = [
+    {
+      field: 'setback_front_ft',
+      value: input.zoning.setbacks.front_ft,
+      source: 'zoning',
+    },
+    {
+      field: 'setback_side_ft',
+      value: input.zoning.setbacks.side_ft,
+      source: 'zoning',
+    },
+    {
+      field: 'setback_rear_ft',
+      value: input.zoning.setbacks.rear_ft,
+      source: 'zoning',
+    },
+    {
+      field: 'max_lot_coverage_pct',
+      value: input.zoning.max_lot_coverage_pct,
+      source: 'zoning',
+    },
+    {
+      field: 'stormwater_plan_required',
+      value: input.stormwater.stormwater_plan_required,
+      source: 'stormwater',
+    },
+    {
+      field: 'fire_lane_required',
+      value: input.fire_access.fire_lane_required,
+      source: 'fire_access',
+    },
+  ];
+
+  for (const check of checks) {
+    if (check.value === null || check.value === undefined) {
+      missing.push(`${check.source}.${check.field}`);
+    } else if (check.revalidation_required) {
+      stale.push(`${check.source}.${check.field}`);
+    }
+  }
+
+  return { missing, stale };
+}
 
 // =============================================================================
 // CONSTANTS — Named for clarity
@@ -50,6 +124,9 @@ const PARKING_SQFT_PER_SPACE = 180;
  * Calculate buildability envelope from constraints.
  *
  * DOCTRINE: This is geometry only. No dollars. No timelines.
+ *
+ * GUARDRAIL: This function REFUSES to calculate if any REQUIRED_FOR_ENVELOPE
+ * field is unknown, blocked, or stale. No silent partial envelopes.
  */
 export async function runEnvelopeReducer(
   input: EnvelopeReducerInput
@@ -57,6 +134,52 @@ export async function runEnvelopeReducer(
   const timestamp = new Date().toISOString();
 
   console.log(`[SS.02.08] Calculating envelope for ${input.gross_acres} acres`);
+
+  // ===========================================================================
+  // GUARDRAIL: Check required fields BEFORE any calculation
+  // ===========================================================================
+  const requiredCheck = checkRequiredFields(input);
+
+  if (requiredCheck.missing.length > 0 || requiredCheck.stale.length > 0) {
+    const reasons: string[] = [];
+    if (requiredCheck.missing.length > 0) {
+      reasons.push(`Missing required fields: ${requiredCheck.missing.join(', ')}`);
+    }
+    if (requiredCheck.stale.length > 0) {
+      reasons.push(`Stale fields requiring revalidation: ${requiredCheck.stale.join(', ')}`);
+    }
+
+    console.log(`[SS.02.08] GUARDRAIL: Refusing to calculate envelope. ${reasons.join('; ')}`);
+
+    return {
+      spoke_id: 'SS.02.08',
+      status: 'error',
+      timestamp,
+      notes: `GUARDRAIL: Envelope calculation refused. ${reasons.join('; ')}`,
+
+      gross_acres: input.gross_acres,
+      net_buildable_acres: null,
+      sqft_per_acre_ceiling: null,
+      max_buildable_sqft: null,
+
+      reductions: {
+        setback_acres: 0,
+        stormwater_acres: 0,
+        fire_lane_acres: 0,
+        landscape_acres: 0,
+        parking_acres: 0,
+        other_acres: 0,
+        total_reduction_acres: 0,
+      },
+
+      envelope_valid: false,
+      invalid_reason: reasons.join('; '),
+      missing_constraints: requiredCheck.missing,
+
+      assumptions: [],
+    };
+  }
+  // ===========================================================================
 
   const missingConstraints: string[] = [];
   const assumptions: string[] = [];
