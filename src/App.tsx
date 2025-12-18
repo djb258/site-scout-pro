@@ -9,6 +9,7 @@ import Pass1Hub from "@/pages/hub/Pass1Hub";
 import Pass15Hub from "@/pages/hub/Pass15Hub";
 import Pass2Hub from "@/pages/hub/Pass2Hub";
 import Pass3Hub from "@/pages/hub/Pass3Hub";
+import Solver from "@/pages/Solver";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -21,6 +22,7 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<SystemOverview />} />
+          <Route path="/solver" element={<Solver />} />
           <Route path="/hub/pass0" element={<Pass0Hub />} />
           <Route path="/hub/pass1" element={<Pass1Hub />} />
           <Route path="/hub/pass15" element={<Pass15Hub />} />

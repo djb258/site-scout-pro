@@ -96,3 +96,6 @@ verify_jwt = false
 
 [functions.hub15_get_dashboard]
 verify_jwt = false
+
+[functions.solver_run]
+verify_jwt = false
