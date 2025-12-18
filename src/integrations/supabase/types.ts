@@ -331,6 +331,96 @@ export type Database = {
         }
         Relationships: []
       }
+      pass0_narrative_pins: {
+        Row: {
+          confidence: string | null
+          created_at: string
+          id: string
+          lat: number | null
+          lon: number | null
+          raw_title: string
+          raw_url: string | null
+          resolution_tier: string | null
+          run_id: string
+          source_id: string
+          ttl: string | null
+          zip_id: string | null
+        }
+        Insert: {
+          confidence?: string | null
+          created_at?: string
+          id?: string
+          lat?: number | null
+          lon?: number | null
+          raw_title: string
+          raw_url?: string | null
+          resolution_tier?: string | null
+          run_id: string
+          source_id: string
+          ttl?: string | null
+          zip_id?: string | null
+        }
+        Update: {
+          confidence?: string | null
+          created_at?: string
+          id?: string
+          lat?: number | null
+          lon?: number | null
+          raw_title?: string
+          raw_url?: string | null
+          resolution_tier?: string | null
+          run_id?: string
+          source_id?: string
+          ttl?: string | null
+          zip_id?: string | null
+        }
+        Relationships: []
+      }
+      pass0_run_log: {
+        Row: {
+          created_at: string
+          ended_at: string | null
+          error_message: string | null
+          failure_count: number | null
+          id: string
+          item_count: number | null
+          kill_switch: boolean | null
+          metadata: Json | null
+          run_id: string
+          started_at: string | null
+          status: string
+          step: string
+        }
+        Insert: {
+          created_at?: string
+          ended_at?: string | null
+          error_message?: string | null
+          failure_count?: number | null
+          id?: string
+          item_count?: number | null
+          kill_switch?: boolean | null
+          metadata?: Json | null
+          run_id: string
+          started_at?: string | null
+          status?: string
+          step: string
+        }
+        Update: {
+          created_at?: string
+          ended_at?: string | null
+          error_message?: string | null
+          failure_count?: number | null
+          id?: string
+          item_count?: number | null
+          kill_switch?: boolean | null
+          metadata?: Json | null
+          run_id?: string
+          started_at?: string | null
+          status?: string
+          step?: string
+        }
+        Relationships: []
+      }
       pass1_census_snapshot: {
         Row: {
           created_at: string | null

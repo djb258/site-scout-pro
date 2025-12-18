@@ -99,3 +99,22 @@ verify_jwt = false
 
 [functions.solver_run]
 verify_jwt = false
+
+# ================================================================
+# Pass 0 — News & Narrative Pins (v0.1.0 SHELL)
+# ================================================================
+
+[functions.pass0_orchestrator]
+verify_jwt = false
+
+[functions.pass0_source_fetcher]
+verify_jwt = false
+
+[functions.pass0_geo_resolver]
+verify_jwt = false
+
+[functions.pass0_zip_mapper]
+verify_jwt = false
+
+[functions.pass0_pin_emitter]
+verify_jwt = false

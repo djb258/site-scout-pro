@@ -1,0 +1,45 @@
+{
+  "version": "1.0.0",
+  "sources": [
+    {
+      "source_id": "google_news_local",
+      "type": "rss",
+      "geo_scope": "state",
+      "enabled": true,
+      "cadence": "6h",
+      "description": "Google News local business RSS"
+    },
+    {
+      "source_id": "bizjournals",
+      "type": "rss",
+      "geo_scope": "metro",
+      "enabled": true,
+      "cadence": "12h",
+      "description": "Regional business journal feeds"
+    },
+    {
+      "source_id": "local_gov_permits",
+      "type": "api",
+      "geo_scope": "county",
+      "enabled": false,
+      "cadence": "24h",
+      "description": "Municipal permit announcement APIs"
+    },
+    {
+      "source_id": "press_releases",
+      "type": "scrape",
+      "geo_scope": "national",
+      "enabled": true,
+      "cadence": "4h",
+      "description": "Corporate press release aggregators"
+    },
+    {
+      "source_id": "economic_dev",
+      "type": "api",
+      "geo_scope": "state",
+      "enabled": true,
+      "cadence": "24h",
+      "description": "State economic development announcements"
+    }
+  ]
+}
