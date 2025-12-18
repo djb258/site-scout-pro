@@ -28,6 +28,7 @@ export interface CompetitorData {
   address: string;
   zip: string;
   phone: string | null;
+  url: string | null;             // Competitor website URL
   units: UnitSize[];              // All unit sizes with prices
   total_sqft: number | null;      // Total facility square footage (if available)
   distance_miles?: number;
