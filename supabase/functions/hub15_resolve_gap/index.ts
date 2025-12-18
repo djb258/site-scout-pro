@@ -3,8 +3,9 @@
  * process_id: hub15_resolve_gap
  * version: 1.0.0
  * 
+ * // DOCTRINE LOCKED — PASS 1.5 COMPLETE
  * DO NOT MODIFY — downstream depends on this shape
- * 
+ *
  * PURPOSE: Convert successful remediation into vault-ready addendum.
  * This is the ONLY path from remediation to permanent storage.
  * 

@@ -2,9 +2,10 @@
  * PROCESS: hub15.log_attempt
  * VERSION: v1.1.0
  * 
+ * // DOCTRINE LOCKED — PASS 1.5 COMPLETE
  * PURPOSE: Authoritative audit trail logger for all remediation attempts.
  * Performs ATOMIC writes to attempt_log and gap_queue status updates.
- * 
+ *
  * GUARD RAILS:
  * - Append-only logging (no updates to attempt_log)
  * - Idempotent by (gap_queue_id, attempt_number) via unique index
