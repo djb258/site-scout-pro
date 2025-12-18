@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,249 +6,312 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { 
   ArrowLeft, 
   Radio, 
   Play, 
-  Target, 
-  Square, 
-  Eye, 
-  ArrowUpRight, 
-  Trash2,
+  Power, 
+  Clock, 
   Loader2,
-  AlertCircle,
-  CheckCircle2,
-  Clock
+  AlertTriangle,
+  CheckCircle,
+  Newspaper,
+  FileCheck,
+  MapPin,
+  List,
+  Rss,
+  Link as LinkIcon,
+  FileText,
+  Globe,
+  Target
 } from "lucide-react";
 
-interface Candidate {
-  area: { city: string; county: string; state: string };
-  signal_score: number;
-  signal_density: number;
-  primary_drivers: string[];
-  source_count: number;
-  confidence_level: "high" | "medium" | "low";
-  evidence: {
-    summary: string;
-    sources: { title: string; type: string; snippet: string; date: string }[];
-    rationale: string;
-  };
+// Pipeline stage definitions
+interface PipelineStage {
+  id: string;
+  label: string;
+  description: string;
+  icon: React.ElementType;
+  functions: string[];
+  sources: { id: string; label: string; enabled: boolean }[];
 }
 
-interface ScanResult {
-  process_id: string;
-  status: "running" | "completed" | "failed" | "aborted";
-  started_at: string;
-  completed_at?: string;
-  candidates: Candidate[];
+interface StageStatus {
+  isRunning: boolean;
+  lastRun: string | null;
+  itemCount: number;
+  errorCount: number;
+  killSwitch: boolean;
 }
+
+interface LogEntry {
+  id: string;
+  timestamp: string;
+  level: 'info' | 'warn' | 'error';
+  message: string;
+}
+
+const PIPELINE_STAGES: PipelineStage[] = [
+  {
+    id: 'news_narratives',
+    label: 'Stage 1: News & Narratives',
+    description: 'RSS ingestion, manual URLs, content parsing',
+    icon: Newspaper,
+    functions: ['pass0_source_fetcher', 'pass0_content_parser'],
+    sources: [
+      { id: 'rss_feeds', label: 'RSS Feeds', enabled: true },
+      { id: 'google_news', label: 'Google News', enabled: true },
+      { id: 'bizjournals', label: 'BizJournals', enabled: false },
+      { id: 'press_releases', label: 'Press Releases', enabled: true }
+    ]
+  },
+  {
+    id: 'permits_inspections',
+    label: 'Stage 2: Permits & Inspections',
+    description: 'Permit feeds, inspection tracking, zoning alerts',
+    icon: FileCheck,
+    functions: ['pass0_permit_fetcher', 'pass0_inspection_tracker'],
+    sources: [
+      { id: 'county_permits', label: 'County Permits', enabled: true },
+      { id: 'state_filings', label: 'State Filings', enabled: true },
+      { id: 'inspection_feeds', label: 'Inspection Feeds', enabled: false },
+      { id: 'zoning_changes', label: 'Zoning Changes', enabled: true }
+    ]
+  },
+  {
+    id: 'geo_pin_output',
+    label: 'Stage 3: Geo Resolution & Pin Output',
+    description: 'Location resolution, ZIP mapping, pin emission',
+    icon: MapPin,
+    functions: ['pass0_geo_resolver', 'pass0_zip_mapper', 'pass0_pin_emitter'],
+    sources: [
+      { id: 'geocoder', label: 'Geocoder API', enabled: true },
+      { id: 'zip_lookup', label: 'ZIP Lookup', enabled: true },
+      { id: 'confidence_filter', label: 'Confidence Filter', enabled: true }
+    ]
+  }
+];
+
+// Mock log generator
+const generateMockLogs = (stageId: string): LogEntry[] => [
+  { id: '1', timestamp: new Date().toISOString(), level: 'info', message: `[${stageId}] Stage initiated` },
+  { id: '2', timestamp: new Date(Date.now() - 1000).toISOString(), level: 'info', message: `[${stageId}] Processing batch...` },
+  { id: '3', timestamp: new Date(Date.now() - 2000).toISOString(), level: 'warn', message: `[${stageId}] Rate limit warning` },
+  { id: '4', timestamp: new Date(Date.now() - 3000).toISOString(), level: 'info', message: `[${stageId}] Items processed: 12` },
+  { id: '5', timestamp: new Date(Date.now() - 4000).toISOString(), level: 'info', message: `[${stageId}] Stage complete` },
+];
 
 const Pass0Hub = () => {
   const { toast } = useToast();
-  
-  // Scan controls
-  const [toggles, setToggles] = useState({
-    news_events: true,
-    permits_zoning: true,
-    infrastructure: false,
-    storage_industrial: true
-  });
-  const [states, setStates] = useState("");
-  const [industryFocus, setIndustryFocus] = useState("");
-  const [lookbackDays, setLookbackDays] = useState(30);
-  
-  // Execution state
-  const [isScanning, setIsScanning] = useState(false);
-  const [scanResult, setScanResult] = useState<ScanResult | null>(null);
-  const [runtime, setRuntime] = useState(0);
-  
-  // Evidence drawer
-  const [selectedCandidate, setSelectedCandidate] = useState<Candidate | null>(null);
-  const [isEvidenceOpen, setIsEvidenceOpen] = useState(false);
-  
-  // Promotion modal state
-  const [promotedPayload, setPromotedPayload] = useState<object | null>(null);
 
-  // Runtime counter
-  useEffect(() => {
-    let interval: NodeJS.Timeout;
-    if (isScanning && scanResult?.started_at) {
-      interval = setInterval(() => {
-        const start = new Date(scanResult.started_at).getTime();
-        const now = Date.now();
-        setRuntime(Math.floor((now - start) / 1000));
-      }, 1000);
-    }
-    return () => clearInterval(interval);
-  }, [isScanning, scanResult?.started_at]);
-
-  const runScan = useCallback(async (scanType: "full" | "targeted") => {
-    setIsScanning(true);
-    setScanResult(null);
-    setRuntime(0);
-
-    try {
-      const { data, error } = await supabase.functions.invoke('hub0_run_radar', {
-        body: {
-          scan_type: scanType,
-          toggles,
-          filters: {
-            states: states ? states.split(',').map(s => s.trim().toUpperCase()) : undefined,
-            industry_focus: industryFocus || undefined,
-            lookback_days: lookbackDays
-          }
-        }
-      });
-
-      if (error) throw error;
-
-      setScanResult(data);
-      toast({
-        title: "Scan Complete",
-        description: `Found ${data.candidates?.length || 0} candidate areas`,
-      });
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Scan failed';
-      toast({
-        title: "Scan Failed",
-        description: errorMessage,
-        variant: "destructive"
-      });
-      setScanResult({
-        process_id: crypto.randomUUID(),
-        status: "failed",
-        started_at: new Date().toISOString(),
-        candidates: []
-      });
-    } finally {
-      setIsScanning(false);
-    }
-  }, [toggles, states, industryFocus, lookbackDays, toast]);
-
-  const abortScan = useCallback(async () => {
-    if (!scanResult?.process_id) return;
-
-    try {
-      await supabase.functions.invoke('hub0_abort_scan', {
-        body: { process_id: scanResult.process_id }
-      });
-
-      setIsScanning(false);
-      setScanResult(prev => prev ? { ...prev, status: "aborted" } : null);
-      toast({
-        title: "Scan Aborted",
-        description: "Radar scan was terminated",
-      });
-    } catch (error) {
-      toast({
-        title: "Abort Failed",
-        description: "Could not abort scan",
-        variant: "destructive"
-      });
-    }
-  }, [scanResult?.process_id, toast]);
-
-  const promoteCandidate = useCallback(async (candidate: Candidate) => {
-    if (!scanResult?.process_id) return;
-
-    try {
-      const { data, error } = await supabase.functions.invoke('hub0_promote', {
-        body: {
-          candidate: {
-            city: candidate.area.city,
-            county: candidate.area.county,
-            state: candidate.area.state,
-            signal_score: candidate.signal_score,
-            rationale: candidate.evidence.rationale,
-            sources: candidate.evidence.sources
-          },
-          process_id: scanResult.process_id
-        }
-      });
-
-      if (error) throw error;
-
-      setPromotedPayload(data);
-      toast({
-        title: "Candidate Promoted",
-        description: `${candidate.area.city}, ${candidate.area.state} promoted to Hub 1`,
-      });
-    } catch (error) {
-      toast({
-        title: "Promotion Failed",
-        description: "Could not promote candidate",
-        variant: "destructive"
-      });
-    }
-  }, [scanResult?.process_id, toast]);
-
-  const discardCandidate = useCallback((candidate: Candidate) => {
-    setScanResult(prev => {
-      if (!prev) return null;
-      return {
-        ...prev,
-        candidates: prev.candidates.filter(c => 
-          c.area.city !== candidate.area.city || 
-          c.area.state !== candidate.area.state
-        )
+  // Stage statuses
+  const [stageStatuses, setStageStatuses] = useState<Record<string, StageStatus>>(() => {
+    const initial: Record<string, StageStatus> = {};
+    PIPELINE_STAGES.forEach(stage => {
+      initial[stage.id] = {
+        isRunning: false,
+        lastRun: null,
+        itemCount: 0,
+        errorCount: 0,
+        killSwitch: false
       };
     });
+    return initial;
+  });
 
-    // Log discard event
-    if (scanResult?.process_id) {
-      supabase.functions.invoke('hub0_log_event', {
-        body: {
-          process_id: scanResult.process_id,
-          action: 'candidate_discarded',
-          status: 'completed',
-          metadata: { area: candidate.area }
-        }
+  // Source toggles (per stage)
+  const [sourceToggles, setSourceToggles] = useState<Record<string, Record<string, boolean>>>(() => {
+    const initial: Record<string, Record<string, boolean>> = {};
+    PIPELINE_STAGES.forEach(stage => {
+      initial[stage.id] = {};
+      stage.sources.forEach(source => {
+        initial[stage.id][source.id] = source.enabled;
       });
+    });
+    return initial;
+  });
+
+  // Logs per stage
+  const [logs, setLogs] = useState<Record<string, LogEntry[]>>({});
+
+  // Expanded accordion items
+  const [expandedStages, setExpandedStages] = useState<string[]>(['news_narratives']);
+
+  // Manual URL input for Stage 1
+  const [manualUrl, setManualUrl] = useState("");
+
+  // Auto-expand stages with active runs or errors
+  useEffect(() => {
+    const autoExpand: string[] = [];
+    Object.entries(stageStatuses).forEach(([stageId, status]) => {
+      if (status.isRunning || status.errorCount > 0) {
+        autoExpand.push(stageId);
+      }
+    });
+    if (autoExpand.length > 0) {
+      setExpandedStages(prev => [...new Set([...prev, ...autoExpand])]);
     }
+  }, [stageStatuses]);
+
+  const toggleKillSwitch = async (stageId: string) => {
+    const newValue = !stageStatuses[stageId].killSwitch;
+    setStageStatuses(prev => ({
+      ...prev,
+      [stageId]: { ...prev[stageId], killSwitch: newValue }
+    }));
 
     toast({
-      title: "Candidate Discarded",
-      description: `${candidate.area.city}, ${candidate.area.state} removed`,
+      title: newValue ? "Kill Switch Enabled" : "Kill Switch Disabled",
+      description: `Stage ${stageId} ${newValue ? 'halted' : 'resumed'}`,
+      variant: newValue ? "destructive" : "default"
     });
-  }, [scanResult?.process_id, toast]);
+  };
 
-  const getStatusIcon = () => {
-    if (isScanning) return <Loader2 className="h-4 w-4 animate-spin" />;
-    switch (scanResult?.status) {
-      case "completed": return <CheckCircle2 className="h-4 w-4" />;
-      case "failed": return <AlertCircle className="h-4 w-4" />;
-      case "aborted": return <Square className="h-4 w-4" />;
-      default: return <Clock className="h-4 w-4" />;
+  const toggleSource = (stageId: string, sourceId: string) => {
+    setSourceToggles(prev => ({
+      ...prev,
+      [stageId]: {
+        ...prev[stageId],
+        [sourceId]: !prev[stageId][sourceId]
+      }
+    }));
+  };
+
+  const runStage = async (stageId: string) => {
+    if (stageStatuses[stageId].killSwitch) {
+      toast({
+        title: "Blocked",
+        description: "Kill switch is enabled for this stage",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setStageStatuses(prev => ({
+      ...prev,
+      [stageId]: { ...prev[stageId], isRunning: true }
+    }));
+
+    toast({
+      title: "Stage Running",
+      description: `Starting ${stageId}...`
+    });
+
+    // Generate mock logs
+    setLogs(prev => ({ ...prev, [stageId]: generateMockLogs(stageId) }));
+
+    try {
+      const { data, error } = await supabase.functions.invoke('pass0_orchestrator', {
+        body: { 
+          trigger: 'manual', 
+          stage_id: stageId, 
+          sources: Object.entries(sourceToggles[stageId])
+            .filter(([_, enabled]) => enabled)
+            .map(([id]) => id),
+          dry_run: true 
+        }
+      });
+
+      if (error) throw error;
+
+      const mockItemCount = Math.floor(Math.random() * 25) + 5;
+      const mockErrorCount = Math.floor(Math.random() * 2);
+
+      setStageStatuses(prev => ({
+        ...prev,
+        [stageId]: {
+          ...prev[stageId],
+          isRunning: false,
+          lastRun: new Date().toISOString(),
+          itemCount: prev[stageId].itemCount + mockItemCount,
+          errorCount: mockErrorCount
+        }
+      }));
+
+      toast({
+        title: "Stage Complete",
+        description: `${mockItemCount} items processed, ${mockErrorCount} errors`
+      });
+
+    } catch (err) {
+      setStageStatuses(prev => ({
+        ...prev,
+        [stageId]: { 
+          ...prev[stageId], 
+          isRunning: false, 
+          errorCount: prev[stageId].errorCount + 1 
+        }
+      }));
+      toast({
+        title: "Stage Failed",
+        description: err instanceof Error ? err.message : "Unknown error",
+        variant: "destructive"
+      });
     }
   };
 
-  const getStatusColor = () => {
-    if (isScanning) return "bg-blue-500/20 text-blue-400 border-blue-500/30";
-    switch (scanResult?.status) {
-      case "completed": return "bg-emerald-500/20 text-emerald-400 border-emerald-500/30";
-      case "failed": return "bg-destructive/20 text-destructive border-destructive/30";
-      case "aborted": return "bg-amber-500/20 text-amber-400 border-amber-500/30";
-      default: return "bg-muted text-muted-foreground border-border";
+  const submitManualUrl = async () => {
+    if (!manualUrl.trim()) return;
+
+    try {
+      const { error } = await supabase.from('pass0_url_queue').insert({
+        url: manualUrl,
+        status: 'pending',
+        submitted_by: 'manual_ui'
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "URL Queued",
+        description: "Added to processing queue"
+      });
+      setManualUrl("");
+    } catch (err) {
+      toast({
+        title: "Failed",
+        description: "Could not queue URL",
+        variant: "destructive"
+      });
     }
   };
 
-  const getConfidenceBadge = (level: string) => {
+  const getStatusBadge = (status: StageStatus) => {
+    if (status.killSwitch) {
+      return <Badge variant="destructive" className="gap-1"><Power className="h-3 w-3" />KILLED</Badge>;
+    }
+    if (status.isRunning) {
+      return <Badge className="gap-1 bg-amber-500/20 text-amber-400 border-amber-500/30"><Loader2 className="h-3 w-3 animate-spin" />RUNNING</Badge>;
+    }
+    if (status.errorCount > 0) {
+      return <Badge variant="destructive" className="gap-1"><AlertTriangle className="h-3 w-3" />{status.errorCount} ERRORS</Badge>;
+    }
+    if (status.lastRun) {
+      return <Badge className="gap-1 bg-emerald-500/20 text-emerald-400 border-emerald-500/30"><CheckCircle className="h-3 w-3" />READY</Badge>;
+    }
+    return <Badge variant="outline" className="gap-1">IDLE</Badge>;
+  };
+
+  const getLogLevelColor = (level: string) => {
     switch (level) {
-      case "high": return <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30">High</Badge>;
-      case "medium": return <Badge className="bg-amber-500/20 text-amber-400 border-amber-500/30">Medium</Badge>;
-      default: return <Badge className="bg-muted text-muted-foreground">Low</Badge>;
+      case 'error': return 'text-red-500';
+      case 'warn': return 'text-amber-500';
+      default: return 'text-muted-foreground';
     }
   };
 
-  const getScoreColor = (score: number) => {
-    if (score >= 80) return "text-emerald-400";
-    if (score >= 65) return "text-amber-400";
-    return "text-muted-foreground";
+  const getStageIcon = (stageId: string) => {
+    switch (stageId) {
+      case 'news_narratives': return <Newspaper className="h-5 w-5" />;
+      case 'permits_inspections': return <FileCheck className="h-5 w-5" />;
+      case 'geo_pin_output': return <MapPin className="h-5 w-5" />;
+      default: return <Target className="h-5 w-5" />;
+    }
   };
 
   return (
@@ -268,385 +331,241 @@ const Pass0Hub = () => {
                 <Radio className="h-6 w-6 text-white" />
               </div>
               <div>
-                <h1 className="text-3xl font-bold text-foreground font-mono">Hub 0 — Radar</h1>
-                <p className="text-muted-foreground">Signal Detection • No Persistence</p>
+                <h1 className="text-3xl font-bold text-foreground font-mono">Hub 0 — Radar Pipeline</h1>
+                <p className="text-muted-foreground">Waterfall Intake • News → Permits → Geo Output</p>
               </div>
             </div>
-            <Badge variant="outline" className="bg-amber-500/10 text-amber-400 border-amber-500/30 font-mono">
-              Ephemeral / Cloud-Only
-            </Badge>
+            <div className="flex items-center gap-3">
+              <Link to="/pass0">
+                <Button variant="outline" size="sm">
+                  <FileText className="h-4 w-4 mr-2" />
+                  Dashboard
+                </Button>
+              </Link>
+              <Badge variant="outline" className="bg-amber-500/10 text-amber-400 border-amber-500/30 font-mono">
+                Ephemeral / Cloud-Only
+              </Badge>
+            </div>
           </div>
         </div>
       </header>
 
       <main className="container mx-auto px-6 py-8 space-y-6">
-        {/* Radar Controls Panel */}
+        {/* Pipeline Waterfall */}
         <Card className="border-border bg-card/50">
           <CardHeader className="pb-4">
             <CardTitle className="text-lg font-mono flex items-center gap-2">
-              <Target className="h-5 w-5 text-blue-400" />
-              Radar Controls
+              <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+              PIPELINE STAGES
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-6">
-            {/* Action Buttons */}
-            <div className="flex flex-wrap gap-3">
-              <Button 
-                onClick={() => runScan("full")} 
-                disabled={isScanning}
-                className="bg-blue-600 hover:bg-blue-700"
-              >
-                {isScanning ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Play className="mr-2 h-4 w-4" />}
-                Run Full Radar Scan
-              </Button>
-              <Button 
-                variant="secondary" 
-                onClick={() => runScan("targeted")}
-                disabled={isScanning}
-              >
-                <Target className="mr-2 h-4 w-4" />
-                Run Targeted Scan
-              </Button>
-              <Button 
-                variant="destructive" 
-                onClick={abortScan}
-                disabled={!isScanning}
-              >
-                <Square className="mr-2 h-4 w-4" />
-                Abort Scan
-              </Button>
-            </div>
+          <CardContent className="p-0">
+            <Accordion
+              type="multiple"
+              value={expandedStages}
+              onValueChange={setExpandedStages}
+              className="divide-y divide-border"
+            >
+              {PIPELINE_STAGES.map((stage, index) => {
+                const status = stageStatuses[stage.id];
+                const StageIcon = stage.icon;
 
-            <Separator />
+                return (
+                  <AccordionItem key={stage.id} value={stage.id} className="border-0">
+                    <AccordionTrigger className="px-6 py-4 hover:bg-muted/50 hover:no-underline">
+                      <div className="flex items-center justify-between w-full pr-4">
+                        <div className="flex items-center gap-4">
+                          {/* Stage number indicator */}
+                          <div className={`
+                            w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold
+                            ${status.killSwitch ? 'bg-destructive/20 text-destructive' : 'bg-primary/20 text-primary'}
+                          `}>
+                            {index + 1}
+                          </div>
+                          <div className={`p-2 rounded-lg ${status.killSwitch ? 'bg-destructive/10' : 'bg-muted'}`}>
+                            <StageIcon className={`h-5 w-5 ${status.killSwitch ? 'text-destructive' : 'text-foreground'}`} />
+                          </div>
+                          <div className="text-left">
+                            <div className="font-semibold font-mono">{stage.label}</div>
+                            <div className="text-xs text-muted-foreground">{stage.description}</div>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-4">
+                          {getStatusBadge(status)}
+                          {status.lastRun && (
+                            <div className="text-xs text-muted-foreground flex items-center gap-1">
+                              <Clock className="h-3 w-3" />
+                              {new Date(status.lastRun).toLocaleTimeString()}
+                            </div>
+                          )}
+                          <div className="text-xs font-mono bg-muted px-2 py-1 rounded">
+                            {status.itemCount} items
+                          </div>
+                        </div>
+                      </div>
+                    </AccordionTrigger>
 
-            {/* Signal Toggles */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30 border border-border">
-                <Label htmlFor="news" className="text-sm">News / Events</Label>
-                <Switch 
-                  id="news"
-                  checked={toggles.news_events}
-                  onCheckedChange={(checked) => setToggles(t => ({ ...t, news_events: checked }))}
-                />
-              </div>
-              <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30 border border-border">
-                <Label htmlFor="permits" className="text-sm">Permits / Zoning</Label>
-                <Switch 
-                  id="permits"
-                  checked={toggles.permits_zoning}
-                  onCheckedChange={(checked) => setToggles(t => ({ ...t, permits_zoning: checked }))}
-                />
-              </div>
-              <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30 border border-border">
-                <Label htmlFor="infra" className="text-sm">Infrastructure / Logistics</Label>
-                <Switch 
-                  id="infra"
-                  checked={toggles.infrastructure}
-                  onCheckedChange={(checked) => setToggles(t => ({ ...t, infrastructure: checked }))}
-                />
-              </div>
-              <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30 border border-border">
-                <Label htmlFor="storage" className="text-sm">Storage / RV / Industrial</Label>
-                <Switch 
-                  id="storage"
-                  checked={toggles.storage_industrial}
-                  onCheckedChange={(checked) => setToggles(t => ({ ...t, storage_industrial: checked }))}
-                />
-              </div>
-            </div>
+                    <AccordionContent className="px-6 pb-6">
+                      {/* Waterfall connector line */}
+                      {index < PIPELINE_STAGES.length - 1 && (
+                        <div className="absolute left-10 top-full h-4 w-0.5 bg-border" />
+                      )}
 
-            <Separator />
-
-            {/* Filter Inputs */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="states" className="text-sm text-muted-foreground">States (comma-separated)</Label>
-                <Input 
-                  id="states"
-                  placeholder="MD, VA, WV, PA"
-                  value={states}
-                  onChange={(e) => setStates(e.target.value)}
-                  className="font-mono bg-muted/30"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="industry" className="text-sm text-muted-foreground">Industry Focus (optional)</Label>
-                <Input 
-                  id="industry"
-                  placeholder="e.g., distribution, logistics"
-                  value={industryFocus}
-                  onChange={(e) => setIndustryFocus(e.target.value)}
-                  className="bg-muted/30"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="lookback" className="text-sm text-muted-foreground">Lookback Window (days)</Label>
-                <Input 
-                  id="lookback"
-                  type="number"
-                  min={7}
-                  max={365}
-                  value={lookbackDays}
-                  onChange={(e) => setLookbackDays(parseInt(e.target.value) || 30)}
-                  className="font-mono bg-muted/30"
-                />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Execution Status Panel */}
-        <Card className="border-border bg-card/50">
-          <CardHeader className="pb-4">
-            <CardTitle className="text-lg font-mono flex items-center gap-2">
-              <Clock className="h-5 w-5 text-muted-foreground" />
-              Execution Status
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="space-y-1">
-                <p className="text-xs text-muted-foreground uppercase tracking-wider">Run ID</p>
-                <p className="font-mono text-sm truncate">
-                  {scanResult?.process_id?.slice(0, 8) || "—"}
-                </p>
-              </div>
-              <div className="space-y-1">
-                <p className="text-xs text-muted-foreground uppercase tracking-wider">Start Time</p>
-                <p className="font-mono text-sm">
-                  {scanResult?.started_at 
-                    ? new Date(scanResult.started_at).toLocaleTimeString() 
-                    : "—"}
-                </p>
-              </div>
-              <div className="space-y-1">
-                <p className="text-xs text-muted-foreground uppercase tracking-wider">Runtime</p>
-                <p className="font-mono text-sm">
-                  {isScanning ? `${runtime}s` : scanResult ? `${runtime}s` : "—"}
-                </p>
-              </div>
-              <div className="space-y-1">
-                <p className="text-xs text-muted-foreground uppercase tracking-wider">Status</p>
-                <Badge variant="outline" className={`font-mono ${getStatusColor()}`}>
-                  {getStatusIcon()}
-                  <span className="ml-1.5">
-                    {isScanning ? "Running" : scanResult?.status || "Idle"}
-                  </span>
-                </Badge>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Radar Results Table */}
-        {scanResult && scanResult.candidates.length > 0 && (
-          <Card className="border-border bg-card/50">
-            <CardHeader className="pb-4">
-              <CardTitle className="text-lg font-mono flex items-center gap-2">
-                <Radio className="h-5 w-5 text-emerald-400" />
-                Radar Results
-                <Badge variant="secondary" className="ml-2">{scanResult.candidates.length} candidates</Badge>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="rounded-md border border-border overflow-hidden">
-                <Table>
-                  <TableHeader>
-                    <TableRow className="bg-muted/30 hover:bg-muted/30">
-                      <TableHead className="font-mono text-xs">Candidate Area</TableHead>
-                      <TableHead className="font-mono text-xs text-center">Signal Score</TableHead>
-                      <TableHead className="font-mono text-xs text-center">Density</TableHead>
-                      <TableHead className="font-mono text-xs">Primary Drivers</TableHead>
-                      <TableHead className="font-mono text-xs text-center">Sources</TableHead>
-                      <TableHead className="font-mono text-xs text-center">Confidence</TableHead>
-                      <TableHead className="font-mono text-xs text-right">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {scanResult.candidates.map((candidate, idx) => (
-                      <TableRow key={idx} className="hover:bg-muted/20">
-                        <TableCell className="font-medium">
-                          {candidate.area.city}, {candidate.area.county}
-                          <span className="text-muted-foreground ml-1">({candidate.area.state})</span>
-                        </TableCell>
-                        <TableCell className="text-center">
-                          <span className={`font-mono font-bold ${getScoreColor(candidate.signal_score)}`}>
-                            {candidate.signal_score}
-                          </span>
-                        </TableCell>
-                        <TableCell className="text-center font-mono">
-                          {candidate.signal_density.toFixed(2)}
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex flex-wrap gap-1">
-                            {candidate.primary_drivers.slice(0, 3).map((driver, i) => (
-                              <Badge key={i} variant="outline" className="text-xs">
-                                {driver}
-                              </Badge>
+                      <div className="grid grid-cols-3 gap-6">
+                        {/* Source Registry */}
+                        <div className="space-y-3">
+                          <div className="flex items-center gap-2 text-sm font-medium">
+                            <List className="h-4 w-4" />
+                            Source Registry
+                          </div>
+                          <div className="space-y-2">
+                            {stage.sources.map(source => (
+                              <div 
+                                key={source.id} 
+                                className="flex items-center justify-between p-2 rounded bg-muted/50 border border-border"
+                              >
+                                <div className="flex items-center gap-2">
+                                  {stage.id === 'news_narratives' && <Rss className="h-3 w-3 text-muted-foreground" />}
+                                  {stage.id === 'permits_inspections' && <FileCheck className="h-3 w-3 text-muted-foreground" />}
+                                  {stage.id === 'geo_pin_output' && <Globe className="h-3 w-3 text-muted-foreground" />}
+                                  <code className="text-xs">{source.label}</code>
+                                </div>
+                                <Switch
+                                  checked={sourceToggles[stage.id]?.[source.id] ?? source.enabled}
+                                  onCheckedChange={() => toggleSource(stage.id, source.id)}
+                                  disabled={status.killSwitch}
+                                  className="scale-75"
+                                />
+                              </div>
                             ))}
                           </div>
-                        </TableCell>
-                        <TableCell className="text-center font-mono">
-                          {candidate.source_count}
-                        </TableCell>
-                        <TableCell className="text-center">
-                          {getConfidenceBadge(candidate.confidence_level)}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex justify-end gap-1">
+
+                          {/* Manual URL injection for Stage 1 */}
+                          {stage.id === 'news_narratives' && (
+                            <div className="pt-3 space-y-2">
+                              <Label className="text-xs text-muted-foreground">Manual URL Injection</Label>
+                              <div className="flex gap-2">
+                                <Input
+                                  placeholder="https://..."
+                                  value={manualUrl}
+                                  onChange={(e) => setManualUrl(e.target.value)}
+                                  className="text-xs h-8 bg-muted/30"
+                                />
+                                <Button size="sm" variant="secondary" onClick={submitManualUrl} className="h-8">
+                                  <LinkIcon className="h-3 w-3" />
+                                </Button>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Controls */}
+                        <div className="space-y-3">
+                          <div className="text-sm font-medium">Controls</div>
+                          <div className="space-y-4">
                             <Button 
-                              size="sm" 
-                              variant="ghost"
-                              onClick={() => {
-                                setSelectedCandidate(candidate);
-                                setIsEvidenceOpen(true);
-                              }}
+                              onClick={() => runStage(stage.id)}
+                              disabled={status.isRunning || status.killSwitch}
+                              className="w-full"
+                              variant={status.killSwitch ? 'secondary' : 'default'}
                             >
-                              <Eye className="h-4 w-4" />
+                              {status.isRunning ? (
+                                <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Running...</>
+                              ) : (
+                                <><Play className="h-4 w-4 mr-2" />Run Stage</>
+                              )}
                             </Button>
-                            <Button 
-                              size="sm" 
-                              variant="ghost"
-                              className="text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/10"
-                              onClick={() => promoteCandidate(candidate)}
-                            >
-                              <ArrowUpRight className="h-4 w-4" />
-                            </Button>
-                            <Button 
-                              size="sm" 
-                              variant="ghost"
-                              className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                              onClick={() => discardCandidate(candidate)}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
+
+                            <Separator />
+
+                            <div className="flex items-center justify-between p-3 rounded-lg border border-destructive/30 bg-destructive/5">
+                              <div className="flex items-center gap-2">
+                                <Power className="h-4 w-4 text-destructive" />
+                                <span className="text-sm font-medium">Kill Switch</span>
+                              </div>
+                              <Switch
+                                checked={status.killSwitch}
+                                onCheckedChange={() => toggleKillSwitch(stage.id)}
+                                className="data-[state=checked]:bg-destructive"
+                              />
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-2 text-center">
+                              <div className="p-2 rounded bg-muted">
+                                <div className="text-lg font-bold font-mono">{status.itemCount}</div>
+                                <div className="text-[10px] text-muted-foreground uppercase">Items</div>
+                              </div>
+                              <div className="p-2 rounded bg-muted">
+                                <div className={`text-lg font-bold font-mono ${status.errorCount > 0 ? 'text-destructive' : ''}`}>
+                                  {status.errorCount}
+                                </div>
+                                <div className="text-[10px] text-muted-foreground uppercase">Errors</div>
+                              </div>
+                            </div>
+
+                            {/* Functions list */}
+                            <div className="text-xs text-muted-foreground">
+                              <div className="font-medium mb-1">Functions:</div>
+                              {stage.functions.map(fn => (
+                                <code key={fn} className="block text-[10px] text-muted-foreground">{fn}</code>
+                              ))}
+                            </div>
                           </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            </CardContent>
-          </Card>
-        )}
+                        </div>
 
-        {/* Empty state */}
-        {scanResult && scanResult.candidates.length === 0 && scanResult.status !== "running" && (
-          <Card className="border-border bg-card/50">
-            <CardContent className="py-12 text-center">
-              <Radio className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-              <h3 className="text-lg font-medium text-foreground mb-2">No Candidates Found</h3>
-              <p className="text-muted-foreground text-sm">
-                Try adjusting your signal toggles or expanding the state filter
-              </p>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Promoted Payload Display */}
-        {promotedPayload && (
-          <Card className="border-emerald-500/30 bg-emerald-500/5">
-            <CardHeader className="pb-4">
-              <CardTitle className="text-lg font-mono flex items-center gap-2 text-emerald-400">
-                <ArrowUpRight className="h-5 w-5" />
-                Hub 1 Handoff Payload
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <pre className="bg-muted/30 p-4 rounded-lg overflow-x-auto text-xs font-mono">
-                {JSON.stringify(promotedPayload, null, 2)}
-              </pre>
-              <Button 
-                variant="outline" 
-                className="mt-4"
-                onClick={() => setPromotedPayload(null)}
-              >
-                Dismiss
-              </Button>
-            </CardContent>
-          </Card>
-        )}
-      </main>
-
-      {/* Evidence Drawer */}
-      <Sheet open={isEvidenceOpen} onOpenChange={setIsEvidenceOpen}>
-        <SheetContent className="w-full sm:max-w-xl overflow-y-auto">
-          <SheetHeader>
-            <SheetTitle className="font-mono">
-              {selectedCandidate?.area.city}, {selectedCandidate?.area.state}
-            </SheetTitle>
-            <SheetDescription>
-              Signal Evidence & Rationale
-            </SheetDescription>
-          </SheetHeader>
-          
-          {selectedCandidate && (
-            <div className="mt-6 space-y-6">
-              {/* Summary */}
-              <div>
-                <h4 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-2">
-                  Signal Summary
-                </h4>
-                <p className="text-foreground">{selectedCandidate.evidence.summary}</p>
-              </div>
-
-              <Separator />
-
-              {/* Rationale */}
-              <div>
-                <h4 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-2">
-                  Why This Area Surfaced
-                </h4>
-                <p className="text-foreground">{selectedCandidate.evidence.rationale}</p>
-              </div>
-
-              <Separator />
-
-              {/* Sources */}
-              <div>
-                <h4 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-3">
-                  Source Evidence ({selectedCandidate.evidence.sources.length})
-                </h4>
-                <div className="space-y-3">
-                  {selectedCandidate.evidence.sources.map((source, idx) => (
-                    <div key={idx} className="p-3 rounded-lg bg-muted/30 border border-border">
-                      <div className="flex items-start justify-between gap-2 mb-1">
-                        <p className="font-medium text-sm">{source.title}</p>
-                        <Badge variant="outline" className="text-xs shrink-0">
-                          {source.type}
-                        </Badge>
+                        {/* Log Preview */}
+                        <div className="space-y-3">
+                          <div className="text-sm font-medium">Log Preview</div>
+                          <ScrollArea className="h-52 rounded border border-border bg-muted/30 p-2">
+                            {(logs[stage.id] || []).length === 0 ? (
+                              <div className="text-xs text-muted-foreground text-center py-8">
+                                No logs yet. Run the stage.
+                              </div>
+                            ) : (
+                              <div className="space-y-1 font-mono text-[10px]">
+                                {(logs[stage.id] || []).map(log => (
+                                  <div key={log.id} className="flex gap-2">
+                                    <span className="text-muted-foreground shrink-0">
+                                      {new Date(log.timestamp).toLocaleTimeString()}
+                                    </span>
+                                    <span className={getLogLevelColor(log.level)}>
+                                      [{log.level.toUpperCase()}]
+                                    </span>
+                                    <span className="text-foreground">{log.message}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </ScrollArea>
+                        </div>
                       </div>
-                      <p className="text-muted-foreground text-sm mb-1">{source.snippet}</p>
-                      <p className="text-xs text-muted-foreground font-mono">{source.date}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
+                    </AccordionContent>
+                  </AccordionItem>
+                );
+              })}
+            </Accordion>
+          </CardContent>
+        </Card>
 
-              {/* Actions */}
-              <div className="flex gap-2 pt-4">
-                <Button 
-                  className="flex-1 bg-emerald-600 hover:bg-emerald-700"
-                  onClick={() => {
-                    promoteCandidate(selectedCandidate);
-                    setIsEvidenceOpen(false);
-                  }}
-                >
-                  <ArrowUpRight className="mr-2 h-4 w-4" />
-                  Promote to Hub 1
-                </Button>
-                <Button 
-                  variant="outline"
-                  onClick={() => setIsEvidenceOpen(false)}
-                >
-                  Close
-                </Button>
-              </div>
-            </div>
-          )}
-        </SheetContent>
-      </Sheet>
+        {/* Footer Summary */}
+        <div className="flex items-center justify-between text-xs text-muted-foreground px-2">
+          <div className="font-mono">Pass 0 Radar Pipeline • Waterfall v1.0</div>
+          <div className="flex items-center gap-6">
+            <span className="flex items-center gap-1">
+              <Newspaper className="h-3 w-3" />
+              News: {stageStatuses.news_narratives.itemCount}
+            </span>
+            <span className="flex items-center gap-1">
+              <FileCheck className="h-3 w-3" />
+              Permits: {stageStatuses.permits_inspections.itemCount}
+            </span>
+            <span className="flex items-center gap-1">
+              <MapPin className="h-3 w-3" />
+              Pins: {stageStatuses.geo_pin_output.itemCount}
+            </span>
+          </div>
+        </div>
+      </main>
     </div>
   );
 };
