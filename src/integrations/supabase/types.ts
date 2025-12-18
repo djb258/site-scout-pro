@@ -59,8 +59,19 @@ export type Database = {
           city: string | null
           climate_controlled: boolean | null
           confidence_score: number | null
+          count_10x10: number | null
+          count_10x10_cc: number | null
+          count_10x15: number | null
+          count_10x15_cc: number | null
+          count_10x20: number | null
+          count_10x20_cc: number | null
+          count_10x30: number | null
+          count_5x10: number | null
+          count_5x5: number | null
+          count_rv_boat: number | null
           county: string
           created_at: string
+          dominant_unit_size: string | null
           facility_name: string
           has_rv_boat: boolean | null
           id: string
@@ -68,6 +79,7 @@ export type Database = {
           lat: number | null
           lng: number | null
           phone: string | null
+          price_per_sqft: number | null
           rent_10x10: number | null
           rent_10x10_cc: number | null
           rent_10x15: number | null
@@ -94,8 +106,19 @@ export type Database = {
           city?: string | null
           climate_controlled?: boolean | null
           confidence_score?: number | null
+          count_10x10?: number | null
+          count_10x10_cc?: number | null
+          count_10x15?: number | null
+          count_10x15_cc?: number | null
+          count_10x20?: number | null
+          count_10x20_cc?: number | null
+          count_10x30?: number | null
+          count_5x10?: number | null
+          count_5x5?: number | null
+          count_rv_boat?: number | null
           county: string
           created_at?: string
+          dominant_unit_size?: string | null
           facility_name: string
           has_rv_boat?: boolean | null
           id?: string
@@ -103,6 +126,7 @@ export type Database = {
           lat?: number | null
           lng?: number | null
           phone?: string | null
+          price_per_sqft?: number | null
           rent_10x10?: number | null
           rent_10x10_cc?: number | null
           rent_10x15?: number | null
@@ -129,8 +153,19 @@ export type Database = {
           city?: string | null
           climate_controlled?: boolean | null
           confidence_score?: number | null
+          count_10x10?: number | null
+          count_10x10_cc?: number | null
+          count_10x15?: number | null
+          count_10x15_cc?: number | null
+          count_10x20?: number | null
+          count_10x20_cc?: number | null
+          count_10x30?: number | null
+          count_5x10?: number | null
+          count_5x5?: number | null
+          count_rv_boat?: number | null
           county?: string
           created_at?: string
+          dominant_unit_size?: string | null
           facility_name?: string
           has_rv_boat?: boolean | null
           id?: string
@@ -138,6 +173,7 @@ export type Database = {
           lat?: number | null
           lng?: number | null
           phone?: string | null
+          price_per_sqft?: number | null
           rent_10x10?: number | null
           rent_10x10_cc?: number | null
           rent_10x15?: number | null
