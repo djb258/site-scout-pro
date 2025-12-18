@@ -25,21 +25,27 @@ export function AppNav() {
 
         {/* TOC Navigation */}
         <nav className="flex items-center gap-1 border-l border-border pl-6">
-          {navLinks.map(({ to, label, icon: Icon }) => (
-            <Link
-              key={to}
-              to={to}
-              className={cn(
-                "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition",
-                path === to || (to === "/pass0" && path === "/")
-                  ? "text-primary bg-primary/10"
-                  : "text-muted-foreground hover:text-foreground hover:bg-muted"
-              )}
-            >
-              <Icon className="w-4 h-4" />
-              <span>{label}</span>
-            </Link>
-          ))}
+          {navLinks.map(({ to, label, icon: Icon }) => {
+            const isActive = path === to || (to === "/pass0" && path === "/");
+            return (
+              <Link
+                key={to}
+                to={to}
+                className={cn(
+                  "relative flex items-center gap-1.5 px-3 py-2 text-sm font-medium transition",
+                  isActive
+                    ? "text-primary"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                <Icon className="w-4 h-4" />
+                <span>{label}</span>
+                {isActive && (
+                  <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-primary rounded-full" />
+                )}
+              </Link>
+            );
+          })}
         </nav>
       </div>
     </header>
