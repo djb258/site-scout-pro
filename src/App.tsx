@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import SystemOverview from "@/pages/SystemOverview";
 import Pass0Hub from "@/pages/hub/Pass0Hub";
 import Pass0Dashboard from "@/pages/Pass0Dashboard";
+import Pass0Intake from "@/pages/Pass0Intake";
 import Pass1Hub from "@/pages/hub/Pass1Hub";
 import Pass15Hub from "@/pages/hub/Pass15Hub";
 import Pass2Hub from "@/pages/hub/Pass2Hub";
@@ -26,6 +27,7 @@ const App = () => (
           <Route path="/viability" element={<Viability />} />
           <Route path="/hub/pass0" element={<Pass0Hub />} />
           <Route path="/pass0" element={<Pass0Dashboard />} />
+          <Route path="/pass0/intake" element={<Pass0Intake />} />
           <Route path="/hub/pass1" element={<Pass1Hub />} />
           <Route path="/hub/pass15" element={<Pass15Hub />} />
           <Route path="/hub/pass2" element={<Pass2Hub />} />

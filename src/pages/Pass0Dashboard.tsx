@@ -6,7 +6,8 @@ import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { toast } from 'sonner';
-import { Play, RefreshCw, MapPin, Newspaper, AlertCircle, CheckCircle, Clock, XCircle } from 'lucide-react';
+import { Play, RefreshCw, MapPin, Newspaper, AlertCircle, CheckCircle, Clock, XCircle, Settings } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import sourceRegistry from '@/config/pass0-source-registry.json';
 
 interface RunLog {
@@ -155,6 +156,12 @@ export default function Pass0Dashboard() {
             </p>
           </div>
           <div className="flex gap-2">
+            <Link to="/pass0/intake">
+              <Button variant="outline">
+                <Settings className="h-4 w-4 mr-2" />
+                Intake Control
+              </Button>
+            </Link>
             <Button variant="outline" onClick={fetchData} disabled={loading}>
               <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
               Refresh
