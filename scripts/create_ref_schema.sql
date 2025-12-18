@@ -26,20 +26,28 @@ CREATE TABLE IF NOT EXISTS ref.ref_county (
     county_name TEXT NOT NULL
 );
 
--- 4. ZIP View (references existing zips_master)
-CREATE OR REPLACE VIEW ref.ref_zip AS
-SELECT
-    zip AS zip_code,
-    state AS state_code,
-    county_fips,
-    county_name,
-    city,
-    lat AS latitude,
-    lng AS longitude,
-    population,
-    income_household_median,
-    home_value
-FROM public.zips_master;
+-- 4. ZIP Table (Geography Only - Hardened 2025-12-18)
+-- FORBIDDEN: population, income, census_data, demographic fields
+CREATE TABLE IF NOT EXISTS ref.ref_zip (
+    zip_id CHAR(5) PRIMARY KEY,
+    state_id INTEGER NOT NULL REFERENCES ref.ref_state(state_id) ON DELETE RESTRICT,
+    lat NUMERIC(9,6),
+    lon NUMERIC(10,6)
+);
+
+CREATE INDEX IF NOT EXISTS idx_ref_zip_state ON ref.ref_zip(state_id);
+CREATE INDEX IF NOT EXISTS idx_ref_zip_lat_lon ON ref.ref_zip(lat, lon);
+
+-- 4b. ZIP to County mapping table
+CREATE TABLE IF NOT EXISTS ref.ref_zip_county_map (
+    zip_id CHAR(5) NOT NULL REFERENCES ref.ref_zip(zip_id) ON DELETE RESTRICT,
+    county_id INTEGER NOT NULL REFERENCES ref.ref_county(county_id) ON DELETE RESTRICT,
+    is_primary BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT NOW(),
+    PRIMARY KEY (zip_id, county_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_ref_zip_county_map_county ON ref.ref_zip_county_map(county_id);
 
 -- 5. Asset Class
 CREATE TABLE IF NOT EXISTS ref.ref_asset_class (

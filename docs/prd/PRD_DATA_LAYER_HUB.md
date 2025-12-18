@@ -156,19 +156,32 @@ The Data Layer Hub manages all database connections and persistence operations a
 | vault | Final underwriting records | id (uuid) |
 | vault_history | Versioned vault records | id (uuid), version |
 
-### Neon PostgreSQL (ref schema - Static Reference)
+### Neon PostgreSQL (ref schema - Static Reference, Geography Only)
 
-| Table/View | Purpose | Primary Key |
-|------------|---------|-------------|
-| ref.ref_country | Country geography root | country_id |
-| ref.ref_state | US states (50 + DC) | state_id |
-| ref.ref_county | Counties with FIPS codes | county_id |
-| ref.ref_zip (VIEW) | ZIP codes (links to zips_master) | zip_code |
-| ref.ref_asset_class | Storage asset classifications | asset_class_id |
-| ref.ref_unit_type | Unit types (climate/non-climate) | unit_type_id |
-| ref.ref_unit_size | Standard unit dimensions | unit_size_id |
+| Table | Purpose | Primary Key | Records |
+|-------|---------|-------------|---------|
+| ref.ref_country | Country geography root | country_id | 1 |
+| ref.ref_state | US states (50 + DC) | state_id | 51 |
+| ref.ref_county | Counties with FIPS codes | county_id | 3,132 |
+| ref.ref_zip | ZIP codes (geography only) | zip_id | 40,745 |
+| ref.ref_zip_county_map | ZIP to County linkage | (zip_id, county_id) | 40,728 |
+| ref.ref_asset_class | Storage asset classifications | asset_class_id | 4 |
+| ref.ref_unit_type | Unit types (climate/non-climate) | unit_type_id | 5 |
+| ref.ref_unit_size | Standard unit dimensions | unit_size_id | 9 |
 
-**Note:** The `ref` schema is immutable static reference data. It defines geography (where) and asset intent (what). Passes decide (whether), calculators compute (how), and parcels come later (commit).
+**ref.ref_zip Schema (Hardened 2025-12-18):**
+```sql
+CREATE TABLE ref.ref_zip (
+    zip_id CHAR(5) PRIMARY KEY,
+    state_id INTEGER NOT NULL REFERENCES ref.ref_state(state_id),
+    lat NUMERIC(9,6),
+    lon NUMERIC(10,6)
+);
+```
+
+**FORBIDDEN in ref schema:** population, income, median_income, home_value, census_data, demographic data
+
+**Note:** The `ref` schema is immutable static reference data containing GEOGRAPHY ONLY. It defines geography (where) and asset intent (what). Census/demographic data lives in `public.pass1_census_snapshot`. Passes decide (whether), calculators compute (how), and parcels come later (commit).
 
 ---
 
