@@ -335,11 +335,13 @@ export type Database = {
         Row: {
           confidence: string | null
           created_at: string
+          distance_miles: number | null
           id: string
           lat: number | null
           lon: number | null
           raw_title: string
           raw_url: string | null
+          resolution_explain: Json | null
           resolution_tier: string | null
           run_id: string
           source_id: string
@@ -349,11 +351,13 @@ export type Database = {
         Insert: {
           confidence?: string | null
           created_at?: string
+          distance_miles?: number | null
           id?: string
           lat?: number | null
           lon?: number | null
           raw_title: string
           raw_url?: string | null
+          resolution_explain?: Json | null
           resolution_tier?: string | null
           run_id: string
           source_id: string
@@ -363,11 +367,13 @@ export type Database = {
         Update: {
           confidence?: string | null
           created_at?: string
+          distance_miles?: number | null
           id?: string
           lat?: number | null
           lon?: number | null
           raw_title?: string
           raw_url?: string | null
+          resolution_explain?: Json | null
           resolution_tier?: string | null
           run_id?: string
           source_id?: string
@@ -418,6 +424,48 @@ export type Database = {
           started_at?: string | null
           status?: string
           step?: string
+        }
+        Relationships: []
+      }
+      pass0_url_queue: {
+        Row: {
+          created_at: string | null
+          error_message: string | null
+          geo_hint: string | null
+          id: string
+          processed_at: string | null
+          processed_run_id: string | null
+          source_override: string | null
+          status: string | null
+          submitted_by: string | null
+          title: string | null
+          url: string
+        }
+        Insert: {
+          created_at?: string | null
+          error_message?: string | null
+          geo_hint?: string | null
+          id?: string
+          processed_at?: string | null
+          processed_run_id?: string | null
+          source_override?: string | null
+          status?: string | null
+          submitted_by?: string | null
+          title?: string | null
+          url: string
+        }
+        Update: {
+          created_at?: string | null
+          error_message?: string | null
+          geo_hint?: string | null
+          id?: string
+          processed_at?: string | null
+          processed_run_id?: string | null
+          source_override?: string | null
+          status?: string | null
+          submitted_by?: string | null
+          title?: string | null
+          url?: string
         }
         Relationships: []
       }
