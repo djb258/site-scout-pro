@@ -669,42 +669,6 @@ const Pass1Hub = () => {
 
                 {/* Results Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {/* ZIP Metadata */}
-                  <Card className="border-border bg-card">
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-sm flex items-center gap-2">
-                        <MapPin className="h-4 w-4 text-amber-500" />
-                        ZIP Metadata
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-2 text-sm">
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Location</span>
-                        <span>{result.zip_metadata.city}, {result.zip_metadata.state_id}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">County</span>
-                        <span>{result.zip_metadata.county}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Population</span>
-                        <span>{result.zip_metadata.population?.toLocaleString()}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Density</span>
-                        <span>{result.zip_metadata.density?.toLocaleString()}/mi²</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Median Income</span>
-                        <span>${result.zip_metadata.income?.toLocaleString()}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Home Value</span>
-                        <span>${result.zip_metadata.home_value?.toLocaleString()}</span>
-                      </div>
-                    </CardContent>
-                  </Card>
-
                   {/* Radius Analysis */}
                   {result.derived_counties && (
                   <Card className="border-border bg-card">
