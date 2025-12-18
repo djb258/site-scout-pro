@@ -2,23 +2,20 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 /**
- * START_PASS3 Edge Function
+ * START_PASS3 Edge Function — DECISION SHELL ONLY
  *
- * Initiates Pass-3 Pro Forma Hub analysis.
- * Pass-3 performs detailed pro forma modeling and financial analysis.
+ * Pass 3 performs NO underwriting math and NO recalculation.
+ * It consumes immutable artifacts from Pass 1, Pass 1.5, and Pass 2.
  *
- * Request body:
- *   - pass2_id: string (required) - The Pass-2 run ID
- *   - parcel_id: string (required) - Parcel ID for the site
- *   - acreage: number (required) - Site acreage
- *   - zoning: ZoningConstraints (required) - Zoning constraints object
- *   - target_irr: number (optional) - Target IRR (default: 0.15)
- *   - target_dscr: number (optional) - Target DSCR (default: 1.25)
- *   - hold_period_years: number (optional) - Hold period in years (default: 5)
+ * PURPOSE:
+ *   - Fetch read-only artifact data
+ *   - Accept decision parameters (GO/HOLD/NO-GO)
+ *   - Require explicit rationale
+ *   - Emit decision record for Neon persistence
  *
- * Response:
- *   - Success: { pass3_id, run_id, status, projected_irr, projected_noi, max_land_value }
- *   - Error: { error }
+ * ACTIONS:
+ *   - "fetch_artifact": Get read-only data for display
+ *   - "submit_decision": Record decision with rationale
  */
 
 const corsHeaders = {
@@ -27,207 +24,344 @@ const corsHeaders = {
 };
 
 // ============================================================================
-// INLINE ORCHESTRATOR TYPES (for Deno edge function compatibility)
+// TYPE DEFINITIONS — Decision Shell Contract
 // ============================================================================
 
-interface ZoningConstraints {
-  maxCoverage: number;
-  maxHeight: number;
-  setbacks: { front: number; side: number; rear: number };
-  maxStories: number;
+type DecisionType = 'GO' | 'HOLD' | 'NO_GO';
+type PhaseScope = 'PHASE_1_ONLY' | 'FULL_BUILD' | 'LAND_BANK';
+type TimingIntent = 'IMMEDIATE' | 'WITHIN_6_MO' | 'WITHIN_12_MO' | 'OPPORTUNISTIC';
+type ConfidenceClass = 'HIGH' | 'MEDIUM' | 'LOW';
+type LifecycleStatus = 'ACTIVE' | 'SUPERSEDED' | 'CLOSED';
+
+interface Pass3FetchInput {
+  action: 'fetch_artifact';
+  artifact_id: string;  // References upstream compiled artifact
+  zip?: string;         // Optional ZIP for context
 }
 
-interface Pass3Input {
-  pass2RunId: string;
-  parcelId: string;
-  acreage: number;
-  zoning: ZoningConstraints;
-  targetIRR?: number;
-  targetDSCR?: number;
-  holdPeriodYears?: number;
+interface Pass3DecisionInput {
+  action: 'submit_decision';
+  artifact_id: string;
+  zip: string;
+  decision: DecisionType;
+  phase_scope: PhaseScope;
+  timing_intent: TimingIntent;
+  confidence_class: ConfidenceClass;
+  rationale: string;    // REQUIRED - no silent approval
+  supersedes_run_id?: string;  // If superseding a previous decision
 }
 
-interface Pass3Output {
-  pass: 'PASS3';
-  runId: string;
-  timestamp: string;
-  input: Pass3Input;
-  setbackEngine: any | null;
-  coverageEngine: any | null;
-  unitMixOptimizer: any | null;
-  phasePlanner: any | null;
-  buildCostModel: any | null;
-  noiEngine: any | null;
-  debtModel: any | null;
-  maxLandPrice: any | null;
-  irrModel: any | null;
-  proFormaComplete: boolean;
-  projectedIRR: number;
-  projectedNOI: number;
-  maxLandValue: number;
-  status: 'complete' | 'partial' | 'failed';
-  errors: string[];
+interface ArtifactData {
+  // From Pass 1
+  pass1_demand_gap_sqft: number | null;
+  pass1_supply_sqft: number | null;
+  pass1_population: number | null;
+  pass1_zip_count: number | null;
+  
+  // From Pass 1.5
+  pass15_rent_low: number | null;
+  pass15_rent_medium: number | null;
+  pass15_rent_high: number | null;
+  pass15_confidence: string | null;
+  
+  // From Pass 2
+  pass2_status: string | null;
+  pass2_feasibility_flag: boolean | null;
+  pass2_dscr: number | null;
+  pass2_zoning_status: string | null;
+  pass2_civil_status: string | null;
+  pass2_prohibitions: string[];
+  pass2_missing_fields: string[];
+}
+
+interface Pass3ArtifactResponse {
+  artifact_id: string;
+  zip: string | null;
+  artifact_data: ArtifactData;
+  artifact_valid: boolean;
+  validation_errors: string[];
+  previous_decisions: Array<{
+    run_id: string;
+    decision: DecisionType;
+    created_at: string;
+    status: LifecycleStatus;
+  }>;
+}
+
+interface Pass3DecisionResponse {
+  pass3_run_id: string;
+  artifact_id: string;
+  zip: string;
+  decision: DecisionType;
+  phase_scope: PhaseScope;
+  timing_intent: TimingIntent;
+  confidence_class: ConfidenceClass;
+  rationale: string;
+  lifecycle_status: LifecycleStatus;
+  created_at: string;
+  payload_for_neon: object;
 }
 
 // ============================================================================
-// INLINE ORCHESTRATOR (simplified for edge function)
+// ARTIFACT FETCHER — Read-Only Data Assembly
 // ============================================================================
 
-async function runPass3Orchestrator(input: Pass3Input): Promise<Pass3Output> {
-  const runId = `P3-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-  console.log(`[PASS3_PROFORMA_HUB] Starting run ${runId}`);
-
-  // Calculate buildable area
-  const acreageSqFt = input.acreage * 43560;
-  const setbackReduction = 0.75; // Assume 75% buildable after setbacks
-  const buildableArea = acreageSqFt * setbackReduction;
-
-  // Placeholder spoke outputs (would call actual spokes in production)
-  const setbackEngine = {
-    spokeId: 'SS.03.01',
-    buildableArea,
-    setbackPolygon: [],
-    constrainedBy: ['front', 'side', 'rear'],
-    timestamp: new Date().toISOString(),
+async function fetchArtifactData(
+  supabase: any,
+  artifactId: string,
+  zip?: string
+): Promise<Pass3ArtifactResponse> {
+  const validationErrors: string[] = [];
+  
+  // Initialize empty artifact data
+  const artifactData: ArtifactData = {
+    pass1_demand_gap_sqft: null,
+    pass1_supply_sqft: null,
+    pass1_population: null,
+    pass1_zip_count: null,
+    pass15_rent_low: null,
+    pass15_rent_medium: null,
+    pass15_rent_high: null,
+    pass15_confidence: null,
+    pass2_status: null,
+    pass2_feasibility_flag: null,
+    pass2_dscr: null,
+    pass2_zoning_status: null,
+    pass2_civil_status: null,
+    pass2_prohibitions: [],
+    pass2_missing_fields: [],
   };
 
-  const coverageEngine = {
-    spokeId: 'SS.03.02',
-    maxBuildableSqFt: Math.floor(buildableArea * input.zoning.maxCoverage),
-    coveragePercent: input.zoning.maxCoverage * 100,
-    stories: Math.min(input.zoning.maxStories, 3),
-    footprintSqFt: Math.floor(buildableArea * input.zoning.maxCoverage),
-    timestamp: new Date().toISOString(),
-  };
+  let resolvedZip = zip;
 
-  const totalSqFt = coverageEngine.maxBuildableSqFt * coverageEngine.stories;
+  // Try to resolve ZIP from artifact_id if it looks like a zip_run_id
+  if (!resolvedZip) {
+    const { data: zipRun } = await supabase
+      .from('zip_runs')
+      .select('zip_code')
+      .eq('id', artifactId)
+      .single();
+    
+    if (zipRun) {
+      resolvedZip = zipRun.zip_code;
+    }
+  }
 
-  const unitMixOptimizer = {
-    spokeId: 'SS.03.03',
-    unitMix: [
-      { size: '5x5', count: Math.floor(totalSqFt * 0.1 / 25), sqFtEach: 25, monthlyRent: 55 },
-      { size: '5x10', count: Math.floor(totalSqFt * 0.15 / 50), sqFtEach: 50, monthlyRent: 85 },
-      { size: '10x10', count: Math.floor(totalSqFt * 0.35 / 100), sqFtEach: 100, monthlyRent: 135 },
-      { size: '10x15', count: Math.floor(totalSqFt * 0.2 / 150), sqFtEach: 150, monthlyRent: 185 },
-      { size: '10x20', count: Math.floor(totalSqFt * 0.2 / 200), sqFtEach: 200, monthlyRent: 225 },
-    ],
-    totalUnits: 0,
-    totalSqFt,
-    avgRentPerSqFt: 1.15,
-    timestamp: new Date().toISOString(),
-  };
-  unitMixOptimizer.totalUnits = unitMixOptimizer.unitMix.reduce((sum, u) => sum + u.count, 0);
+  // =========================================================================
+  // PASS 1 DATA — Demand Gap, Supply, Population
+  // =========================================================================
+  
+  // Try pass1_demand_agg
+  const { data: demandAgg } = await supabase
+    .from('pass1_demand_agg')
+    .select('*')
+    .eq('run_id', artifactId)
+    .limit(10);
 
-  const phasePlanner = {
-    spokeId: 'SS.03.04',
-    phases: [
-      { phaseNumber: 1, units: unitMixOptimizer.totalUnits, sqFt: totalSqFt, startMonth: 0, completionMonth: 12 },
-    ],
-    totalPhases: 1,
-    constructionMonths: 12,
-    leaseUpMonths: 18,
-    timestamp: new Date().toISOString(),
-  };
+  if (demandAgg && demandAgg.length > 0) {
+    const totalDemand = demandAgg.reduce((sum: number, d: any) => sum + (d.baseline_demand_sqft || 0), 0);
+    const totalPop = demandAgg.reduce((sum: number, d: any) => sum + (d.population_total || 0), 0);
+    artifactData.pass1_demand_gap_sqft = totalDemand;
+    artifactData.pass1_population = totalPop;
+    artifactData.pass1_zip_count = demandAgg.length;
+  }
 
-  const buildCostModel = {
-    spokeId: 'SS.03.05',
-    hardCosts: totalSqFt * 45,
-    softCosts: totalSqFt * 12,
-    contingency: totalSqFt * 5,
-    totalDevelopmentCost: totalSqFt * 62,
-    costPerSqFt: 62,
-    timestamp: new Date().toISOString(),
-  };
+  // Try pass1_supply_agg
+  const { data: supplyAgg } = await supabase
+    .from('pass1_supply_agg')
+    .select('*')
+    .eq('run_id', artifactId)
+    .limit(10);
 
-  const grossPotentialRent = unitMixOptimizer.unitMix.reduce((sum, u) => sum + (u.count * u.monthlyRent * 12), 0);
-  const vacancyLoss = grossPotentialRent * 0.08;
-  const effectiveGrossIncome = grossPotentialRent - vacancyLoss;
-  const operatingExpenses = effectiveGrossIncome * 0.35;
-  const netOperatingIncome = effectiveGrossIncome - operatingExpenses;
+  if (supplyAgg && supplyAgg.length > 0) {
+    artifactData.pass1_supply_sqft = supplyAgg.reduce((sum: number, s: any) => sum + (s.supply_sqft_total || 0), 0);
+  }
 
-  const noiEngine = {
-    spokeId: 'SS.03.06',
-    grossPotentialRent,
-    vacancyLoss,
-    effectiveGrossIncome,
-    operatingExpenses,
-    netOperatingIncome,
-    expenseRatio: 0.35,
-    timestamp: new Date().toISOString(),
-  };
+  // =========================================================================
+  // PASS 1.5 DATA — Rent Benchmarks
+  // =========================================================================
+  
+  if (resolvedZip) {
+    const { data: rentStaging } = await supabase
+      .from('rent_band_staging')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single();
 
-  const loanAmount = buildCostModel.totalDevelopmentCost * 0.70;
-  const interestRate = 0.065;
-  const annualDebtService = loanAmount * 0.08; // Simplified debt service calculation
+    if (rentStaging) {
+      artifactData.pass15_rent_low = rentStaging.low_rent;
+      artifactData.pass15_rent_medium = rentStaging.medium_rent;
+      artifactData.pass15_rent_high = rentStaging.high_rent;
+      artifactData.pass15_confidence = rentStaging.status;
+    }
+  }
 
-  const debtModel = {
-    spokeId: 'SS.03.07',
-    loanAmount,
-    interestRate,
-    termYears: 25,
-    annualDebtService,
-    dscr: netOperatingIncome / annualDebtService,
-    ltv: 0.70,
-    timestamp: new Date().toISOString(),
-  };
+  // =========================================================================
+  // PASS 2 DATA — Feasibility, Zoning, Civil Status
+  // =========================================================================
+  
+  // Try pass2_results
+  const { data: pass2Result } = await supabase
+    .from('pass2_results')
+    .select('*')
+    .eq('zip_run_id', artifactId)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .single();
 
-  const capRate = 0.065;
-  const stabilizedValue = netOperatingIncome / capRate;
-  const developerProfit = stabilizedValue * 0.15;
-  const residualLandValue = stabilizedValue - buildCostModel.totalDevelopmentCost - developerProfit;
+  if (pass2Result) {
+    const verdict = pass2Result.verdict || {};
+    const feasibility = pass2Result.feasibility || {};
+    const zoning = pass2Result.zoning || {};
+    
+    artifactData.pass2_status = verdict.status || verdict.decision || 'UNKNOWN';
+    artifactData.pass2_feasibility_flag = feasibility.viable === true;
+    artifactData.pass2_dscr = feasibility.dscr || null;
+    artifactData.pass2_zoning_status = zoning.status || 'NOT_CHECKED';
+    artifactData.pass2_civil_status = zoning.civil_status || 'NOT_CHECKED';
+    artifactData.pass2_prohibitions = verdict.fatal_prohibitions || [];
+    artifactData.pass2_missing_fields = verdict.missing_required_fields || [];
+  }
 
-  const maxLandPriceOutput = {
-    spokeId: 'SS.03.08',
-    maxLandPrice: Math.max(0, residualLandValue),
-    pricePerAcre: Math.max(0, residualLandValue / input.acreage),
-    residualAnalysis: {
-      stabilizedValue,
-      totalCosts: buildCostModel.totalDevelopmentCost,
-      developerProfit,
-      residualLandValue,
-    },
-    timestamp: new Date().toISOString(),
-  };
+  // Also try pass2_runs for backup
+  if (!pass2Result) {
+    const { data: pass2Run } = await supabase
+      .from('pass2_runs')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single();
 
-  const holdPeriod = input.holdPeriodYears ?? 5;
-  const exitCapRate = 0.07;
-  const exitValue = netOperatingIncome / exitCapRate;
-  const equity = buildCostModel.totalDevelopmentCost - loanAmount;
-  const cashFlows = Array(holdPeriod).fill(netOperatingIncome - annualDebtService);
-  cashFlows[holdPeriod - 1] += exitValue - loanAmount; // Add exit proceeds
+    if (pass2Run) {
+      const verdict = pass2Run.verdict || {};
+      const feasibility = pass2Run.feasibility || {};
+      const zoning = pass2Run.zoning_intel || {};
+      
+      artifactData.pass2_status = verdict.status || pass2Run.status || 'UNKNOWN';
+      artifactData.pass2_feasibility_flag = feasibility.viable === true;
+      artifactData.pass2_dscr = feasibility.dscr || null;
+      artifactData.pass2_zoning_status = zoning.status || 'NOT_CHECKED';
+    }
+  }
 
-  const irrModel = {
-    spokeId: 'SS.03.09',
-    projectIRR: 0.18, // Placeholder - would calculate actual IRR
-    equityMultiple: (cashFlows.reduce((a, b) => a + b, 0) + equity) / equity,
-    cashOnCash: cashFlows.map(cf => cf / equity),
-    npv: cashFlows.reduce((npv, cf, i) => npv + cf / Math.pow(1.1, i + 1), -equity),
-    paybackPeriod: 4.2,
-    exitCapRate,
-    exitValue,
-    timestamp: new Date().toISOString(),
-  };
+  // =========================================================================
+  // VALIDATION — Check for required data
+  // =========================================================================
+
+  if (artifactData.pass1_demand_gap_sqft === null) {
+    validationErrors.push('Missing Pass 1 demand data');
+  }
+  if (artifactData.pass2_status === null) {
+    validationErrors.push('Missing Pass 2 constraint status');
+  }
+  if (artifactData.pass2_prohibitions.length > 0) {
+    validationErrors.push(`${artifactData.pass2_prohibitions.length} fatal prohibition(s) present`);
+  }
+  if (artifactData.pass2_missing_fields.length > 0) {
+    validationErrors.push(`${artifactData.pass2_missing_fields.length} required field(s) missing`);
+  }
+
+  // =========================================================================
+  // PREVIOUS DECISIONS — Lifecycle Tracking
+  // =========================================================================
+
+  const { data: previousDecisions } = await supabase
+    .from('engine_logs')
+    .select('*')
+    .eq('engine', 'pass3_decision')
+    .order('created_at', { ascending: false })
+    .limit(10);
+
+  const formattedPreviousDecisions = (previousDecisions || [])
+    .filter((d: any) => d.payload?.artifact_id === artifactId)
+    .map((d: any) => ({
+      run_id: d.payload?.pass3_run_id || d.id,
+      decision: d.payload?.decision || 'UNKNOWN',
+      created_at: d.created_at,
+      status: d.payload?.lifecycle_status || 'ACTIVE',
+    }));
 
   return {
-    pass: 'PASS3',
-    runId,
-    timestamp: new Date().toISOString(),
-    input,
-    setbackEngine,
-    coverageEngine,
-    unitMixOptimizer,
-    phasePlanner,
-    buildCostModel,
-    noiEngine,
-    debtModel,
-    maxLandPrice: maxLandPriceOutput,
-    irrModel,
-    proFormaComplete: true,
-    projectedIRR: irrModel.projectIRR,
-    projectedNOI: noiEngine.netOperatingIncome,
-    maxLandValue: maxLandPriceOutput.maxLandPrice,
-    status: 'complete',
-    errors: [],
+    artifact_id: artifactId,
+    zip: resolvedZip || null,
+    artifact_data: artifactData,
+    artifact_valid: validationErrors.length === 0,
+    validation_errors: validationErrors,
+    previous_decisions: formattedPreviousDecisions,
+  };
+}
+
+// ============================================================================
+// DECISION RECORDER — Submit Decision with Rationale
+// ============================================================================
+
+async function submitDecision(
+  supabase: any,
+  input: Pass3DecisionInput
+): Promise<Pass3DecisionResponse> {
+  // Generate unique run ID
+  const pass3RunId = `P3-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+  const createdAt = new Date().toISOString();
+
+  // Validate rationale is present (no silent approval)
+  if (!input.rationale || input.rationale.trim().length < 10) {
+    throw new Error('Rationale is required and must be at least 10 characters. No silent approval allowed.');
+  }
+
+  // If superseding, mark previous as superseded
+  if (input.supersedes_run_id) {
+    await supabase
+      .from('engine_logs')
+      .update({
+        payload: supabase.sql`payload || '{"lifecycle_status": "SUPERSEDED"}'::jsonb`,
+      })
+      .eq('engine', 'pass3_decision')
+      .filter('payload->pass3_run_id', 'eq', input.supersedes_run_id);
+  }
+
+  // Build Neon-ready payload
+  const neonPayload = {
+    pass3_run_id: pass3RunId,
+    artifact_id: input.artifact_id,
+    zip: input.zip,
+    decision: input.decision,
+    phase_scope: input.phase_scope,
+    timing_intent: input.timing_intent,
+    confidence_class: input.confidence_class,
+    rationale: input.rationale,
+    lifecycle_status: 'ACTIVE' as LifecycleStatus,
+    supersedes_run_id: input.supersedes_run_id || null,
+    created_at: createdAt,
+    schema_version: 'v1.0',
+  };
+
+  // Log decision to engine_logs (Supabase staging)
+  const { error: logError } = await supabase
+    .from('engine_logs')
+    .insert({
+      engine: 'pass3_decision',
+      event: 'decision_recorded',
+      payload: neonPayload,
+      status: input.decision,
+    });
+
+  if (logError) {
+    console.error('[start_pass3] Decision log error:', logError);
+  }
+
+  return {
+    pass3_run_id: pass3RunId,
+    artifact_id: input.artifact_id,
+    zip: input.zip,
+    decision: input.decision,
+    phase_scope: input.phase_scope,
+    timing_intent: input.timing_intent,
+    confidence_class: input.confidence_class,
+    rationale: input.rationale,
+    lifecycle_status: 'ACTIVE',
+    created_at: createdAt,
+    payload_for_neon: neonPayload,
   };
 }
 
@@ -246,114 +380,79 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    const {
-      pass2_id,
-      parcel_id,
-      acreage,
-      zoning,
-      target_irr = 0.15,
-      target_dscr = 1.25,
-      hold_period_years = 5,
-    } = await req.json();
+    const body = await req.json();
+    const action = body.action || 'fetch_artifact';
 
-    if (!pass2_id || !parcel_id || !acreage || !zoning) {
+    console.log(`[start_pass3] Action: ${action}`);
+
+    // =========================================================================
+    // ACTION: FETCH ARTIFACT
+    // =========================================================================
+    if (action === 'fetch_artifact') {
+      const { artifact_id, zip } = body;
+
+      if (!artifact_id) {
+        return new Response(
+          JSON.stringify({ error: 'artifact_id is required' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      const artifactResponse = await fetchArtifactData(supabase, artifact_id, zip);
+
       return new Response(
-        JSON.stringify({ error: 'pass2_id, parcel_id, acreage, and zoning are required' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        JSON.stringify(artifactResponse),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    console.log(`[start_pass3] Starting pro forma for pass2_id: ${pass2_id}, parcel: ${parcel_id}`);
+    // =========================================================================
+    // ACTION: SUBMIT DECISION
+    // =========================================================================
+    if (action === 'submit_decision') {
+      const { artifact_id, zip, decision, phase_scope, timing_intent, confidence_class, rationale, supersedes_run_id } = body;
 
-    // =========================================================================
-    // STEP 1: Validate zoning constraints
-    // =========================================================================
-    const zoningConstraints: ZoningConstraints = {
-      maxCoverage: zoning.maxCoverage ?? zoning.max_coverage ?? 0.7,
-      maxHeight: zoning.maxHeight ?? zoning.max_height ?? 35,
-      setbacks: zoning.setbacks ?? { front: 25, side: 10, rear: 10 },
-      maxStories: zoning.maxStories ?? zoning.max_stories ?? 3,
-    };
+      // Validate required fields
+      if (!artifact_id || !zip || !decision || !phase_scope || !timing_intent || !confidence_class || !rationale) {
+        return new Response(
+          JSON.stringify({
+            error: 'Missing required fields',
+            required: ['artifact_id', 'zip', 'decision', 'phase_scope', 'timing_intent', 'confidence_class', 'rationale'],
+          }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
 
-    // =========================================================================
-    // STEP 2: Run Pass-3 Orchestrator
-    // =========================================================================
-    const pass3Input: Pass3Input = {
-      pass2RunId: pass2_id,
-      parcelId: parcel_id,
-      acreage,
-      zoning: zoningConstraints,
-      targetIRR: target_irr,
-      targetDSCR: target_dscr,
-      holdPeriodYears: hold_period_years,
-    };
+      // Validate decision type
+      if (!['GO', 'HOLD', 'NO_GO'].includes(decision)) {
+        return new Response(
+          JSON.stringify({ error: 'decision must be GO, HOLD, or NO_GO' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
 
-    const pass3Output = await runPass3Orchestrator(pass3Input);
+      const decisionResponse = await submitDecision(supabase, {
+        action: 'submit_decision',
+        artifact_id,
+        zip,
+        decision,
+        phase_scope,
+        timing_intent,
+        confidence_class,
+        rationale,
+        supersedes_run_id,
+      });
 
-    // =========================================================================
-    // STEP 3: Store Pass-3 Results
-    // =========================================================================
-    const { data: pass3Run, error: insertError } = await supabase
-      .from('pass3_runs')
-      .insert({
-        pass2_id,
-        parcel_id,
-        run_id: pass3Output.runId,
-        results: pass3Output,
-        projected_irr: pass3Output.projectedIRR,
-        projected_noi: pass3Output.projectedNOI,
-        max_land_value: pass3Output.maxLandValue,
-        status: pass3Output.status,
-        // Map to OpportunityObject segments
-        unit_mix: pass3Output.unitMixOptimizer,
-        build_cost: pass3Output.buildCostModel,
-        noi_engine: pass3Output.noiEngine,
-        debt_model: pass3Output.debtModel,
-        irr_model: pass3Output.irrModel,
-      })
-      .select()
-      .single();
-
-    if (insertError) {
-      console.error('[start_pass3] Insert error:', insertError);
-      // Continue even if storage fails
+      return new Response(
+        JSON.stringify(decisionResponse),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
-    // =========================================================================
-    // STEP 4: Log Engine Event
-    // =========================================================================
-    await supabase.from('engine_logs').insert({
-      engine: 'start_pass3',
-      event: 'proforma_complete',
-      payload: {
-        pass3_id: pass3Run?.id,
-        pass2_id,
-        run_id: pass3Output.runId,
-        parcel_id,
-        projected_irr: pass3Output.projectedIRR,
-        projected_noi: pass3Output.projectedNOI,
-        max_land_value: pass3Output.maxLandValue,
-      },
-      status: pass3Output.status,
-    });
-
-    console.log(`[start_pass3] Completed with IRR: ${(pass3Output.projectedIRR * 100).toFixed(1)}%, NOI: $${pass3Output.projectedNOI.toLocaleString()}`);
-
-    // =========================================================================
-    // STEP 5: Return Response
-    // =========================================================================
+    // Unknown action
     return new Response(
-      JSON.stringify({
-        pass3_id: pass3Run?.id,
-        run_id: pass3Output.runId,
-        status: pass3Output.status,
-        projected_irr: pass3Output.projectedIRR,
-        projected_noi: pass3Output.projectedNOI,
-        max_land_value: pass3Output.maxLandValue,
-        pro_forma_complete: pass3Output.proFormaComplete,
-        results: pass3Output,
-      }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      JSON.stringify({ error: `Unknown action: ${action}. Use 'fetch_artifact' or 'submit_decision'` }),
+      { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
   } catch (error) {
