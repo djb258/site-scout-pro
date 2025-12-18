@@ -5,7 +5,7 @@
 - **System Name:** Storage Site Scout
 - **Hub Name:** DATA_LAYER_HUB
 - **Owner:** Barton Enterprises / SVG Agency
-- **Version:** 1.1.0
+- **Version:** 1.2.0
 - **Doctrine ID:** SS.DL.00
 
 ---
@@ -243,6 +243,18 @@ Pass-0 Hub                Pass-1 Hub                Pass-2 Hub
 │  └──────────────┘     └──────────────┘                 │
 └─────────────────────────────────────────────────────────┘
 ```
+
+---
+
+## 15. Related Documents
+
+| Document | Path | Description |
+|----------|------|-------------|
+| ERD Hub-Spoke | [docs/ERD_HUB_SPOKE.md](../ERD_HUB_SPOKE.md) | Full entity relationship diagram with all passes |
+| ADR-016 | [docs/adr/ADR-016-neon-database.md](../adr/ADR-016-neon-database.md) | Neon PostgreSQL database decision |
+| ADR-013 | [docs/adr/ADR-013-master-failure-log.md](../adr/ADR-013-master-failure-log.md) | Master failure log architecture |
+| Ref Schema SQL | [scripts/create_ref_schema.sql](../../scripts/create_ref_schema.sql) | Static reference schema definition |
+| Hardening SQL | [scripts/harden_ref_schema.sql](../../scripts/harden_ref_schema.sql) | Ref schema hardening (geography-only) |
 
 ---
 
