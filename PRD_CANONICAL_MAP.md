@@ -1,29 +1,133 @@
-# PRD Canonical Map
+# PRD Canonical Map — Storage Site Scout
 
-**Generated:** 2025-12-17
-**Purpose:** Source of truth for repository structure alignment
+**Last Updated:** 2025-12-18
+**Purpose:** Single source of truth for documentation hierarchy and repository structure
+
+---
+
+## Documentation Hierarchy
+
+```
+DOCTRINE (Process Locks)
+    └── ADRs (Architectural Decisions)
+        └── PRDs (Product Requirements)
+            └── PRSs (Execution Specs)
+                └── Checklists (Compliance Gates)
+```
+
+---
+
+## Quick Reference: Pass 2 Changes (2025-12-18)
+
+> **CRITICAL:** Pass 2 has been redefined from "Underwriting Hub" to "Constraint Compiler"
+>
+> **Old (DEPRECATED):** 11 spokes including financial logic (Feasibility, Verdict, etc.)
+> **New (CANONICAL):** 9 spokes, NO financial logic, constraint compilation only
+>
+> See ADR-019, ADR-020, and `SYSTEM_PROMPT_PASS2.md` for the definitive rules.
 
 ---
 
 ## PRD Registry
 
-| PRD ID | Pass | Hub Name | Doctrine ID | Spokes |
-|--------|------|----------|-------------|--------|
-| PRD_PASS0_RADAR_HUB | 0 | PASS0_RADAR_HUB | SS.00.00 | 6 |
-| PRD_PASS1_STRUCTURE_HUB | 1 | PASS1_STRUCTURE_HUB | SS.01.00 | 8 |
-| PRD_PASS15_RENT_RECON_HUB | 1.5 | PASS15_RENT_RECON_HUB | SS.015.00 | 5 |
-| PRD_PASS2_UNDERWRITING_HUB | 2 | PASS2_UNDERWRITING_HUB | SS.02.00 | 11 |
-| PRD_PASS3_DESIGN_HUB | 3 | PASS3_DESIGN_HUB | SS.03.00 | 9 |
-| PRD_DATA_LAYER_HUB | N/A | DATA_LAYER_HUB | SS.DL.00 | 2 |
+| PRD ID | Pass | Hub Name | Doctrine ID | Spokes | Status |
+|--------|------|----------|-------------|--------|--------|
+| PRD_PASS0_RADAR_HUB | 0 | PASS0_RADAR_HUB | SS.00.00 | 6 | Active |
+| PRD_PASS1_STRUCTURE_HUB | 1 | PASS1_STRUCTURE_HUB | SS.01.00 | 8 | Active |
+| PRD_PASS15_RENT_RECON_HUB | 1.5 | PASS15_RENT_RECON_HUB | SS.015.00 | 5 | Active |
+| PRD_PASS2_JURISDICTION_CARD | 2 | PASS2_CONSTRAINT_COMPILER | SS.02.00 | 9 | **Active** |
+| ~~PRD_PASS2_UNDERWRITING_HUB~~ | 2 | ~~PASS2_UNDERWRITING_HUB~~ | SS.02.00 | 11 | **DEPRECATED** |
+| PRD_PASS3_DESIGN_HUB | 3 | PASS3_DESIGN_HUB | SS.03.00 | 9 | Active |
+| PRD_DATA_LAYER_HUB | N/A | DATA_LAYER_HUB | SS.DL.00 | 2 | Active |
 
 ---
 
-## Pass-0 Radar Hub (SS.00.00)
+## Cross-Pass Infrastructure
+
+### County Capability Asset (CCA)
+
+**Location:** `ref` schema (NOT inside any pass)
+**Doctrine ID:** REF.CCA.00
+
+| Type | File | Purpose |
+|------|------|---------|
+| Doctrine | `docs/doctrine/CountyCapabilityAsset.md` | Cross-pass reference primitive |
+| ADR | `docs/adr/ADR-022-county-capability-asset.md` | CCA as infrastructure |
+| Checklist | `docs/checklists/CCA_COUNTY_CAPABILITY_COMPLIANCE.md` | Pre-ship compliance |
+| Migration | `supabase/migrations/20251218_county_capability_profiles.sql` | Database schema |
+| Types | `src/capability/types.ts` | TypeScript definitions |
+| Probe | `src/capability/CapabilityProbe.ts` | Capability detection |
+
+**Key Rules:**
+- CCA answers HOW to get data, not WHAT the rules are
+- Only CapabilityProbe writes to CCA (passes are read-only)
+- Pass 0 and Pass 2 both read CCA
+- 12-month TTL with automatic expiration
+
+---
+
+## Pass 2: Constraint Compiler (SS.02.00)
+
+### Current (Canonical)
+
+| Type | File | Purpose |
+|------|------|---------|
+| Doctrine | `docs/doctrine/SYSTEM_PROMPT_PASS2.md` | **Process lock** — Definitive rules |
+| Doctrine | `docs/doctrine/Pass2ReallyIs.md` | What Pass 2 actually is |
+| ADR | `docs/adr/ADR-019-pass2-really-is.md` | Why Pass 2 is a constraint compiler |
+| ADR | `docs/adr/ADR-020-pass2-constraint-compiler-position.md` | Architectural position |
+| ADR | `docs/adr/ADR-021-jurisdiction-card-hydration-pipeline.md` | Automated hydration |
+| PRD | `docs/prd/PRD_PASS2_JURISDICTION_CARD.md` | Jurisdiction card requirements |
+| PRS | `docs/prs/PRS_PASS2_CONSTRAINT_COMPILER.md` | Execution specification |
+| Checklist | `docs/checklists/PASS2_CONSTRAINT_COMPILER_COMPLIANCE.md` | Pre-ship compliance |
+
+### Spokes (9 Total)
+
+| Spoke | Doctrine ID | Purpose |
+|-------|-------------|---------|
+| JurisdictionResolver | SS.02.01 | ZIP → County resolution |
+| JurisdictionCardReader | SS.02.02 | Load jurisdiction card |
+| ZoningConstraints | SS.02.03 | Zoning restrictions |
+| SitePlanConstraints | SS.02.04 | Site plan requirements |
+| StormwaterConstraints | SS.02.05 | Stormwater rules |
+| FireAccessConstraints | SS.02.06 | Fire access requirements |
+| PermittingChecklist | SS.02.07 | Required permits |
+| EnvelopeReducer | SS.02.08 | Geometry-only envelope |
+| ConstraintVerdict | SS.02.09 | ELIGIBLE/HOLD/NO_GO |
+
+### Deprecated (Do Not Use)
+
+| File | Superseded By | Why |
+|------|---------------|-----|
+| `PRD_PASS2_UNDERWRITING_HUB.md` | `PRD_PASS2_JURISDICTION_CARD.md` | Contained financial logic |
+| `PASS2_UNDERWRITING_HUB_COMPLIANCE.md` | `PASS2_CONSTRAINT_COMPILER_COMPLIANCE.md` | Wrong spoke count |
+
+### Pass 2 Doctrine Summary
+
+**ALLOWED:**
+- ZIP → County resolution
+- Read County Capability Asset (CCA)
+- Read Jurisdiction Cards
+- Detect missing/blocked/stale constraints
+- Compute geometry-only envelope (setbacks, coverage, net acres)
+- Emit: ELIGIBLE / HOLD_INCOMPLETE / NO_GO
+
+**NOT ALLOWED:**
+- NOI, DSCR, IRR, yield, or costs
+- Timeline estimates
+- Deal scoring or rankings
+- Recommendations
+- Guessing missing values
+
+---
+
+## Pass 0: Radar Hub (SS.00.00)
 
 **PRD:** `docs/prd/PRD_PASS0_RADAR_HUB.md`
+**Checklist:** `docs/checklists/PASS0_RADAR_HUB_COMPLIANCE.md`
 **Directory:** `/src/pass0/radar_hub/`
 
-### Spokes
+### Spokes (6 Total)
 | Spoke | Doctrine ID | File |
 |-------|-------------|------|
 | TrendSignal | SS.00.01 | `spokes/TrendSignal.ts` |
@@ -33,24 +137,20 @@
 | HousingPipeline | SS.00.05 | `spokes/HousingPipeline.ts` |
 | MomentumFusion | SS.00.06 | `spokes/MomentumFusion.ts` |
 
-### Entry Points
-| Entry Point | File |
-|-------------|------|
-| Orchestrator | `orchestrator/Pass0Orchestrator.ts` |
-| Edge Function | `edge/start_pass0.ts` |
-
-### Outputs
-- MomentumAnalysis object
-- Fused momentum score (0-100)
+### CCA Integration
+- Pass 0 reads CCA to determine signal confidence
+- `manual_only` or `unknown` capability → low confidence signals
+- **DOCTRINE:** Pass 0 may NOT emit high-confidence signals from manual_only/unknown counties
 
 ---
 
-## Pass-1 Structure Hub (SS.01.00)
+## Pass 1: Structure Hub (SS.01.00)
 
 **PRD:** `docs/prd/PRD_PASS1_STRUCTURE_HUB.md`
+**Checklist:** `docs/checklists/PASS1_STRUCTURE_HUB_COMPLIANCE.md`
 **Directory:** `/src/pass1/structure_hub/`
 
-### Spokes
+### Spokes (8 Total)
 | Spoke | Doctrine ID | File |
 |-------|-------------|------|
 | ZipHydration | SS.01.01 | `spokes/ZipHydration.ts` |
@@ -62,24 +162,15 @@
 | HotspotScoring | SS.01.07 | `spokes/HotspotScoring.ts` |
 | ValidationGate | SS.01.08 | `spokes/ValidationGate.ts` |
 
-### Entry Points
-| Entry Point | File |
-|-------------|------|
-| Orchestrator | `orchestrator/Pass1Orchestrator.ts` |
-| Edge Function | `edge/start_pass1.ts` |
-
-### Outputs
-- OpportunityObject (enriched)
-- Hotspot score and tier
-
 ---
 
-## Pass-1.5 Rent Recon Hub (SS.015.00)
+## Pass 1.5: Rent Recon Hub (SS.015.00)
 
 **PRD:** `docs/prd/PRD_PASS15_RENT_RECON_HUB.md`
+**Checklist:** `docs/checklists/PASS15_RENT_RECON_HUB_COMPLIANCE.md`
 **Directory:** `/src/pass15/rent_recon_hub/`
 
-### Spokes
+### Spokes (5 Total)
 | Spoke | Doctrine ID | File |
 |-------|-------------|------|
 | PublishedRateScraper | SS.015.01 | `spokes/PublishedRateScraper.ts` |
@@ -88,57 +179,15 @@
 | CoverageConfidence | SS.015.04 | `spokes/CoverageConfidence.ts` |
 | PromotionGate | SS.015.05 | `spokes/PromotionGate.ts` |
 
-### Entry Points
-| Entry Point | File |
-|-------------|------|
-| Orchestrator | `orchestrator/Pass15Orchestrator.ts` |
-| Edge Function | `edge/start_pass15.ts` |
-
-### Outputs
-- RateEvidencePackage
-- Coverage confidence score
-
 ---
 
-## Pass-2 Underwriting Hub (SS.02.00)
-
-**PRD:** `docs/prd/PRD_PASS2_UNDERWRITING_HUB.md`
-**Directory:** `/src/pass2/underwriting_hub/`
-
-### Spokes
-| Spoke | Doctrine ID | File |
-|-------|-------------|------|
-| Zoning | SS.02.01 | `spokes/Zoning.ts` |
-| CivilConstraints | SS.02.02 | `spokes/CivilConstraints.ts` |
-| PermitsStatic | SS.02.03 | `spokes/PermitsStatic.ts` |
-| PricingVerification | SS.02.04 | `spokes/PricingVerification.ts` |
-| FusionDemand | SS.02.05 | `spokes/FusionDemand.ts` |
-| CompetitivePressure | SS.02.06 | `spokes/CompetitivePressure.ts` |
-| Feasibility | SS.02.07 | `spokes/Feasibility.ts` |
-| ReverseFeasibility | SS.02.08 | `spokes/ReverseFeasibility.ts` |
-| MomentumReader | SS.02.09 | `spokes/MomentumReader.ts` |
-| Verdict | SS.02.10 | `spokes/Verdict.ts` |
-| VaultMapper | SS.02.11 | `spokes/VaultMapper.ts` |
-
-### Entry Points
-| Entry Point | File |
-|-------------|------|
-| Orchestrator | `orchestrator/Pass2Orchestrator.ts` |
-| Edge Function | `edge/start_pass2.ts` |
-
-### Outputs
-- UnderwritingPackage
-- GO/NO_GO/MAYBE verdict
-- STAMPED vault record
-
----
-
-## Pass-3 Design/Calculator Hub (SS.03.00)
+## Pass 3: Design/Calculator Hub (SS.03.00)
 
 **PRD:** `docs/prd/PRD_PASS3_DESIGN_HUB.md`
+**Checklist:** `docs/checklists/PASS3_DESIGN_HUB_COMPLIANCE.md`
 **Directory:** `/src/pass3/design_hub/`
 
-### Spokes
+### Spokes (9 Total)
 | Spoke | Doctrine ID | File |
 |-------|-------------|------|
 | SetbackEngine | SS.03.01 | `spokes/SetbackEngine.ts` |
@@ -151,209 +200,80 @@
 | MaxLandPrice | SS.03.08 | `spokes/MaxLandPrice.ts` |
 | IRRModel | SS.03.09 | `spokes/IRRModel.ts` |
 
-### Entry Points
-| Entry Point | File |
-|-------------|------|
-| Orchestrator | `orchestrator/Pass3Orchestrator.ts` |
-| Edge Function | `edge/start_pass3.ts` |
-
-### Outputs
-- ProFormaSummary
-- Investment memo data
+**Note:** All financial calculations (NOI, DSCR, IRR) belong in Pass 3, NOT Pass 2.
 
 ---
 
 ## Data Layer Hub (SS.DL.00)
 
 **PRD:** `docs/prd/PRD_DATA_LAYER_HUB.md`
+**Checklist:** `docs/checklists/DATA_LAYER_HUB_COMPLIANCE.md`
 **Directory:** `/src/shared/data_layer/`
 
 ### Components
-| Component | Doctrine ID | File | Status |
-|-----------|-------------|------|--------|
-| LovableAdapter | SS.DL.01 | `adapters/LovableAdapter.ts` | Implemented |
-| NeonAdapter | SS.DL.02 | `adapters/NeonAdapter.ts` | Stub (by design) |
-
-**Note:** Firebase is NOT used in this repository. FirebaseAdapter is intentionally excluded.
-
-### Shared Dependencies
-| Dependency | File |
-|------------|------|
-| MasterFailureLogger | `failures/masterFailureLogger.ts` |
-| MasterFailureHub | `failures/MasterFailureHub.ts` |
-| OpportunityObject | `types/OpportunityObject.ts` |
+| Component | Doctrine ID | Status |
+|-----------|-------------|--------|
+| LovableAdapter | SS.DL.01 | Implemented |
+| NeonAdapter | SS.DL.02 | Stub (by design) |
 
 ---
 
-## Target Directory Structure
+## ADR Index
 
-```
-/src
-  /pass0
-    /radar_hub
-      /orchestrator
-        Pass0Orchestrator.ts
-      /spokes
-        TrendSignal.ts
-        PermitActivity.ts
-        NewsEvents.ts
-        IndustrialLogistics.ts
-        HousingPipeline.ts
-        MomentumFusion.ts
-      /edge
-        start_pass0.ts
-      /types
-        pass0_types.ts
-      README.md
-
-  /pass1
-    /structure_hub
-      /orchestrator
-        Pass1Orchestrator.ts
-      /spokes
-        ZipHydration.ts
-        RadiusBuilder.ts
-        MacroDemand.ts
-        MacroSupply.ts
-        CompetitorRegistry.ts
-        LocalScan.ts
-        HotspotScoring.ts
-        ValidationGate.ts
-      /edge
-        start_pass1.ts
-      /types
-        pass1_types.ts
-      README.md
-
-  /pass15
-    /rent_recon_hub
-      /orchestrator
-        Pass15Orchestrator.ts
-      /spokes
-        PublishedRateScraper.ts
-        AICallWorkOrders.ts
-        RateEvidenceNormalizer.ts
-        CoverageConfidence.ts
-        PromotionGate.ts
-      /edge
-        start_pass15.ts
-      /types
-        pass15_types.ts
-      README.md
-
-  /pass2
-    /underwriting_hub
-      /orchestrator
-        Pass2Orchestrator.ts
-      /spokes
-        Zoning.ts
-        CivilConstraints.ts
-        PermitsStatic.ts
-        PricingVerification.ts
-        FusionDemand.ts
-        CompetitivePressure.ts
-        Feasibility.ts
-        ReverseFeasibility.ts
-        MomentumReader.ts
-        Verdict.ts
-        VaultMapper.ts
-      /edge
-        start_pass2.ts
-        save_to_vault.ts
-      /types
-        pass2_types.ts
-      README.md
-
-  /pass3
-    /design_hub
-      /orchestrator
-        Pass3Orchestrator.ts
-      /spokes
-        SetbackEngine.ts
-        CoverageEngine.ts
-        UnitMixOptimizer.ts
-        PhasePlanner.ts
-        BuildCostModel.ts
-        NOIEngine.ts
-        DebtModel.ts
-        MaxLandPrice.ts
-        IRRModel.ts
-      /edge
-        start_pass3.ts
-      /types
-        pass3_types.ts
-      README.md
-
-  /shared
-    /data_layer
-      /adapters
-        LovableAdapter.ts
-        NeonAdapter.ts
-        FirebaseAdapter.ts
-      README.md
-    /failures
-      MasterFailureHub.ts
-      masterFailureLogger.ts
-    /types
-      OpportunityObject.ts
-      shared_types.ts
-    /config
-      GlobalConfig.ts
-
-  /ui
-    /components
-      [all UI components]
-    /pages
-      [all page components]
-    /hooks
-      [custom hooks]
-    /contexts
-      [React contexts]
-    /services
-      [UI service layer]
-
-/tests
-  /pass0
-  /pass1
-  /pass15
-  /pass2
-  /pass3
-  /shared
-```
+| ADR | Title | Status |
+|-----|-------|--------|
+| ADR-001 | Census API | Active |
+| ADR-002 | Google Places API | Active |
+| ADR-003 | Scoring Engine | Active |
+| ADR-004 | Zoning Regrid API | Active |
+| ADR-005 | Retell AI | Active |
+| ADR-006 | Feasibility Engine | **Review needed** |
+| ADR-007 | Verdict Engine | **Review needed** |
+| ADR-008 | Google Trends API | Active |
+| ADR-009 | Firecrawl | Active |
+| ADR-010 | Unit Mix Optimizer | Active (Pass 3) |
+| ADR-011 | Build Cost Calculator | Active (Pass 3) |
+| ADR-012 | IRR Calculator | Active (Pass 3) |
+| ADR-013 | Master Failure Log | Active |
+| ADR-014 | FEMA Flood API | Active |
+| ADR-015 | USGS DEM API | Active |
+| ADR-016 | Neon Database | Active |
+| ADR-017 | Supabase Integration | Active |
+| ADR-018 | Pass 2/Pass 3 Realignment | **Superseded** |
+| ADR-019 | Pass 2 Really Is | **Active** |
+| ADR-020 | Pass 2 Constraint Compiler Position | **Active** |
+| ADR-021 | Jurisdiction Card Hydration Pipeline | **Active** |
+| ADR-022 | County Capability Asset | **Active** |
 
 ---
 
-## Files NOT Owned by Any PRD
+## Doctrine Hierarchy
 
-All files have been moved to their PRD-aligned locations. No orphaned files remain.
+When conflicts arise, resolve using this priority:
 
-| Original Location | New Location | Status |
-|-------------------|--------------|--------|
-| `src/services/pass1Calculators.ts` | `/shared/calculators/pass1Calculators.ts` | ✅ Moved |
-| `src/services/pass2Calculators.ts` | `/shared/calculators/pass2Calculators.ts` | ✅ Moved |
-| `src/pipeline/Pass1ToPass2Validator.ts` | `/shared/validators/Pass1ToPass2Validator.ts` | ✅ Moved |
-| `src/engine/*` | `/src/ui/pages/engine/` | ✅ Moved |
+1. **SYSTEM_PROMPT_PASS2.md** — Highest authority for Pass 2
+2. **CountyCapabilityAsset.md** — Highest authority for CCA
+3. **ADRs** — Architectural decisions
+4. **PRDs** — Product requirements
+5. **Checklists** — Compliance gates
 
 ---
 
-## Validation Checklist
+## Review Flags
 
-For each PRD:
-- [x] Directory exists at correct path
-- [x] All spokes present
-- [x] Orchestrator present
-- [x] Edge function present
-- [x] Types file present
-- [x] README.md present
-- [x] Tests exist in `/tests/{pass}/`
+Documents marked for review:
 
-### Per-Hub Validation Status
+| Document | Issue | Action Needed |
+|----------|-------|---------------|
+| ADR-006 | References Pass 2 feasibility | Update to reference Pass 3 |
+| ADR-007 | References Pass 2 verdict | Update outputs to ELIGIBLE/HOLD/NO_GO |
+| ADR-018 | Interim realignment doc | Mark as fully superseded |
 
-| Hub | Directory | Spokes | Orchestrator | Edge | Types | README |
-|-----|-----------|--------|--------------|------|-------|--------|
-| Pass-0 | ✅ | ✅ 6/6 | ✅ | ✅ | ✅ | ✅ |
-| Pass-1 | ✅ | ✅ 8/8 | ✅ | ✅ | ✅ | ✅ |
-| Pass-1.5 | ✅ | ✅ 5/5 | ✅ | ✅ | ✅ | ✅ |
-| Pass-2 | ✅ | ✅ 11/11 | ✅ | ✅ | ✅ | ✅ |
-| Pass-3 | ✅ | ✅ 9/9 | ✅ | ✅ | ✅ | ✅ |
-| Data Layer | ✅ | ⚠️ 1/3 | N/A | N/A | N/A | ✅ |
+---
+
+## Maintenance Rules
+
+1. **No orphan documents** — Every PRD must have a checklist
+2. **Deprecation over deletion** — Add deprecation notice, don't delete
+3. **Single source of truth** — One canonical document per concept
+4. **Cross-reference** — ADRs reference doctrine, PRDs reference ADRs

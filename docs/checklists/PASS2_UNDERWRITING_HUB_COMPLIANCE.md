@@ -1,8 +1,22 @@
 # Hub Compliance Checklist — PASS2_UNDERWRITING_HUB
 
+> ⚠️ **DEPRECATED** — This checklist is superseded.
+>
+> **USE INSTEAD:** `PASS2_CONSTRAINT_COMPILER_COMPLIANCE.md`
+>
+> **Why deprecated:** This checklist describes Pass 2 as an underwriting hub with
+> 11 spokes including financial logic (Feasibility, ReverseFeasibility, Verdict).
+> Per ADR-019 and ADR-020, Pass 2 is now a **Constraint Compiler** with 9 spokes
+> and NO financial calculations.
+>
+> **Effective Date:** 2025-12-18
+> **Doctrine Reference:** ADR-019, ADR-020, SYSTEM_PROMPT_PASS2.md
+
+---
+
 **Doctrine ID:** SS.02.00
-**Last Updated:** 2025-12-17
-**Status:** [ ] Compliant / [ ] Non-Compliant
+**Last Updated:** 2025-12-17 (DEPRECATED)
+**Status:** [x] DEPRECATED — See PASS2_CONSTRAINT_COMPILER_COMPLIANCE.md
 
 ---
 

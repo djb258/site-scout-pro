@@ -1,5 +1,24 @@
 # PRD — Pass-2 Underwriting Hub
 
+> ⚠️ **DEPRECATED** — This document is superseded by the new Pass 2 architecture.
+>
+> **DO NOT USE FOR NEW DEVELOPMENT**
+>
+> | Superseded By | Purpose |
+> |---------------|---------|
+> | `PRD_PASS2_JURISDICTION_CARD.md` | Product requirements for jurisdiction cards |
+> | `PRS_PASS2_CONSTRAINT_COMPILER.md` | Execution spec for constraint compiler |
+> | `SYSTEM_PROMPT_PASS2.md` | Definitive process lock |
+>
+> **Why deprecated:** This PRD describes Pass 2 as a financial underwriting engine.
+> Per ADR-019, ADR-020, and the new doctrine, Pass 2 is a **Constraint Compiler**
+> that performs NO financial calculations. All NOI, DSCR, IRR logic belongs in Pass 3.
+>
+> **Effective Date:** 2025-12-18
+> **Doctrine Reference:** ADR-019, ADR-020, SYSTEM_PROMPT_PASS2.md
+
+---
+
 ## 1. Overview
 
 - **System Name:** Storage Site Scout (Barton Storage Application)
