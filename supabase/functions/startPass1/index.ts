@@ -1,3 +1,17 @@
+// =============================================================================
+// ⚠️  DOCTRINE VIOLATION — ZIP REPLICA SYNC (SS.REF.SYNC.01)
+// =============================================================================
+// This file references 'us_zip_codes' which is DEPRECATED.
+//
+// REQUIRED CHANGES:
+// 1. Replace 'us_zip_codes' with 'ref.ref_zip_replica' (geography only)
+// 2. Get census data from 'pass1_census_snapshot' (time-variant)
+// 3. Add version check: ref.require_valid_replica() before execution
+//
+// DO NOT USE — ZIP REPLICA DOCTRINE
+// See: docs/doctrine/ZIP_REPLICA_SYNC_DOCTRINE.md
+// =============================================================================
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 

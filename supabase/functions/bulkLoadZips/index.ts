@@ -1,3 +1,20 @@
+// =============================================================================
+// ⚠️  DEPRECATED — ZIP REPLICA SYNC DOCTRINE (SS.REF.SYNC.01)
+// =============================================================================
+// This function is DEPRECATED and should NOT be used.
+//
+// REASON: Bulk loads to 'us_zip_codes' with 30+ demographic columns,
+// violating doctrine (ref schema = geography ONLY).
+//
+// USE INSTEAD: scripts/sync_zip_replica.py
+//   - Syncs to ref.ref_zip_replica (geography only: zip_id, state_id, lat, lon)
+//   - Manual sync only, audited
+//   - Writes sync manifest
+//
+// DO NOT USE — ZIP REPLICA DOCTRINE
+// See: docs/doctrine/ZIP_REPLICA_SYNC_DOCTRINE.md
+// =============================================================================
+
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 
 const corsHeaders = {

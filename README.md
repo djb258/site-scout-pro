@@ -71,6 +71,39 @@ This repository operates in **BACKEND-ONLY MODE** for AI-assisted development.
 
 See `backend/BACKEND_ONLY_MODE.md` for complete rules.
 
+## ⚠️ ZIP Replica Sync Doctrine (SS.REF.SYNC.01)
+
+**CRITICAL: Read before modifying any ZIP-related code.**
+
+The `us_zip_codes` table is **DEPRECATED**. All ZIP lookups must use:
+
+| Use Case | Table | Schema |
+|----------|-------|--------|
+| Geography lookup (lat/lon) | `ref.ref_zip_replica` | geography only |
+| Census/demographic data | `pass1_census_snapshot` | time-variant |
+
+### Non-Negotiable Invariants
+
+1. **Neon = Vault (authoritative)** — All ref data lives in Neon
+2. **Lovable = Workbench (read-only)** — Execution cache only
+3. **ref schema = geography ONLY** — NO census/demographic data
+4. **Manual sync only** — No automated sync jobs
+
+### Deprecated Functions (DO NOT USE)
+
+- `syncZipsFromNeon` — Use `scripts/sync_zip_replica.py`
+- `bulkLoadZips` — Use `scripts/sync_zip_replica.py`
+- `uploadZipCodes` — Use `scripts/sync_zip_replica.py`
+
+### Required Before Pass Execution
+
+```typescript
+// Version check REQUIRED before execution
+await supabase.rpc('ref.require_valid_replica');
+```
+
+**Full Doctrine:** [docs/doctrine/ZIP_REPLICA_SYNC_DOCTRINE.md](docs/doctrine/ZIP_REPLICA_SYNC_DOCTRINE.md)
+
 ## Frontend
 
 The frontend is built with Lovable.dev using React, TypeScript, and Tailwind CSS. To run the frontend:

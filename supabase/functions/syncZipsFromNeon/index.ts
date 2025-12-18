@@ -1,3 +1,19 @@
+// =============================================================================
+// ⚠️  DEPRECATED — ZIP REPLICA SYNC DOCTRINE (SS.REF.SYNC.01)
+// =============================================================================
+// This function is DEPRECATED and should NOT be used.
+//
+// REASON: Writes to 'us_zip_codes' with demographic data, violating doctrine.
+//
+// USE INSTEAD: scripts/sync_zip_replica.py
+//   - Syncs to ref.ref_zip_replica (geography only)
+//   - Manual sync only, audited
+//   - Writes sync manifest
+//
+// DO NOT USE — ZIP REPLICA DOCTRINE
+// See: docs/doctrine/ZIP_REPLICA_SYNC_DOCTRINE.md
+// =============================================================================
+
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import postgres from "https://deno.land/x/postgresjs@v3.4.4/mod.js";
 
