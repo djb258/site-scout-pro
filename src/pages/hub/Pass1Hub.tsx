@@ -601,40 +601,6 @@ const Pass1Hub = () => {
 
           {/* Right Column: Results */}
           <div className="lg:col-span-2 space-y-6">
-            {/* Pipeline Card - Always visible when we have a run */}
-            {runId && (
-              <Pass1PipelineCard
-                runId={runId}
-                radiusData={radiusCount > 0 ? { zipCount: radiusCount, originZip: zip } : null}
-                censusData={censusCount > 0 ? { zipCount: censusCount, vintageYear: 2023 } : null}
-                demandData={demandAgg.length > 0 ? {
-                  totalSqft: demandAgg.reduce((sum, d) => sum + Number(d.baseline_demand_sqft), 0),
-                  bands: demandAgg.map(d => ({
-                    band: d.distance_band,
-                    population: d.population_total,
-                    demandSqft: Number(d.baseline_demand_sqft),
-                  })),
-                } : null}
-                supplySnapshotData={supplySnapshotCount > 0 ? {
-                  facilityCount: supplySnapshotCount,
-                  source: "mock",
-                  confidence: "low",
-                } : null}
-                supplyGapData={supplyAgg.length > 0 ? {
-                  netGapSqft: supplyAgg.reduce((sum, s) => sum + Number(s.gap_sqft), 0),
-                  bands: supplyAgg.map(s => ({
-                    band: s.distance_band,
-                    demandSqft: demandAgg.find(d => d.distance_band === s.distance_band)?.baseline_demand_sqft || 0,
-                    supplySqft: Number(s.supply_sqft_total),
-                    gapSqft: Number(s.gap_sqft),
-                    confidence: s.confidence,
-                  })),
-                } : null}
-                error={error}
-                isRunning={isRunning}
-              />
-            )}
-            
             {!result && !runId ? (
               <Card className="border-border bg-card h-full flex items-center justify-center min-h-[400px]">
                 <div className="text-center text-muted-foreground">
