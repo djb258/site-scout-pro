@@ -156,27 +156,45 @@ serve(async (req) => {
     console.log(`[${PROCESS_ID}] Origin found: ${origin.zip} at (${origin.lat}, ${origin.lng})`);
 
     // ========================================================================
-    // STEP 3: LOAD ALL ZIPS
+    // STEP 3: LOAD ALL ZIPS (PAGINATED TO BYPASS 1000-ROW DEFAULT)
     // ========================================================================
-    console.log(`[${PROCESS_ID}] Step 3: Loading all ZIPs from replica`);
+    console.log(`[${PROCESS_ID}] Step 3: Loading all ZIPs from replica (paginated)`);
     
-    const { data: allZips, error: allZipsError } = await supabase
-      .from('ref_zip_replica')
-      .select('zip, lat, lng');
+    const PAGE_SIZE = 10000;
+    const allZips: { zip: string; lat: number; lng: number }[] = [];
+    let from = 0;
+    let hasMore = true;
 
-    if (allZipsError || !allZips) {
-      console.error(`[${PROCESS_ID}] Failed to load ZIPs: ${allZipsError?.message}`);
-      return new Response(JSON.stringify({
-        run_id,
-        status: 'error',
-        reason: 'FAILED_TO_LOAD_ZIPS'
-      }), {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      });
+    while (hasMore) {
+      const { data: batch, error: batchError } = await supabase
+        .from('ref_zip_replica')
+        .select('zip, lat, lng')
+        .range(from, from + PAGE_SIZE - 1);
+
+      if (batchError) {
+        console.error(`[${PROCESS_ID}] Failed to load ZIPs at offset ${from}: ${batchError.message}`);
+        return new Response(JSON.stringify({
+          run_id,
+          status: 'error',
+          reason: 'FAILED_TO_LOAD_ZIPS',
+          error: batchError.message
+        }), {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
+
+      if (batch && batch.length > 0) {
+        allZips.push(...batch);
+        from += PAGE_SIZE;
+        hasMore = batch.length === PAGE_SIZE;
+        console.log(`[${PROCESS_ID}] Loaded batch: ${batch.length} ZIPs, total: ${allZips.length}`);
+      } else {
+        hasMore = false;
+      }
     }
 
-    console.log(`[${PROCESS_ID}] Loaded ${allZips.length} ZIPs from replica`);
+    console.log(`[${PROCESS_ID}] Loaded ${allZips.length} ZIPs from replica (paginated)`);
 
     // ========================================================================
     // STEP 4: HAVERSINE + FILTER ≤ RADIUS
