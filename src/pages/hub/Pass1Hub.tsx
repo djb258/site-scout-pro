@@ -30,6 +30,7 @@ import {
   Info
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { Pass1PipelineCard } from "@/components/Pass1PipelineCard";
 
 // ============================================================================
 // CONSTANTS (Match Edge Function)
@@ -166,6 +167,11 @@ const Pass1Hub = () => {
   const [demandAgg, setDemandAgg] = useState<DemandAggRow[]>([]);
   const [supplyAgg, setSupplyAgg] = useState<SupplyAggRow[]>([]);
   
+  // Pipeline Card State
+  const [radiusCount, setRadiusCount] = useState<number>(0);
+  const [censusCount, setCensusCount] = useState<number>(0);
+  const [supplySnapshotCount, setSupplySnapshotCount] = useState<number>(0);
+  
   // Promotion State
   const [promotionPayload, setPromotionPayload] = useState<Record<string, unknown> | null>(null);
   const [isPromoting, setIsPromoting] = useState(false);
@@ -181,28 +187,35 @@ const Pass1Hub = () => {
     return () => clearInterval(interval);
   }, [isRunning, startTime]);
 
-  // Fetch demand/supply aggregates when runId changes
+  // Fetch pipeline data when runId changes
   useEffect(() => {
-    const fetchAggregates = async () => {
-      if (!runId || !result) return;
+    const fetchPipelineData = async () => {
+      if (!runId) {
+        setDemandAgg([]);
+        setSupplyAgg([]);
+        setRadiusCount(0);
+        setCensusCount(0);
+        setSupplySnapshotCount(0);
+        return;
+      }
       
-      // Fetch demand agg
-      const { data: demandData } = await supabase
-        .from('pass1_demand_agg')
-        .select('distance_band, baseline_demand_sqft, population_total')
-        .eq('run_id', runId);
+      // Fetch all pipeline data in parallel
+      const [radiusRes, censusRes, demandRes, supplyAggRes, supplySnapshotRes] = await Promise.all([
+        supabase.from('pass1_radius_zip').select('id', { count: 'exact', head: true }).eq('run_id', runId),
+        supabase.from('pass1_census_snapshot').select('id', { count: 'exact', head: true }).eq('run_id', runId),
+        supabase.from('pass1_demand_agg').select('distance_band, baseline_demand_sqft, population_total').eq('run_id', runId),
+        supabase.from('pass1_supply_agg').select('distance_band, facility_count, supply_sqft_total, gap_sqft, confidence').eq('run_id', runId),
+        supabase.from('pass1_supply_snapshot').select('id', { count: 'exact', head: true }).eq('run_id', runId),
+      ]);
       
-      // Fetch supply agg
-      const { data: supplyData } = await supabase
-        .from('pass1_supply_agg')
-        .select('distance_band, facility_count, supply_sqft_total, gap_sqft, confidence')
-        .eq('run_id', runId);
-      
-      if (demandData) setDemandAgg(demandData as DemandAggRow[]);
-      if (supplyData) setSupplyAgg(supplyData as SupplyAggRow[]);
+      setRadiusCount(radiusRes.count || 0);
+      setCensusCount(censusRes.count || 0);
+      if (demandRes.data) setDemandAgg(demandRes.data as DemandAggRow[]);
+      if (supplyAggRes.data) setSupplyAgg(supplyAggRes.data as SupplyAggRow[]);
+      setSupplySnapshotCount(supplySnapshotRes.count || 0);
     };
     
-    fetchAggregates();
+    fetchPipelineData();
   }, [runId, result]);
 
   // Generate UUID
@@ -552,11 +565,52 @@ const Pass1Hub = () => {
 
           {/* Right Column: Results */}
           <div className="lg:col-span-2 space-y-6">
-            {!result ? (
+            {/* Pipeline Card - Always visible when we have a run */}
+            {runId && (
+              <Pass1PipelineCard
+                runId={runId}
+                radiusData={radiusCount > 0 ? { zipCount: radiusCount, originZip: zip } : null}
+                censusData={censusCount > 0 ? { zipCount: censusCount, vintageYear: 2023 } : null}
+                demandData={demandAgg.length > 0 ? {
+                  totalSqft: demandAgg.reduce((sum, d) => sum + Number(d.baseline_demand_sqft), 0),
+                  bands: demandAgg.map(d => ({
+                    band: d.distance_band,
+                    population: d.population_total,
+                    demandSqft: Number(d.baseline_demand_sqft),
+                  })),
+                } : null}
+                supplySnapshotData={supplySnapshotCount > 0 ? {
+                  facilityCount: supplySnapshotCount,
+                  source: "mock",
+                  confidence: "low",
+                } : null}
+                supplyGapData={supplyAgg.length > 0 ? {
+                  netGapSqft: supplyAgg.reduce((sum, s) => sum + Number(s.gap_sqft), 0),
+                  bands: supplyAgg.map(s => ({
+                    band: s.distance_band,
+                    demandSqft: demandAgg.find(d => d.distance_band === s.distance_band)?.baseline_demand_sqft || 0,
+                    supplySqft: Number(s.supply_sqft_total),
+                    gapSqft: Number(s.gap_sqft),
+                    confidence: s.confidence,
+                  })),
+                } : null}
+                error={error}
+                isRunning={isRunning}
+              />
+            )}
+            
+            {!result && !runId ? (
               <Card className="border-border bg-card h-full flex items-center justify-center min-h-[400px]">
                 <div className="text-center text-muted-foreground">
                   <Search className="h-16 w-16 mx-auto mb-4 opacity-30" />
                   <p>Enter a ZIP code and run Pass 1 to see results</p>
+                </div>
+              </Card>
+            ) : !result ? (
+              <Card className="border-border bg-card h-full flex items-center justify-center min-h-[200px]">
+                <div className="text-center text-muted-foreground">
+                  <Search className="h-12 w-12 mx-auto mb-2 opacity-30 animate-pulse" />
+                  <p>Processing...</p>
                 </div>
               </Card>
             ) : (
