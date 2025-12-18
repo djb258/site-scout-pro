@@ -3,8 +3,9 @@
  * process_id: hub15_enqueue_gaps
  * version: 1.0.0
  * 
+ * // DOCTRINE LOCKED — PASS 1.5 COMPLETE
  * DO NOT MODIFY — downstream depends on this shape
- * 
+ *
  * PURPOSE: Deterministically translate Pass 1 gap flags into remediation queue.
  * Reads GapFlag[] input and populates pass_1_5_gap_queue with deduplication.
  * 

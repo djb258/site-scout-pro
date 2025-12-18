@@ -2,9 +2,10 @@
  * PROCESS: hub15.get_dashboard
  * VERSION: v1.1.0
  * 
+ * // DOCTRINE LOCKED — PASS 1.5 COMPLETE
  * PURPOSE: Read-only API for Hub 1.5 dashboard data.
  * Returns queue status counts, attempt stats, cost totals, and guard-rail health.
- * 
+ *
  * ZERO MUTATIONS — pure read operation
  * DO NOT MODIFY — UI depends on this shape
  */
