@@ -255,18 +255,36 @@ serve(async (req) => {
     const centerLat = typedZipData.lat || 0;
     const centerLng = typedZipData.lng || 0;
 
-    // Get all ZIPs and filter by distance
-    const { data: allZips } = await supabase
+    // Calculate bounding box for initial filter (1 degree lat ≈ 69 miles)
+    const latDegrees = radius_miles / 69;
+    const lngDegrees = radius_miles / (69 * Math.cos(centerLat * Math.PI / 180));
+    
+    const minLat = centerLat - latDegrees;
+    const maxLat = centerLat + latDegrees;
+    const minLng = centerLng - lngDegrees;
+    const maxLng = centerLng + lngDegrees;
+
+    console.log(`[HUB1_PASS1] Bounding box: lat ${minLat.toFixed(2)}-${maxLat.toFixed(2)}, lng ${minLng.toFixed(2)}-${maxLng.toFixed(2)}`);
+
+    // Get ZIPs within bounding box (much smaller result set)
+    const { data: nearbyZips, error: zipsError } = await supabase
       .from('us_zip_codes')
       .select('county_name, county_fips, population, lat, lng')
+      .gte('lat', minLat)
+      .lte('lat', maxLat)
+      .gte('lng', minLng)
+      .lte('lng', maxLng)
       .not('lat', 'is', null)
-      .not('lng', 'is', null);
+      .not('lng', 'is', null)
+      .limit(5000);
+
+    console.log(`[HUB1_PASS1] Found ${nearbyZips?.length || 0} ZIPs in bounding box`);
 
     const countiesMap = new Map<string, County>();
     let totalPopulationInRadius = 0;
 
-    if (allZips) {
-      for (const z of allZips) {
+    if (nearbyZips && !zipsError) {
+      for (const z of nearbyZips) {
         if (z.lat && z.lng) {
           const distance = haversineDistance(centerLat, centerLng, z.lat, z.lng);
           if (distance <= radius_miles && z.county_name) {
@@ -286,6 +304,8 @@ serve(async (req) => {
           }
         }
       }
+    } else if (zipsError) {
+      console.error(`[HUB1_PASS1] Error fetching nearby ZIPs: ${zipsError.message}`);
     }
 
     const derivedCounties = Array.from(countiesMap.values())
