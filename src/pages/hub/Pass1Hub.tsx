@@ -887,41 +887,6 @@ const Pass1Hub = () => {
                   </Card>
                 )}
 
-                {/* Scoring Breakdown */}
-                {result.scoring && (
-                <Card className="border-border bg-card">
-                  <CardHeader>
-                    <CardTitle className="text-sm flex items-center gap-2">
-                      <TrendingUp className="h-4 w-4 text-amber-500" />
-                      Scoring Breakdown (Deterministic)
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-4 gap-4 text-sm">
-                      <div className="p-4 rounded bg-muted/30 text-center">
-                        <p className="text-xs text-muted-foreground mb-1">Demand</p>
-                        <p className="text-2xl font-bold text-amber-400">{result.scoring.raw_scores?.demand ?? 'N/A'}</p>
-                        <p className="text-[10px] text-muted-foreground">× {result.scoring.weights?.demand ?? '-'}</p>
-                      </div>
-                      <div className="p-4 rounded bg-muted/30 text-center">
-                        <p className="text-xs text-muted-foreground mb-1">Supply Gap</p>
-                        <p className="text-2xl font-bold text-amber-400">{result.scoring.raw_scores?.supply ?? 'N/A'}</p>
-                        <p className="text-[10px] text-muted-foreground">× {result.scoring.weights?.supply ?? '-'}</p>
-                      </div>
-                      <div className="p-4 rounded bg-muted/30 text-center">
-                        <p className="text-xs text-muted-foreground mb-1">Constraints</p>
-                        <p className="text-2xl font-bold text-amber-400">{result.scoring.raw_scores?.constraints ?? 'N/A'}</p>
-                        <p className="text-[10px] text-muted-foreground">× {result.scoring.weights?.constraints ?? '-'}</p>
-                      </div>
-                      <div className={`p-4 rounded text-center ${getDecisionStyles(result.decision).bg} border ${getDecisionStyles(result.decision).border}`}>
-                        <p className="text-xs text-muted-foreground mb-1">Final Score</p>
-                        <p className={`text-2xl font-bold ${getDecisionStyles(result.decision).text}`}>{result.scoring.final_score ?? 'N/A'}</p>
-                        <p className="text-[10px] text-muted-foreground">Weighted Sum</p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-                )}
 
                 {/* Evidence Drawer */}
                 <Sheet>
