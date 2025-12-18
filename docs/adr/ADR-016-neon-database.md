@@ -46,13 +46,14 @@ const connectionConfig = {
 
 ```
 neondb/
-├── Tables
+├── public schema (Application Data)
 │   ├── site_candidate          -- Main opportunity tracking
 │   ├── rent_comps              -- Rent comparison data
 │   ├── population_metrics      -- Census/demographic data
 │   ├── county_score            -- County difficulty scores
 │   ├── parcel_screening        -- Parcel analysis results
 │   ├── saturation_matrix       -- Market saturation data
+│   ├── zips_master             -- All US ZIP codes (41,551)
 │   ├── process_log             -- Audit trail
 │   ├── error_log               -- Legacy error log
 │   └── master_failure_log      -- Centralized failure tracking (ADR-013)
@@ -62,9 +63,52 @@ neondb/
 │   ├── pass15_runs             -- Pass-1.5 execution records
 │   ├── pass2_runs              -- Pass-2 execution records
 │   └── pass3_runs              -- Pass-3 execution records
+├── ref schema (Static Reference - Immutable, Geography Only)
+│   ├── ref_country             -- Country root (USA)
+│   ├── ref_state               -- US states (50 + DC)
+│   ├── ref_county              -- Counties with FIPS codes
+│   ├── ref_zip                 -- ZIP codes (geography only: zip_id, state_id, lat, lon)
+│   ├── ref_zip_county_map      -- ZIP to County linkage (is_primary flag)
+│   ├── ref_asset_class         -- Storage asset classifications
+│   ├── ref_unit_type           -- Unit types (climate/non-climate)
+│   └── ref_unit_size           -- Standard unit dimensions
 └── Indexes
     └── [See schema.sql for full index list]
 ```
+
+### Static Reference Schema (ref)
+
+The `ref` schema contains immutable reference data that remains stable for years:
+
+| Table | Records | Purpose |
+|-------|---------|---------|
+| ref_country | 1 | Country geography root |
+| ref_state | 51 | US states + DC |
+| ref_county | 3,132 | Counties with FIPS codes |
+| ref_zip | 40,745 | ZIP codes (geography only: zip_id, state_id, lat, lon) |
+| ref_zip_county_map | 40,728 | ZIP to County linkage with is_primary flag |
+| ref_asset_class | 4 | SSF, CSS, RV, MIXED |
+| ref_unit_type | 5 | STD, CC, DU, INT, INT-CC |
+| ref_unit_size | 9 | 5x5 through 20x20 |
+
+**ref.ref_zip Table Schema (Hardened):**
+```sql
+CREATE TABLE ref.ref_zip (
+    zip_id CHAR(5) PRIMARY KEY,
+    state_id INTEGER NOT NULL REFERENCES ref.ref_state(state_id),
+    lat NUMERIC(9,6),
+    lon NUMERIC(10,6)
+);
+```
+
+**FORBIDDEN in ref.ref_zip:** population, income, median_income, home_value, census_data, demographic, county_name, city
+
+**Design Principles:**
+- Geography (where) + Asset intent (what) = ref schema
+- **NO census/demographic data in ref schema** (hardened 2025-12-18)
+- Passes decide (whether)
+- Calculators compute (how)
+- Parcels come later (commit)
 
 ### Usage Patterns
 
@@ -183,6 +227,12 @@ try {
 
 ## Related Documents
 
-- backend/db/schema.sql
-- ADR-013-master-failure-log.md
-- PRD_DATA_LAYER_HUB.md
+- [ERD_HUB_SPOKE.md](../ERD_HUB_SPOKE.md) - Full hub-and-spoke entity relationship diagram
+- [ZIP_REPLICA_SYNC_DOCTRINE.md](../doctrine/ZIP_REPLICA_SYNC_DOCTRINE.md) - Neon→Lovable replica sync doctrine
+- [PRD_DATA_LAYER_HUB.md](../prd/PRD_DATA_LAYER_HUB.md) - Data Layer Hub PRD
+- [ADR-013-master-failure-log.md](ADR-013-master-failure-log.md) - Master failure log architecture
+- [scripts/create_ref_schema.sql](../../scripts/create_ref_schema.sql) - Ref schema creation
+- [scripts/harden_ref_schema.sql](../../scripts/harden_ref_schema.sql) - Ref schema hardening
+- [scripts/validate_ref_schema.py](../../scripts/validate_ref_schema.py) - Validation script
+- [scripts/sync_zip_replica.py](../../scripts/sync_zip_replica.py) - ZIP replica sync script
+- [supabase/migrations/20251218_zip_replica_sync.sql](../../supabase/migrations/20251218_zip_replica_sync.sql) - Lovable replica migration
