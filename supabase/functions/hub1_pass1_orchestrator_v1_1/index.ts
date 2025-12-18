@@ -1,6 +1,9 @@
 /**
+ * ============================================================================
  * PROCESS: hub1.pass1.orchestrator
  * VERSION: v1.1.0
+ * FREEZE TAG: hub1_pass1_orchestrator_v1_1@v1.1.0 ✅ FROZEN
+ * ============================================================================
  * 
  * THIN CONTROLLER ONLY — no compute, no score, no database access
  * Calls: radius → census → demand → (optional) supply
@@ -8,7 +11,9 @@
  * v1.1 CHANGE: Adds optional supply step via include_supply flag
  * When include_supply=false or omitted: identical to v1.0.0 behavior
  * 
- * DO NOT MODIFY without version bump — downstream depends on this shape
+ * DO NOT MODIFY — downstream depends on this shape
+ * See: docs/adr/ADR-018-hub1-pass1-orchestrator-v1-1.md
+ * ============================================================================
  */
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
