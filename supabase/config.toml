@@ -50,3 +50,6 @@ verify_jwt = false
 
 [functions.hub1_cleanup_ttl]
 verify_jwt = false
+
+[functions.hub1_pass1_radius]
+verify_jwt = false

@@ -212,6 +212,39 @@ export type Database = {
         }
         Relationships: []
       }
+      pass1_radius_zip: {
+        Row: {
+          created_at: string | null
+          distance_miles: number
+          id: string
+          lat: number
+          lng: number
+          origin_zip: string
+          run_id: string
+          zip: string
+        }
+        Insert: {
+          created_at?: string | null
+          distance_miles: number
+          id?: string
+          lat: number
+          lng: number
+          origin_zip: string
+          run_id: string
+          zip: string
+        }
+        Update: {
+          created_at?: string | null
+          distance_miles?: number
+          id?: string
+          lat?: number
+          lng?: number
+          origin_zip?: string
+          run_id?: string
+          zip?: string
+        }
+        Relationships: []
+      }
       pass1_results: {
         Row: {
           analysis_summary: Json | null
@@ -309,6 +342,39 @@ export type Database = {
           status?: string | null
           toggles?: Json | null
           updated_at?: string
+          zip?: string
+        }
+        Relationships: []
+      }
+      pass1_skip_log: {
+        Row: {
+          actual_version: string | null
+          created_at: string | null
+          expected_version: string | null
+          id: string
+          process_id: string
+          run_id: string
+          skip_reason: string
+          zip: string
+        }
+        Insert: {
+          actual_version?: string | null
+          created_at?: string | null
+          expected_version?: string | null
+          id?: string
+          process_id?: string
+          run_id: string
+          skip_reason: string
+          zip: string
+        }
+        Update: {
+          actual_version?: string | null
+          created_at?: string | null
+          expected_version?: string | null
+          id?: string
+          process_id?: string
+          run_id?: string
+          skip_reason?: string
           zip?: string
         }
         Relationships: []
@@ -424,6 +490,30 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      ref_zip_replica: {
+        Row: {
+          lat: number
+          lng: number
+          source_version: string
+          synced_at: string
+          zip: string
+        }
+        Insert: {
+          lat: number
+          lng: number
+          source_version?: string
+          synced_at?: string
+          zip: string
+        }
+        Update: {
+          lat?: number
+          lng?: number
+          source_version?: string
+          synced_at?: string
+          zip?: string
+        }
+        Relationships: []
       }
       rent_band_staging: {
         Row: {
