@@ -1,15 +1,19 @@
 # ADR-006: Feasibility Engine
 
-**Status:** Accepted
+**Status:** Partially Superseded by [ADR-018](./ADR-018-pass2-pass3-feasibility-realignment.md)
 **Date:** 2025-12-17
+**Updated:** 2025-12-18
 **Deciders:** Barton Enterprises Engineering Team
-**Doctrine ID:** SS.02.T11
+**Doctrine ID:** SS.03.07 (moved from SS.02.T11)
 
 ---
 
+> **UPDATE 2025-12-18:** Financial calculations have been relocated to Pass 3 (SS.03.07).
+> Pass 2 now only performs constraint validation. See ADR-018 for details.
+
 ## Context
 
-The Pass-2 Underwriting Hub requires financial feasibility calculations to determine if a site meets the Barton Doctrine's minimum thresholds. This includes NOI calculation, DSCR analysis, and the critical $5,000/month per acre minimum.
+The ~~Pass-2 Underwriting Hub~~ **Pass-3 Design/Calculator Hub** performs financial feasibility calculations to determine if a site meets the Barton Doctrine's minimum thresholds. This includes NOI calculation, DSCR analysis, and the critical $5,000/month per acre minimum.
 
 ## Decision
 

@@ -1,587 +1,305 @@
 // =============================================================================
-// FEASIBILITY SPOKE — Pass-2 Core Financial Engine
+// FEASIBILITY CONSTRAINT GATE — Pass-2 Eligibility Check ONLY
 // =============================================================================
 // Doctrine ID: SS.02.07
-// Purpose: Calculate project feasibility with Barton Doctrine enforcement
+// Purpose: Validate constraint eligibility for Pass-3 financial modeling
 //
-// This is the AUTHORITATIVE MATH SPINE for underwriting.
-// All calculations are deterministic, auditable, and replayable.
-// No heuristics, no ML, no randomness.
+// DOCTRINAL NOTE: Pass 2 is the CONSTRAINT & ELIGIBILITY HUB.
+// NO financial calculations belong here. All financial modeling
+// (NOI, DSCR, Yield, etc.) is performed in Pass 3 (SS.03.07).
 //
-// Same inputs → Same outputs (always)
+// This spoke only validates:
+// - Required inputs are present
+// - Constraint data is available
+// - Site meets minimum eligibility requirements for financial analysis
+//
+// See: src/pass3/design_hub/spokes/Feasibility.ts for full financial modeling
 // =============================================================================
 
 import type {
   FeasibilityInput,
-  PricingVerificationResult,
   CivilConstraintResult,
+  ZoningResult,
+  PricingVerificationResult,
 } from '../types/pass2_types';
 
 // =============================================================================
-// NAMED CONSTANTS — All numeric assumptions must be named
+// CONSTRAINT GATE TYPES
 // =============================================================================
 
-/** Barton Doctrine: Minimum NOI per acre per month */
-const DOCTRINE_MIN_NOI_PER_ACRE_MONTHLY = 5000;
-
-/** Barton Doctrine: Minimum stressed NOI per acre per month (after 25% haircut) */
-const DOCTRINE_MIN_STRESSED_NOI_PER_ACRE_MONTHLY = 3750;
-
-/** Barton Doctrine: Minimum DSCR ratio */
-const DOCTRINE_MIN_DSCR = 1.25;
-
-/** Default vacancy rate (10%) */
-const DEFAULT_VACANCY_RATE = 0.10;
-
-/** Default collection loss rate (2%) */
-const DEFAULT_COLLECTION_LOSS_RATE = 0.02;
-
-/** Default operating expense ratio (32%) */
-const DEFAULT_OPEX_RATIO = 0.32;
-
-/** Stress test haircut (25% reduction to NOI) */
-const STRESS_TEST_HAIRCUT = 0.25;
-
-/** Default interest rate for debt service calculation */
-const DEFAULT_INTEREST_RATE = 0.06;
-
-/** Default loan amortization in years */
-const DEFAULT_AMORTIZATION_YEARS = 25;
-
-/** Default loan-to-value ratio */
-const DEFAULT_LTV = 0.70;
-
-/** Default cap rate for yield calculation */
-const DEFAULT_CAP_RATE = 0.07;
-
-/** Months per year (named for clarity in calculations) */
-const MONTHS_PER_YEAR = 12;
-
-/** Default rent per sqft per month if not provided */
-const DEFAULT_RENT_PSF_MONTHLY = 1.00;
-
-/** Default buildable sqft per acre (conservative) */
-const DEFAULT_BUILDABLE_SQFT_PER_ACRE = 25000;
-
-/** Default construction cost per sqft */
-const DEFAULT_CONSTRUCTION_COST_PSF = 85;
-
-// =============================================================================
-// FATAL FLAW CODES
-// =============================================================================
-
-export type FeasibilityFatalFlawCode =
-  | 'NOI_BELOW_DOCTRINE'
-  | 'STRESSED_NOI_FAILURE'
-  | 'NEGATIVE_NOI'
+export type ConstraintFatalFlawCode =
+  | 'MISSING_ACREAGE'
   | 'ZERO_ACREAGE'
-  | 'ZERO_REVENUE'
-  | 'INVALID_INPUT';
-
-export type FeasibilityWarningCode =
-  | 'DSCR_BELOW_THRESHOLD'
-  | 'LOW_YIELD_ON_COST'
-  | 'HIGH_OPEX_RATIO'
+  | 'MISSING_ZONING'
+  | 'ZONING_PROHIBITED'
+  | 'MISSING_CIVIL_CONSTRAINTS'
+  | 'CIVIL_PROHIBITIVE'
   | 'MISSING_RENT_DATA'
-  | 'ESTIMATED_VALUES_USED';
+  | 'INSUFFICIENT_DATA';
 
-// =============================================================================
-// OUTPUT INTERFACE — Fully typed result object
-// =============================================================================
+export type ConstraintWarningCode =
+  | 'ZONING_CONDITIONAL'
+  | 'CIVIL_CHALLENGING'
+  | 'RENT_DATA_LOW_CONFIDENCE'
+  | 'PARTIAL_DATA';
 
-export interface FeasibilityFatalFlaw {
-  code: FeasibilityFatalFlawCode;
+export interface ConstraintFatalFlaw {
+  code: ConstraintFatalFlawCode;
   severity: 'critical';
   message: string;
-  threshold?: number;
-  actual?: number;
+  field?: string;
 }
 
-export interface FeasibilityWarning {
-  code: FeasibilityWarningCode;
+export interface ConstraintWarning {
+  code: ConstraintWarningCode;
   severity: 'warning';
   message: string;
-  threshold?: number;
-  actual?: number;
+  field?: string;
 }
 
-export interface FeasibilityOutput {
+export interface ConstraintUnknown {
+  field: string;
+  reason: string;
+  required_for_pass3: boolean;
+}
+
+// =============================================================================
+// OUTPUT INTERFACE — Constraint Gate Result
+// =============================================================================
+
+export interface FeasibilityConstraintOutput {
   // Spoke metadata
   spokeId: 'SS.02.07';
   status: 'ok' | 'error';
   timestamp: string;
 
-  // Input echo (for audit)
-  inputs: {
-    acreage: number;
-    rentPsfMonthly: number;
-    buildableSqft: number;
-    landCostPerAcre: number;
-    constructionCostPsf: number;
-    vacancyRate: number;
-    collectionLossRate: number;
-    opexRatio: number;
-    interestRate: number;
-    amortizationYears: number;
-    ltv: number;
-  };
+  // Constraint validation result
+  constraints_satisfied: boolean;
 
-  // Revenue calculations
-  gross_monthly_revenue: number;
-  gross_annual_revenue: number;
-  effective_gross_income: number;
+  // Fatal flaws that block Pass 3
+  fatal_flaws: ConstraintFatalFlaw[];
 
-  // Expense calculations
-  operating_expenses: number;
-  opex_ratio_actual: number;
+  // Warnings that should be noted but don't block
+  warnings: ConstraintWarning[];
 
-  // NOI calculations
-  noi_annual: number;
-  noi_monthly: number;
-  noi_per_acre_annual: number;
-  noi_per_acre_per_month: number;
+  // Unknown/missing data fields
+  unknowns: ConstraintUnknown[];
 
-  // Stressed NOI (25% haircut)
-  stressed_noi_annual: number;
-  stressed_noi_per_acre_per_month: number;
-
-  // Development costs
-  total_land_cost: number;
-  total_construction_cost: number;
-  total_development_cost: number;
-
-  // Debt service
-  loan_amount: number;
-  annual_debt_service: number;
-  dscr: number;
-
-  // Returns
-  yield_on_cost: number;
-  implied_value: number;
-  cap_rate: number;
-
-  // Doctrine compliance
-  passes_doctrine_noi: boolean;
-  passes_stress_test: boolean;
-  passes_dscr: boolean;
-  pass_fail: boolean;
-
-  // Fatal flaws and warnings
-  fatal_flaws: FeasibilityFatalFlaw[];
-  warnings: FeasibilityWarning[];
+  // Eligibility summary
+  eligible_for_pass3: boolean;
+  pass3_ready: boolean;
 
   // Human-readable notes
   notes: string;
 }
 
 // =============================================================================
-// HELPER FUNCTIONS
+// CONSTRAINT VALIDATION INPUT
 // =============================================================================
 
-/**
- * Calculate annual debt service using standard mortgage formula
- * P = L[c(1 + c)^n]/[(1 + c)^n - 1]
- * where L = loan amount, c = monthly rate, n = number of payments
- */
-function calculateAnnualDebtService(
-  loanAmount: number,
-  annualInterestRate: number,
-  amortizationYears: number
-): number {
-  if (loanAmount <= 0) return 0;
-  if (annualInterestRate <= 0) return loanAmount / amortizationYears;
-
-  const monthlyRate = annualInterestRate / MONTHS_PER_YEAR;
-  const numPayments = amortizationYears * MONTHS_PER_YEAR;
-
-  const numerator = monthlyRate * Math.pow(1 + monthlyRate, numPayments);
-  const denominator = Math.pow(1 + monthlyRate, numPayments) - 1;
-
-  const monthlyPayment = loanAmount * (numerator / denominator);
-  return monthlyPayment * MONTHS_PER_YEAR;
-}
-
-/**
- * Extract rent PSF from pricing verification result
- * Falls back to default if not available
- */
-function extractRentPsf(rentBenchmarks: PricingVerificationResult | undefined): number {
-  if (!rentBenchmarks) return DEFAULT_RENT_PSF_MONTHLY;
-  if (rentBenchmarks.avgPsf && rentBenchmarks.avgPsf > 0) return rentBenchmarks.avgPsf;
-  if (rentBenchmarks.blendedRent && rentBenchmarks.blendedRent > 0) {
-    // Assume blendedRent is monthly rent for a 100sqft unit (10x10)
-    return rentBenchmarks.blendedRent / 100;
-  }
-  return DEFAULT_RENT_PSF_MONTHLY;
-}
-
-/**
- * Calculate buildable sqft from acreage, accounting for civil constraints
- */
-function calculateBuildableSqft(
-  acreage: number,
-  civilConstraints: CivilConstraintResult | undefined
-): number {
-  if (civilConstraints?.lotCoverage?.maxBuildableSqft > 0) {
-    return civilConstraints.lotCoverage.maxBuildableSqft;
-  }
-  // Default: assume 25,000 sqft rentable per acre
-  return acreage * DEFAULT_BUILDABLE_SQFT_PER_ACRE;
+export interface ConstraintGateInput {
+  acreage?: number;
+  zoning?: ZoningResult;
+  civilConstraints?: CivilConstraintResult;
+  rentBenchmarks?: PricingVerificationResult;
+  opportunity?: unknown;
 }
 
 // =============================================================================
-// MAIN FEASIBILITY FUNCTION
+// MAIN CONSTRAINT GATE FUNCTION
 // =============================================================================
 
-export async function runFeasibility(input: FeasibilityInput): Promise<FeasibilityOutput> {
+/**
+ * Constraint Gate for Pass-2
+ * Validates that all required constraint data is present and site is eligible
+ * for Pass-3 financial modeling. NO calculations performed here.
+ */
+export async function runFeasibility(input: ConstraintGateInput): Promise<FeasibilityConstraintOutput> {
   const timestamp = new Date().toISOString();
-  const fatalFlaws: FeasibilityFatalFlaw[] = [];
-  const warnings: FeasibilityWarning[] = [];
+  const fatalFlaws: ConstraintFatalFlaw[] = [];
+  const warnings: ConstraintWarning[] = [];
+  const unknowns: ConstraintUnknown[] = [];
 
   // ---------------------------------------------------------------------------
-  // STEP 1: Extract and validate inputs
+  // STEP 1: Validate Acreage
   // ---------------------------------------------------------------------------
 
-  const acreage = input.acreage ?? 0;
-  const landCostPerAcre = input.landCostPerAcre ?? 0;
-  const rentPsfMonthly = extractRentPsf(input.rentBenchmarks);
-  const buildableSqft = calculateBuildableSqft(acreage, input.civilConstraints);
-
-  // Get civil cost adder if available
-  const civilCostAdder = input.civilConstraints?.totalCivilCostAdder ?? 0;
-
-  // Use defaults for financial assumptions
-  const vacancyRate = DEFAULT_VACANCY_RATE;
-  const collectionLossRate = DEFAULT_COLLECTION_LOSS_RATE;
-  const opexRatio = DEFAULT_OPEX_RATIO;
-  const interestRate = DEFAULT_INTEREST_RATE;
-  const amortizationYears = DEFAULT_AMORTIZATION_YEARS;
-  const ltv = DEFAULT_LTV;
-  const constructionCostPsf = DEFAULT_CONSTRUCTION_COST_PSF;
-
-  // Track if we're using estimated values
-  let usingEstimates = false;
-  if (!input.rentBenchmarks?.avgPsf) {
-    usingEstimates = true;
-    warnings.push({
-      code: 'MISSING_RENT_DATA',
-      severity: 'warning',
-      message: `No rent PSF provided, using default $${DEFAULT_RENT_PSF_MONTHLY.toFixed(2)}/sqft/month`,
+  if (input.acreage === undefined || input.acreage === null) {
+    fatalFlaws.push({
+      code: 'MISSING_ACREAGE',
+      severity: 'critical',
+      message: 'Acreage is required for feasibility analysis',
+      field: 'acreage',
     });
-  }
-
-  // ---------------------------------------------------------------------------
-  // STEP 2: Validate critical inputs
-  // ---------------------------------------------------------------------------
-
-  if (acreage <= 0) {
+  } else if (input.acreage <= 0) {
     fatalFlaws.push({
       code: 'ZERO_ACREAGE',
       severity: 'critical',
-      message: 'Acreage is zero or negative - cannot calculate feasibility',
-      actual: acreage,
+      message: 'Acreage must be greater than zero',
+      field: 'acreage',
     });
   }
 
-  if (buildableSqft <= 0) {
+  // ---------------------------------------------------------------------------
+  // STEP 2: Validate Zoning Constraints
+  // ---------------------------------------------------------------------------
+
+  if (!input.zoning || input.zoning.status === 'stub') {
+    unknowns.push({
+      field: 'zoning',
+      reason: 'Zoning data not available',
+      required_for_pass3: true,
+    });
+  } else if (input.zoning.status === 'error') {
     fatalFlaws.push({
-      code: 'INVALID_INPUT',
+      code: 'MISSING_ZONING',
       severity: 'critical',
-      message: 'Buildable sqft is zero or negative',
-      actual: buildableSqft,
+      message: 'Zoning analysis failed - cannot determine eligibility',
+      field: 'zoning',
     });
-  }
-
-  // If critical inputs missing, return early with error
-  if (acreage <= 0 || buildableSqft <= 0) {
-    return {
-      spokeId: 'SS.02.07',
-      status: 'error',
-      timestamp,
-      inputs: {
-        acreage,
-        rentPsfMonthly,
-        buildableSqft,
-        landCostPerAcre,
-        constructionCostPsf,
-        vacancyRate,
-        collectionLossRate,
-        opexRatio,
-        interestRate,
-        amortizationYears,
-        ltv,
-      },
-      gross_monthly_revenue: 0,
-      gross_annual_revenue: 0,
-      effective_gross_income: 0,
-      operating_expenses: 0,
-      opex_ratio_actual: 0,
-      noi_annual: 0,
-      noi_monthly: 0,
-      noi_per_acre_annual: 0,
-      noi_per_acre_per_month: 0,
-      stressed_noi_annual: 0,
-      stressed_noi_per_acre_per_month: 0,
-      total_land_cost: 0,
-      total_construction_cost: 0,
-      total_development_cost: 0,
-      loan_amount: 0,
-      annual_debt_service: 0,
-      dscr: 0,
-      yield_on_cost: 0,
-      implied_value: 0,
-      cap_rate: 0,
-      passes_doctrine_noi: false,
-      passes_stress_test: false,
-      passes_dscr: false,
-      pass_fail: false,
-      fatal_flaws: fatalFlaws,
-      warnings,
-      notes: 'Feasibility calculation failed due to invalid inputs',
-    };
-  }
-
-  // ---------------------------------------------------------------------------
-  // STEP 3: Revenue calculations
-  // ---------------------------------------------------------------------------
-
-  // Gross Monthly Revenue = Buildable Sqft × Rent PSF
-  const gross_monthly_revenue = buildableSqft * rentPsfMonthly;
-
-  // Gross Annual Revenue = Monthly × 12
-  const gross_annual_revenue = gross_monthly_revenue * MONTHS_PER_YEAR;
-
-  // Effective Gross Income = Gross × (1 - vacancy) × (1 - collection loss)
-  const occupancyFactor = 1 - vacancyRate;
-  const collectionFactor = 1 - collectionLossRate;
-  const effective_gross_income = gross_annual_revenue * occupancyFactor * collectionFactor;
-
-  if (gross_annual_revenue <= 0) {
+  } else if (input.zoning.storageAllowed === false) {
     fatalFlaws.push({
-      code: 'ZERO_REVENUE',
+      code: 'ZONING_PROHIBITED',
       severity: 'critical',
-      message: 'Gross annual revenue is zero - cannot proceed',
-      actual: gross_annual_revenue,
+      message: 'Storage use is prohibited by zoning',
+      field: 'zoning.storageAllowed',
     });
-  }
-
-  // ---------------------------------------------------------------------------
-  // STEP 4: Operating expenses
-  // ---------------------------------------------------------------------------
-
-  const operating_expenses = effective_gross_income * opexRatio;
-  const opex_ratio_actual = effective_gross_income > 0
-    ? operating_expenses / effective_gross_income
-    : 0;
-
-  if (opexRatio > 0.40) {
+  } else if (input.zoning.classification === 'prohibited') {
+    fatalFlaws.push({
+      code: 'ZONING_PROHIBITED',
+      severity: 'critical',
+      message: 'Zoning classification is prohibitive',
+      field: 'zoning.classification',
+    });
+  } else if (input.zoning.conditionalUseRequired || input.zoning.classification === 'conditional') {
     warnings.push({
-      code: 'HIGH_OPEX_RATIO',
+      code: 'ZONING_CONDITIONAL',
       severity: 'warning',
-      message: `Operating expense ratio of ${(opexRatio * 100).toFixed(1)}% is above typical 35%`,
-      threshold: 0.35,
-      actual: opexRatio,
+      message: 'Conditional use permit may be required',
+      field: 'zoning',
     });
-  }
-
-  // ---------------------------------------------------------------------------
-  // STEP 5: NOI calculations
-  // ---------------------------------------------------------------------------
-
-  const noi_annual = effective_gross_income - operating_expenses;
-  const noi_monthly = noi_annual / MONTHS_PER_YEAR;
-  const noi_per_acre_annual = noi_annual / acreage;
-  const noi_per_acre_per_month = noi_per_acre_annual / MONTHS_PER_YEAR;
-
-  // Check for negative NOI (fatal)
-  if (noi_annual < 0) {
-    fatalFlaws.push({
-      code: 'NEGATIVE_NOI',
-      severity: 'critical',
-      message: `Negative NOI of $${noi_annual.toLocaleString()} - site is not viable`,
-      actual: noi_annual,
-    });
-  }
-
-  // ---------------------------------------------------------------------------
-  // STEP 6: Stressed NOI (25% haircut)
-  // ---------------------------------------------------------------------------
-
-  const stressed_noi_annual = noi_annual * (1 - STRESS_TEST_HAIRCUT);
-  const stressed_noi_per_acre_per_month = (stressed_noi_annual / acreage) / MONTHS_PER_YEAR;
-
-  // ---------------------------------------------------------------------------
-  // STEP 7: Development costs
-  // ---------------------------------------------------------------------------
-
-  const total_land_cost = acreage * landCostPerAcre;
-  const total_construction_cost = (buildableSqft * constructionCostPsf) + civilCostAdder;
-  const total_development_cost = total_land_cost + total_construction_cost;
-
-  // ---------------------------------------------------------------------------
-  // STEP 8: Debt service calculations
-  // ---------------------------------------------------------------------------
-
-  const loan_amount = total_development_cost * ltv;
-  const annual_debt_service = calculateAnnualDebtService(
-    loan_amount,
-    interestRate,
-    amortizationYears
-  );
-
-  // DSCR = NOI / Annual Debt Service
-  const dscr = annual_debt_service > 0 ? noi_annual / annual_debt_service : 0;
-
-  // ---------------------------------------------------------------------------
-  // STEP 9: Returns calculations
-  // ---------------------------------------------------------------------------
-
-  // Yield on Cost = NOI / Total Development Cost
-  const yield_on_cost = total_development_cost > 0
-    ? noi_annual / total_development_cost
-    : 0;
-
-  // Implied Value = NOI / Cap Rate
-  const implied_value = noi_annual / DEFAULT_CAP_RATE;
-
-  // Actual Cap Rate based on development cost
-  const cap_rate = total_development_cost > 0
-    ? noi_annual / total_development_cost
-    : 0;
-
-  if (yield_on_cost < 0.08) {
+  } else if (input.zoning.classification === 'challenging') {
     warnings.push({
-      code: 'LOW_YIELD_ON_COST',
+      code: 'ZONING_CONDITIONAL',
       severity: 'warning',
-      message: `Yield on cost of ${(yield_on_cost * 100).toFixed(2)}% is below typical 8% target`,
-      threshold: 0.08,
-      actual: yield_on_cost,
+      message: 'Zoning is challenging but not prohibitive',
+      field: 'zoning.classification',
     });
   }
 
   // ---------------------------------------------------------------------------
-  // STEP 10: Barton Doctrine enforcement
+  // STEP 3: Validate Civil Constraints
   // ---------------------------------------------------------------------------
 
-  // Doctrine Rule 1: NOI per acre per month >= $5,000
-  const passes_doctrine_noi = noi_per_acre_per_month >= DOCTRINE_MIN_NOI_PER_ACRE_MONTHLY;
-  if (!passes_doctrine_noi && noi_annual >= 0) {
+  if (!input.civilConstraints || input.civilConstraints.status === 'stub') {
+    unknowns.push({
+      field: 'civilConstraints',
+      reason: 'Civil constraint data not available',
+      required_for_pass3: true,
+    });
+  } else if (input.civilConstraints.status === 'error') {
     fatalFlaws.push({
-      code: 'NOI_BELOW_DOCTRINE',
+      code: 'MISSING_CIVIL_CONSTRAINTS',
       severity: 'critical',
-      message: `NOI of $${noi_per_acre_per_month.toLocaleString(undefined, { maximumFractionDigits: 0 })}/acre/month is below $${DOCTRINE_MIN_NOI_PER_ACRE_MONTHLY.toLocaleString()} minimum`,
-      threshold: DOCTRINE_MIN_NOI_PER_ACRE_MONTHLY,
-      actual: noi_per_acre_per_month,
+      message: 'Civil constraints analysis failed',
+      field: 'civilConstraints',
     });
-  }
-
-  // Doctrine Rule 2: Stressed NOI >= $3,750/acre/month
-  const passes_stress_test = stressed_noi_per_acre_per_month >= DOCTRINE_MIN_STRESSED_NOI_PER_ACRE_MONTHLY;
-  if (!passes_stress_test && noi_annual >= 0) {
+  } else if (input.civilConstraints.civilRating === 'prohibitive') {
     fatalFlaws.push({
-      code: 'STRESSED_NOI_FAILURE',
+      code: 'CIVIL_PROHIBITIVE',
       severity: 'critical',
-      message: `Stressed NOI of $${stressed_noi_per_acre_per_month.toLocaleString(undefined, { maximumFractionDigits: 0 })}/acre/month fails debt survivability test (min $${DOCTRINE_MIN_STRESSED_NOI_PER_ACRE_MONTHLY.toLocaleString()})`,
-      threshold: DOCTRINE_MIN_STRESSED_NOI_PER_ACRE_MONTHLY,
-      actual: stressed_noi_per_acre_per_month,
+      message: 'Civil constraints are prohibitive for development',
+      field: 'civilConstraints.civilRating',
     });
-  }
-
-  // Doctrine Rule 3: DSCR >= 1.25 (warning only, not fatal)
-  const passes_dscr = dscr >= DOCTRINE_MIN_DSCR;
-  if (!passes_dscr && dscr > 0) {
+  } else if (input.civilConstraints.civilRating === 'challenging') {
     warnings.push({
-      code: 'DSCR_BELOW_THRESHOLD',
+      code: 'CIVIL_CHALLENGING',
       severity: 'warning',
-      message: `DSCR of ${dscr.toFixed(2)}x is below ${DOCTRINE_MIN_DSCR}x threshold`,
-      threshold: DOCTRINE_MIN_DSCR,
-      actual: dscr,
-    });
-  }
-
-  // Add estimated values warning if applicable
-  if (usingEstimates) {
-    warnings.push({
-      code: 'ESTIMATED_VALUES_USED',
-      severity: 'warning',
-      message: 'Some calculations used estimated/default values - verify with actual data',
+      message: 'Civil constraints are challenging - cost impacts expected',
+      field: 'civilConstraints.civilRating',
     });
   }
 
   // ---------------------------------------------------------------------------
-  // STEP 11: Final pass/fail determination
+  // STEP 4: Validate Rent Benchmarks
   // ---------------------------------------------------------------------------
 
-  // Pass/Fail: No fatal flaws
-  const pass_fail = fatalFlaws.length === 0;
+  if (!input.rentBenchmarks || input.rentBenchmarks.status === 'stub') {
+    unknowns.push({
+      field: 'rentBenchmarks',
+      reason: 'Rent benchmark data not available',
+      required_for_pass3: true,
+    });
+  } else if (input.rentBenchmarks.status === 'error') {
+    warnings.push({
+      code: 'RENT_DATA_LOW_CONFIDENCE',
+      severity: 'warning',
+      message: 'Rent benchmark data has errors - Pass 3 will use defaults',
+      field: 'rentBenchmarks',
+    });
+  } else if (input.rentBenchmarks.confidence === 'low') {
+    warnings.push({
+      code: 'RENT_DATA_LOW_CONFIDENCE',
+      severity: 'warning',
+      message: 'Rent benchmark confidence is low',
+      field: 'rentBenchmarks.confidence',
+    });
+  }
 
-  // Build notes summary
+  // ---------------------------------------------------------------------------
+  // STEP 5: Determine Eligibility
+  // ---------------------------------------------------------------------------
+
+  const hasNoFatalFlaws = fatalFlaws.length === 0;
+  const hasAllRequiredData = unknowns.filter(u => u.required_for_pass3).length === 0;
+
+  const constraints_satisfied = hasNoFatalFlaws;
+  const eligible_for_pass3 = hasNoFatalFlaws;
+  const pass3_ready = hasNoFatalFlaws && hasAllRequiredData;
+
+  // ---------------------------------------------------------------------------
+  // STEP 6: Build Notes Summary
+  // ---------------------------------------------------------------------------
+
   const notesParts: string[] = [];
-  notesParts.push(`Feasibility analysis for ${acreage.toFixed(2)} acres`);
-  notesParts.push(`NOI: $${noi_annual.toLocaleString(undefined, { maximumFractionDigits: 0 })}/year ($${noi_per_acre_per_month.toLocaleString(undefined, { maximumFractionDigits: 0 })}/acre/month)`);
-  notesParts.push(`DSCR: ${dscr.toFixed(2)}x`);
-  if (pass_fail) {
-    notesParts.push('RESULT: PASSES Barton Doctrine');
+  notesParts.push('Pass-2 Constraint Gate');
+
+  if (fatalFlaws.length > 0) {
+    notesParts.push(`BLOCKED: ${fatalFlaws.length} fatal constraint(s)`);
+  } else if (unknowns.length > 0) {
+    notesParts.push(`ELIGIBLE with ${unknowns.length} unknown(s) - Pass 3 will use defaults`);
   } else {
-    notesParts.push(`RESULT: FAILS - ${fatalFlaws.length} fatal flaw(s)`);
+    notesParts.push('ELIGIBLE: All constraints satisfied');
+  }
+
+  if (warnings.length > 0) {
+    notesParts.push(`${warnings.length} warning(s) noted`);
   }
 
   // ---------------------------------------------------------------------------
-  // STEP 12: Return complete result
+  // STEP 7: Return Constraint Gate Result
   // ---------------------------------------------------------------------------
 
   return {
     spokeId: 'SS.02.07',
-    status: fatalFlaws.some(f => f.code === 'ZERO_ACREAGE' || f.code === 'INVALID_INPUT') ? 'error' : 'ok',
+    status: fatalFlaws.length > 0 ? 'error' : 'ok',
     timestamp,
-    inputs: {
-      acreage,
-      rentPsfMonthly,
-      buildableSqft,
-      landCostPerAcre,
-      constructionCostPsf,
-      vacancyRate,
-      collectionLossRate,
-      opexRatio,
-      interestRate,
-      amortizationYears,
-      ltv,
-    },
-    gross_monthly_revenue,
-    gross_annual_revenue,
-    effective_gross_income,
-    operating_expenses,
-    opex_ratio_actual,
-    noi_annual,
-    noi_monthly,
-    noi_per_acre_annual,
-    noi_per_acre_per_month,
-    stressed_noi_annual,
-    stressed_noi_per_acre_per_month,
-    total_land_cost,
-    total_construction_cost,
-    total_development_cost,
-    loan_amount,
-    annual_debt_service,
-    dscr,
-    yield_on_cost,
-    implied_value,
-    cap_rate,
-    passes_doctrine_noi,
-    passes_stress_test,
-    passes_dscr,
-    pass_fail,
+    constraints_satisfied,
     fatal_flaws: fatalFlaws,
     warnings,
+    unknowns,
+    eligible_for_pass3,
+    pass3_ready,
     notes: notesParts.join('. '),
   };
 }
 
 // =============================================================================
-// EXPORTS
+// RE-EXPORT Pass-3 Feasibility for backward compatibility
 // =============================================================================
-
+// IMPORTANT: Financial calculations live in Pass 3. Import from there.
 export {
+  runFeasibility as runPass3Feasibility,
   DOCTRINE_MIN_NOI_PER_ACRE_MONTHLY,
   DOCTRINE_MIN_STRESSED_NOI_PER_ACRE_MONTHLY,
   DOCTRINE_MIN_DSCR,
@@ -592,4 +310,8 @@ export {
   DEFAULT_AMORTIZATION_YEARS,
   DEFAULT_LTV,
   STRESS_TEST_HAIRCUT,
-};
+  type FeasibilityOutput as Pass3FeasibilityOutput,
+  type FeasibilityInput as Pass3FeasibilityInput,
+  type FeasibilityFatalFlaw as Pass3FatalFlaw,
+  type FeasibilityWarning as Pass3Warning,
+} from '../../../pass3/design_hub/spokes/Feasibility';
