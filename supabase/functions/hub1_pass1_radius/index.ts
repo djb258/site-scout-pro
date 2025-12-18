@@ -160,7 +160,7 @@ serve(async (req) => {
     // ========================================================================
     console.log(`[${PROCESS_ID}] Step 3: Loading all ZIPs from replica (paginated)`);
     
-    const PAGE_SIZE = 10000;
+    const PAGE_SIZE = 1000; // Supabase default max per request
     const allZips: { zip: string; lat: number; lng: number }[] = [];
     let from = 0;
     let hasMore = true;
@@ -169,6 +169,7 @@ serve(async (req) => {
       const { data: batch, error: batchError } = await supabase
         .from('ref_zip_replica')
         .select('zip, lat, lng')
+        .order('zip')
         .range(from, from + PAGE_SIZE - 1);
 
       if (batchError) {
