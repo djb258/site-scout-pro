@@ -127,6 +127,20 @@ interface LogEntry {
   metadata: Record<string, unknown>;
 }
 
+interface DemandAggRow {
+  distance_band: string;
+  baseline_demand_sqft: number;
+  population_total: number;
+}
+
+interface SupplyAggRow {
+  distance_band: string;
+  facility_count: number;
+  supply_sqft_total: number;
+  gap_sqft: number;
+  confidence: "low" | "medium";
+}
+
 // ============================================================================
 // COMPONENT
 // ============================================================================
@@ -148,6 +162,10 @@ const Pass1Hub = () => {
   const [error, setError] = useState<string | null>(null);
   const [logs, setLogs] = useState<LogEntry[]>([]);
   
+  // Supply Gap State
+  const [demandAgg, setDemandAgg] = useState<DemandAggRow[]>([]);
+  const [supplyAgg, setSupplyAgg] = useState<SupplyAggRow[]>([]);
+  
   // Promotion State
   const [promotionPayload, setPromotionPayload] = useState<Record<string, unknown> | null>(null);
   const [isPromoting, setIsPromoting] = useState(false);
@@ -162,6 +180,30 @@ const Pass1Hub = () => {
     }
     return () => clearInterval(interval);
   }, [isRunning, startTime]);
+
+  // Fetch demand/supply aggregates when runId changes
+  useEffect(() => {
+    const fetchAggregates = async () => {
+      if (!runId || !result) return;
+      
+      // Fetch demand agg
+      const { data: demandData } = await supabase
+        .from('pass1_demand_agg')
+        .select('distance_band, baseline_demand_sqft, population_total')
+        .eq('run_id', runId);
+      
+      // Fetch supply agg
+      const { data: supplyData } = await supabase
+        .from('pass1_supply_agg')
+        .select('distance_band, facility_count, supply_sqft_total, gap_sqft, confidence')
+        .eq('run_id', runId);
+      
+      if (demandData) setDemandAgg(demandData as DemandAggRow[]);
+      if (supplyData) setSupplyAgg(supplyData as SupplyAggRow[]);
+    };
+    
+    fetchAggregates();
+  }, [runId, result]);
 
   // Generate UUID
   const generateUUID = () => crypto.randomUUID();
@@ -727,6 +769,105 @@ const Pass1Hub = () => {
                     </CardContent>
                   </Card>
                 </div>
+
+                {/* Demand vs Supply Gap Panel */}
+                {demandAgg.length > 0 && (
+                  <Card className="border-border bg-card">
+                    <CardHeader>
+                      <CardTitle className="text-sm flex items-center gap-2">
+                        <TrendingUp className="h-4 w-4 text-amber-500" />
+                        Demand vs Supply Gap
+                        {supplyAgg.length === 0 && (
+                          <Badge variant="outline" className="border-muted-foreground/30 text-muted-foreground text-xs ml-2">
+                            Supply not computed
+                          </Badge>
+                        )}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      {supplyAgg.length === 0 ? (
+                        // Demand-only table
+                        <div className="space-y-3">
+                          <p className="text-xs text-muted-foreground flex items-center gap-1">
+                            <Info className="h-3 w-3" />
+                            Supply not computed for this run
+                          </p>
+                          <div className="overflow-x-auto">
+                            <table className="w-full text-sm">
+                              <thead>
+                                <tr className="border-b border-border">
+                                  <th className="text-left py-2 text-muted-foreground font-medium">Band</th>
+                                  <th className="text-right py-2 text-muted-foreground font-medium">Population</th>
+                                  <th className="text-right py-2 text-muted-foreground font-medium">Baseline Demand (sqft)</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {["0-30", "30-60", "60-120"].map((band) => {
+                                  const row = demandAgg.find(d => d.distance_band === band);
+                                  return (
+                                    <tr key={band} className="border-b border-border/50">
+                                      <td className="py-2 font-mono">{band} mi</td>
+                                      <td className="py-2 text-right">{row?.population_total?.toLocaleString() ?? "—"}</td>
+                                      <td className="py-2 text-right font-mono">{row?.baseline_demand_sqft?.toLocaleString() ?? "—"}</td>
+                                    </tr>
+                                  );
+                                })}
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+                      ) : (
+                        // Full demand + supply + gap table
+                        <div className="overflow-x-auto">
+                          <table className="w-full text-sm">
+                            <thead>
+                              <tr className="border-b border-border">
+                                <th className="text-left py-2 text-muted-foreground font-medium">Band</th>
+                                <th className="text-right py-2 text-muted-foreground font-medium">Demand (sqft)</th>
+                                <th className="text-right py-2 text-muted-foreground font-medium">Supply (sqft)</th>
+                                <th className="text-right py-2 text-muted-foreground font-medium">Gap (sqft)</th>
+                                <th className="text-center py-2 text-muted-foreground font-medium">Conf</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {["0-30", "30-60", "60-120"].map((band) => {
+                                const demand = demandAgg.find(d => d.distance_band === band);
+                                const supply = supplyAgg.find(s => s.distance_band === band);
+                                const gap = supply?.gap_sqft ?? 0;
+                                const gapColorClass = gap > 0 ? "text-emerald-400" : gap < 0 ? "text-red-400" : "";
+                                
+                                return (
+                                  <tr key={band} className="border-b border-border/50">
+                                    <td className="py-2 font-mono">{band} mi</td>
+                                    <td className="py-2 text-right font-mono">{demand?.baseline_demand_sqft?.toLocaleString() ?? "—"}</td>
+                                    <td className="py-2 text-right font-mono">{supply?.supply_sqft_total?.toLocaleString() ?? "—"}</td>
+                                    <td className={`py-2 text-right font-mono font-medium ${gapColorClass}`}>
+                                      {gap > 0 ? "+" : ""}{gap.toLocaleString()}
+                                    </td>
+                                    <td className="py-2 text-center">
+                                      {supply && (
+                                        <Badge 
+                                          variant="outline" 
+                                          className={
+                                            supply.confidence === "medium" 
+                                              ? "border-amber-500/50 text-amber-400 text-xs" 
+                                              : "border-muted-foreground/30 text-muted-foreground text-xs"
+                                          }
+                                        >
+                                          {supply.confidence}
+                                        </Badge>
+                                      )}
+                                    </td>
+                                  </tr>
+                                );
+                              })}
+                            </tbody>
+                          </table>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                )}
 
                 {/* Scoring Breakdown */}
                 <Card className="border-border bg-card">
