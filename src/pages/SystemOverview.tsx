@@ -77,17 +77,17 @@ const defaultHubs: HubConfig[] = [
     },
   },
   {
-    id: "pass3",
-    name: "Pass 3 — Design",
-    shortName: "Pass 3",
-    route: "/hub/pass3",
-    status: "placeholder",
-    color: "hsl(0, 0%, 50%)",
+    id: "viability",
+    name: "Viability Engine",
+    shortName: "Viability",
+    route: "/viability",
+    status: "active",
+    color: "hsl(270, 80%, 55%)",
     card: {
-      purpose: "Future: Site design and pro forma modeling",
-      inputs: "Pass 2 results, land constraints",
-      outputs: "Unit mix, build cost, IRR projection",
-      promotionRule: "IRR ≥ target → proceed to LOI",
+      purpose: "Unified solver + decision engine with visible math",
+      inputs: "Population, parcel geometry, jurisdiction constraints",
+      outputs: "Capacity calculation, eligibility gates, GO/HOLD/NO-GO",
+      promotionRule: "Decision = GO → proceed to site acquisition",
     },
   },
 ];
@@ -238,7 +238,7 @@ const SystemOverview = () => {
                         {hub.id === "pass0" ? "Radar" : 
                          hub.id === "pass1" ? "Explore" : 
                          hub.id === "pass15" ? "Cleanup" : 
-                         hub.id === "pass2" ? "Underwrite" : "Design"}
+                         hub.id === "pass2" ? "Underwrite" : "Decide"}
                       </text>
                     </g>
                   </Link>
@@ -269,10 +269,10 @@ const SystemOverview = () => {
                       </Badge>
                     </div>
                     <p className="text-sm text-muted-foreground">
-                      {hub.id === "pass0" ? "Radar" : 
-                       hub.id === "pass1" ? "Exploration" : 
-                       hub.id === "pass15" ? "Cleanup" : 
-                       hub.id === "pass2" ? "Underwriting" : "Design"}
+                       {hub.id === "pass0" ? "Radar" : 
+                        hub.id === "pass1" ? "Exploration" : 
+                        hub.id === "pass15" ? "Cleanup" : 
+                        hub.id === "pass2" ? "Underwriting" : "Decision"}
                     </p>
                   </CardHeader>
                   <CardContent className="space-y-3 text-sm">
