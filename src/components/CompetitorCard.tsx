@@ -11,6 +11,27 @@ import {
   Ruler
 } from "lucide-react";
 
+// Asset types for competitor categorization
+export type AssetType = 
+  | "traditional_self_storage" 
+  | "climate_controlled" 
+  | "rv_boat_storage" 
+  | "truck_industrial";
+
+export const ASSET_TYPE_LABELS: Record<AssetType, string> = {
+  traditional_self_storage: "Traditional",
+  climate_controlled: "Climate-Controlled",
+  rv_boat_storage: "RV/Boat",
+  truck_industrial: "Truck/Industrial",
+};
+
+export const ASSET_TYPE_COLORS: Record<AssetType, { bg: string; text: string; border: string }> = {
+  traditional_self_storage: { bg: "bg-blue-500/20", text: "text-blue-400", border: "border-blue-500/50" },
+  climate_controlled: { bg: "bg-cyan-500/20", text: "text-cyan-400", border: "border-cyan-500/50" },
+  rv_boat_storage: { bg: "bg-purple-500/20", text: "text-purple-400", border: "border-purple-500/50" },
+  truck_industrial: { bg: "bg-orange-500/20", text: "text-orange-400", border: "border-orange-500/50" },
+};
+
 // Individual unit size with price
 export interface UnitSize {
   dimensions: string;      // e.g., "10x10", "10x20", "5x10"
@@ -34,6 +55,7 @@ export interface CompetitorData {
   units: UnitSize[];              // All unit sizes with prices
   total_sqft: number | null;      // Total facility square footage (if available)
   distance_miles?: number;
+  asset_type: AssetType;          // Type of storage facility
   source?: string;                // Where we got the data (e.g., "perplexity", "manual")
   fetched_at?: string;            // ISO timestamp when data was collected
 }
@@ -109,6 +131,8 @@ export function CompetitorCard({ competitor, index }: CompetitorCardProps) {
     return value.toLocaleString();
   };
 
+  const assetStyles = ASSET_TYPE_COLORS[competitor.asset_type];
+
   return (
     <Card className="border-border bg-card/50 hover:bg-card/80 transition-colors">
       <CardHeader className="pb-3">
@@ -119,11 +143,19 @@ export function CompetitorCard({ competitor, index }: CompetitorCardProps) {
               {competitor.name}
             </CardTitle>
           </div>
-          {index !== undefined && (
-            <Badge variant="outline" className="text-xs">
-              #{index + 1}
+          <div className="flex items-center gap-2">
+            <Badge 
+              variant="outline" 
+              className={`${assetStyles.bg} ${assetStyles.text} ${assetStyles.border} text-xs`}
+            >
+              {ASSET_TYPE_LABELS[competitor.asset_type]}
             </Badge>
-          )}
+            {index !== undefined && (
+              <Badge variant="outline" className="text-xs">
+                #{index + 1}
+              </Badge>
+            )}
+          </div>
         </div>
       </CardHeader>
       
