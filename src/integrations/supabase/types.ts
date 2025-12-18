@@ -448,6 +448,72 @@ export type Database = {
         }
         Relationships: []
       }
+      pass1_supply_agg: {
+        Row: {
+          confidence: string
+          created_at: string | null
+          distance_band: string
+          facility_count: number
+          gap_sqft: number
+          id: string
+          run_id: string
+          supply_sqft_total: number
+        }
+        Insert: {
+          confidence: string
+          created_at?: string | null
+          distance_band: string
+          facility_count: number
+          gap_sqft: number
+          id?: string
+          run_id: string
+          supply_sqft_total: number
+        }
+        Update: {
+          confidence?: string
+          created_at?: string | null
+          distance_band?: string
+          facility_count?: number
+          gap_sqft?: number
+          id?: string
+          run_id?: string
+          supply_sqft_total?: number
+        }
+        Relationships: []
+      }
+      pass1_supply_snapshot: {
+        Row: {
+          confidence: string
+          created_at: string | null
+          estimated_sqft: number
+          facility_name: string
+          id: string
+          run_id: string
+          source: string
+          zip: string
+        }
+        Insert: {
+          confidence: string
+          created_at?: string | null
+          estimated_sqft: number
+          facility_name: string
+          id?: string
+          run_id: string
+          source: string
+          zip: string
+        }
+        Update: {
+          confidence?: string
+          created_at?: string | null
+          estimated_sqft?: number
+          facility_name?: string
+          id?: string
+          run_id?: string
+          source?: string
+          zip?: string
+        }
+        Relationships: []
+      }
       pass2_results: {
         Row: {
           created_at: string
