@@ -635,7 +635,7 @@ const Pass1Hub = () => {
                       </div>
                       <div className="text-right">
                         <div className={`text-5xl font-bold ${getDecisionStyles(result.decision).text}`}>
-                          {result.viability_score}
+                          {result.viability_score ?? 'N/A'}
                         </div>
                         <p className="text-xs text-muted-foreground">Viability Score</p>
                       </div>
@@ -703,6 +703,7 @@ const Pass1Hub = () => {
                   </Card>
 
                   {/* Radius Analysis */}
+                  {result.derived_counties && (
                   <Card className="border-border bg-card">
                     <CardHeader className="pb-2">
                       <CardTitle className="text-sm flex items-center gap-2">
@@ -721,7 +722,7 @@ const Pass1Hub = () => {
                       </div>
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">Total Population</span>
-                        <span>{result.total_population_in_radius.toLocaleString()}</span>
+                        <span>{result.total_population_in_radius?.toLocaleString() || 'N/A'}</span>
                       </div>
                       <Separator />
                       <div className="max-h-24 overflow-auto">
@@ -735,8 +736,10 @@ const Pass1Hub = () => {
                       </div>
                     </CardContent>
                   </Card>
+                  )}
 
                   {/* Demand Proxies */}
+                  {result.demand_proxies && (
                   <Card className="border-border bg-card">
                     <CardHeader className="pb-2">
                       <CardTitle className="text-sm flex items-center gap-2">
@@ -779,8 +782,10 @@ const Pass1Hub = () => {
                       </div>
                     </CardContent>
                   </Card>
+                  )}
 
                   {/* Competition Summary */}
+                  {result.competition_summary && (
                   <Card className="border-border bg-card">
                     <CardHeader className="pb-2">
                       <CardTitle className="text-sm flex items-center gap-2">
@@ -822,6 +827,7 @@ const Pass1Hub = () => {
                       </div>
                     </CardContent>
                   </Card>
+                  )}
                 </div>
 
                 {/* Demand vs Supply Gap Panel */}
