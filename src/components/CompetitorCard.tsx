@@ -7,8 +7,19 @@ import {
   Phone, 
   DollarSign,
   Square,
-  Calculator
+  Calculator,
+  Ruler
 } from "lucide-react";
+
+// Individual unit size with price
+export interface UnitSize {
+  dimensions: string;      // e.g., "10x10", "10x20", "5x10"
+  width: number;           // in feet
+  depth: number;           // in feet
+  sqft: number;            // width * depth
+  price: number;           // monthly rate
+  price_per_sqft: number;  // price / sqft
+}
 
 // Data structure for competitor information we want to collect
 export interface CompetitorData {
@@ -16,38 +27,61 @@ export interface CompetitorData {
   address: string;
   zip: string;
   phone: string | null;
-  price_10x10: number | null;      // Monthly rate for 10x10 unit
-  price_10x20: number | null;      // Monthly rate for 10x20 unit
-  total_sqft: number | null;       // Total facility square footage
+  units: UnitSize[];              // All unit sizes with prices
+  total_sqft: number | null;      // Total facility square footage (if available)
   distance_miles?: number;
 }
 
-// Calculated fields derived from the collected data
-export interface CompetitorCalculated extends CompetitorData {
-  price_per_sqft_10x10: number | null;  // price_10x10 / 100
-  price_per_sqft_10x20: number | null;  // price_10x20 / 200
-  avg_price_per_sqft: number | null;    // Average of both
+// Helper to parse dimensions string like "10x10" into width/depth
+export function parseDimensions(dimensions: string): { width: number; depth: number } | null {
+  const match = dimensions.toLowerCase().match(/(\d+)\s*[x×]\s*(\d+)/);
+  if (!match) return null;
+  return { width: parseInt(match[1]), depth: parseInt(match[2]) };
 }
 
-// Helper to calculate price per sqft
-export function calculateCompetitorMetrics(data: CompetitorData): CompetitorCalculated {
-  const price_per_sqft_10x10 = data.price_10x10 ? data.price_10x10 / 100 : null;
-  const price_per_sqft_10x20 = data.price_10x20 ? data.price_10x20 / 200 : null;
+// Helper to create a UnitSize from dimensions and price
+export function createUnitSize(dimensions: string, price: number): UnitSize | null {
+  const parsed = parseDimensions(dimensions);
+  if (!parsed) return null;
   
-  let avg_price_per_sqft: number | null = null;
-  if (price_per_sqft_10x10 && price_per_sqft_10x20) {
-    avg_price_per_sqft = (price_per_sqft_10x10 + price_per_sqft_10x20) / 2;
-  } else if (price_per_sqft_10x10) {
-    avg_price_per_sqft = price_per_sqft_10x10;
-  } else if (price_per_sqft_10x20) {
-    avg_price_per_sqft = price_per_sqft_10x20;
+  const sqft = parsed.width * parsed.depth;
+  return {
+    dimensions: `${parsed.width}x${parsed.depth}`,
+    width: parsed.width,
+    depth: parsed.depth,
+    sqft,
+    price,
+    price_per_sqft: price / sqft
+  };
+}
+
+// Calculated metrics derived from the collected data
+export interface CompetitorMetrics {
+  avg_price_per_sqft: number | null;
+  min_price_per_sqft: number | null;
+  max_price_per_sqft: number | null;
+  unit_count: number;
+}
+
+// Helper to calculate metrics from units
+export function calculateCompetitorMetrics(data: CompetitorData): CompetitorMetrics {
+  if (data.units.length === 0) {
+    return {
+      avg_price_per_sqft: null,
+      min_price_per_sqft: null,
+      max_price_per_sqft: null,
+      unit_count: 0
+    };
   }
 
+  const prices = data.units.map(u => u.price_per_sqft);
+  const avg = prices.reduce((a, b) => a + b, 0) / prices.length;
+  
   return {
-    ...data,
-    price_per_sqft_10x10,
-    price_per_sqft_10x20,
-    avg_price_per_sqft
+    avg_price_per_sqft: avg,
+    min_price_per_sqft: Math.min(...prices),
+    max_price_per_sqft: Math.max(...prices),
+    unit_count: data.units.length
   };
 }
 
@@ -57,7 +91,7 @@ interface CompetitorCardProps {
 }
 
 export function CompetitorCard({ competitor, index }: CompetitorCardProps) {
-  const calculated = calculateCompetitorMetrics(competitor);
+  const metrics = calculateCompetitorMetrics(competitor);
   
   const formatCurrency = (value: number | null) => {
     if (value === null) return "—";
@@ -114,41 +148,68 @@ export function CompetitorCard({ competitor, index }: CompetitorCardProps) {
 
         <Separator />
 
-        {/* Pricing Grid */}
-        <div className="grid grid-cols-2 gap-3">
-          {/* 10x10 Pricing */}
-          <div className="space-y-1">
+        {/* Unit Sizes Table */}
+        {competitor.units.length > 0 ? (
+          <div className="space-y-2">
             <p className="text-xs text-muted-foreground flex items-center gap-1">
-              <DollarSign className="h-3 w-3" />
-              10×10 Rate
+              <Ruler className="h-3 w-3" />
+              Unit Sizes ({competitor.units.length})
             </p>
-            <p className="text-lg font-semibold text-foreground">
-              {formatCurrency(competitor.price_10x10)}
-            </p>
-            <p className="text-xs text-muted-foreground">
-              {formatCurrency(calculated.price_per_sqft_10x10)}/sqft
-            </p>
+            <div className="rounded-md border border-border overflow-hidden">
+              <table className="w-full text-sm">
+                <thead className="bg-muted/50">
+                  <tr>
+                    <th className="px-2 py-1.5 text-left font-medium text-muted-foreground">Size</th>
+                    <th className="px-2 py-1.5 text-right font-medium text-muted-foreground">Sqft</th>
+                    <th className="px-2 py-1.5 text-right font-medium text-muted-foreground">Price</th>
+                    <th className="px-2 py-1.5 text-right font-medium text-muted-foreground">$/Sqft</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {competitor.units.map((unit, i) => (
+                    <tr key={i} className="border-t border-border">
+                      <td className="px-2 py-1.5 text-foreground">{unit.dimensions}</td>
+                      <td className="px-2 py-1.5 text-right text-foreground">{unit.sqft}</td>
+                      <td className="px-2 py-1.5 text-right text-foreground">${unit.price}</td>
+                      <td className="px-2 py-1.5 text-right text-muted-foreground">${unit.price_per_sqft.toFixed(2)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
-          
-          {/* 10x20 Pricing */}
-          <div className="space-y-1">
-            <p className="text-xs text-muted-foreground flex items-center gap-1">
-              <DollarSign className="h-3 w-3" />
-              10×20 Rate
-            </p>
-            <p className="text-lg font-semibold text-foreground">
-              {formatCurrency(competitor.price_10x20)}
-            </p>
-            <p className="text-xs text-muted-foreground">
-              {formatCurrency(calculated.price_per_sqft_10x20)}/sqft
-            </p>
-          </div>
-        </div>
+        ) : (
+          <p className="text-sm text-muted-foreground italic">No unit pricing available</p>
+        )}
 
         <Separator />
 
         {/* Summary Stats */}
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-3 gap-3">
+          {/* Avg Price/Sqft */}
+          <div className="space-y-1">
+            <p className="text-xs text-muted-foreground flex items-center gap-1">
+              <Calculator className="h-3 w-3" />
+              Avg $/Sqft
+            </p>
+            <p className="text-sm font-medium text-foreground">
+              {formatCurrency(metrics.avg_price_per_sqft)}
+            </p>
+          </div>
+
+          {/* Price Range */}
+          <div className="space-y-1">
+            <p className="text-xs text-muted-foreground flex items-center gap-1">
+              <DollarSign className="h-3 w-3" />
+              Range
+            </p>
+            <p className="text-sm font-medium text-foreground">
+              {metrics.min_price_per_sqft && metrics.max_price_per_sqft 
+                ? `$${metrics.min_price_per_sqft.toFixed(2)} - $${metrics.max_price_per_sqft.toFixed(2)}`
+                : "—"}
+            </p>
+          </div>
+          
           {/* Total Sqft */}
           <div className="space-y-1">
             <p className="text-xs text-muted-foreground flex items-center gap-1">
@@ -157,17 +218,6 @@ export function CompetitorCard({ competitor, index }: CompetitorCardProps) {
             </p>
             <p className="text-sm font-medium text-foreground">
               {formatNumber(competitor.total_sqft)}
-            </p>
-          </div>
-          
-          {/* Avg Price/Sqft */}
-          <div className="space-y-1">
-            <p className="text-xs text-muted-foreground flex items-center gap-1">
-              <Calculator className="h-3 w-3" />
-              Avg $/Sqft
-            </p>
-            <p className="text-sm font-medium text-foreground">
-              {formatCurrency(calculated.avg_price_per_sqft)}
             </p>
           </div>
         </div>
@@ -182,21 +232,30 @@ interface CompetitorSummaryProps {
 }
 
 export function CompetitorSummary({ competitors }: CompetitorSummaryProps) {
-  const calculated = competitors.map(calculateCompetitorMetrics);
+  const allUnits = competitors.flatMap(c => c.units);
+  const allMetrics = competitors.map(calculateCompetitorMetrics);
   
-  // Calculate averages
-  const validPrices10x10 = calculated.filter(c => c.price_10x10 !== null).map(c => c.price_10x10!);
-  const validPrices10x20 = calculated.filter(c => c.price_10x20 !== null).map(c => c.price_10x20!);
-  const validAvgPerSqft = calculated.filter(c => c.avg_price_per_sqft !== null).map(c => c.avg_price_per_sqft!);
-  const validTotalSqft = calculated.filter(c => c.total_sqft !== null).map(c => c.total_sqft!);
+  // Calculate market averages
+  const validAvgPrices = allMetrics.filter(m => m.avg_price_per_sqft !== null).map(m => m.avg_price_per_sqft!);
+  const validTotalSqft = competitors.filter(c => c.total_sqft !== null).map(c => c.total_sqft!);
 
   const avg = (arr: number[]) => arr.length > 0 ? arr.reduce((a, b) => a + b, 0) / arr.length : null;
   const sum = (arr: number[]) => arr.length > 0 ? arr.reduce((a, b) => a + b, 0) : null;
 
-  const avg10x10 = avg(validPrices10x10);
-  const avg10x20 = avg(validPrices10x20);
-  const avgPerSqft = avg(validAvgPerSqft);
+  const marketAvgPerSqft = avg(validAvgPrices);
   const totalMarketSqft = sum(validTotalSqft);
+  const totalUnitTypes = allUnits.length;
+  
+  // Find most common unit sizes
+  const sizeCounts = allUnits.reduce((acc, unit) => {
+    acc[unit.dimensions] = (acc[unit.dimensions] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
+  
+  const topSizes = Object.entries(sizeCounts)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 3)
+    .map(([size]) => size);
 
   const formatCurrency = (value: number | null) => {
     if (value === null) return "—";
@@ -214,21 +273,23 @@ export function CompetitorSummary({ competitors }: CompetitorSummaryProps) {
       <CardContent>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div>
-            <p className="text-xs text-muted-foreground">Avg 10×10</p>
-            <p className="text-lg font-semibold">{formatCurrency(avg10x10)}</p>
-          </div>
-          <div>
-            <p className="text-xs text-muted-foreground">Avg 10×20</p>
-            <p className="text-lg font-semibold">{formatCurrency(avg10x20)}</p>
-          </div>
-          <div>
             <p className="text-xs text-muted-foreground">Avg $/Sqft</p>
-            <p className="text-lg font-semibold">{formatCurrency(avgPerSqft)}</p>
+            <p className="text-lg font-semibold">{formatCurrency(marketAvgPerSqft)}</p>
           </div>
           <div>
             <p className="text-xs text-muted-foreground">Total Market Sqft</p>
             <p className="text-lg font-semibold">
               {totalMarketSqft ? totalMarketSqft.toLocaleString() : "—"}
+            </p>
+          </div>
+          <div>
+            <p className="text-xs text-muted-foreground">Unit Types Found</p>
+            <p className="text-lg font-semibold">{totalUnitTypes}</p>
+          </div>
+          <div>
+            <p className="text-xs text-muted-foreground">Common Sizes</p>
+            <p className="text-sm font-medium">
+              {topSizes.length > 0 ? topSizes.join(", ") : "—"}
             </p>
           </div>
         </div>
