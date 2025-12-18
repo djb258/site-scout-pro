@@ -8,8 +8,7 @@ import Pass0Hub from "@/pages/hub/Pass0Hub";
 import Pass1Hub from "@/pages/hub/Pass1Hub";
 import Pass15Hub from "@/pages/hub/Pass15Hub";
 import Pass2Hub from "@/pages/hub/Pass2Hub";
-import Pass3Hub from "@/pages/hub/Pass3Hub";
-import Solver from "@/pages/Solver";
+import Viability from "@/pages/Viability";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -22,12 +21,12 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<SystemOverview />} />
-          <Route path="/solver" element={<Solver />} />
+          <Route path="/solver" element={<Viability />} />
+          <Route path="/viability" element={<Viability />} />
           <Route path="/hub/pass0" element={<Pass0Hub />} />
           <Route path="/hub/pass1" element={<Pass1Hub />} />
           <Route path="/hub/pass15" element={<Pass15Hub />} />
           <Route path="/hub/pass2" element={<Pass2Hub />} />
-          <Route path="/hub/pass3" element={<Pass3Hub />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
