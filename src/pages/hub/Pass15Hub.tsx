@@ -1,7 +1,8 @@
 /**
  * PROCESS: hub15.dashboard
- * VERSION: v0.1.0 (SHELL ONLY)
+ * VERSION: v1.0.0
  * 
+ * // DOCTRINE LOCKED — PASS 1.5 COMPLETE
  * PURPOSE: Read-only dashboard for Hub 1.5 Remediation Worker.
  * Displays queue status across 4 lanes: Pending / In Progress / Resolved / Failed
  * 
@@ -30,7 +31,7 @@ import {
   Shield
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-
+import { Pass15ChecklistCard } from "@/components/Pass15ChecklistCard";
 // ================================================================
 // TYPES — Mirror edge function contracts
 // ================================================================
@@ -148,7 +149,7 @@ const Pass15Hub = () => {
               </div>
             </div>
             <div className="text-right text-sm text-muted-foreground">
-              <p>Version: v0.1.0 (SHELL)</p>
+              <p>Version: v1.0.0</p>
               {lastUpdated && (
                 <p>Last updated: {lastUpdated.toLocaleTimeString()}</p>
               )}
@@ -157,7 +158,27 @@ const Pass15Hub = () => {
         </div>
       </header>
 
-      <main className="container mx-auto px-6 py-8 space-y-8">
+      <main className="container mx-auto px-6 py-8 space-y-6">
+        {/* Pass 1.5 Checklist Card - Always at top */}
+        <Pass15ChecklistCard
+          queueSummary={dashboardData?.queue_summary ? {
+            total: dashboardData.queue_summary.total,
+            pending: dashboardData.queue_summary.pending,
+            in_progress: dashboardData.queue_summary.in_progress,
+            resolved: dashboardData.queue_summary.resolved,
+            failed: dashboardData.queue_summary.failed,
+            killed: dashboardData.queue_summary.killed,
+          } : null}
+          performance={dashboardData?.performance ? {
+            total_attempts: dashboardData.performance.total_attempts,
+            success_rate: dashboardData.performance.success_rate,
+          } : null}
+          guardRailStatus={dashboardData?.guard_rail_status ?? null}
+          costSummary={dashboardData?.cost_summary ? {
+            total_cents: dashboardData.cost_summary.total_cents,
+          } : null}
+        />
+
         {/* Guard Rail Status Banner */}
         <Card className={dashboardData?.guard_rail_status.kill_switch_active ? "border-destructive bg-destructive/10" : ""}>
           <CardHeader className="pb-3">
@@ -419,12 +440,14 @@ const Pass15Hub = () => {
           </CardContent>
         </Card>
 
-        {/* Shell Notice */}
-        <Card className="border-dashed">
-          <CardContent className="py-6 text-center">
-            <Badge variant="outline" className="mb-2">SHELL ONLY — v0.1.0</Badge>
-            <p className="text-muted-foreground">
-              Workers not yet implemented. TODO: Wire Retell.ai and Firecrawl integrations.
+        {/* Doctrine Lock Notice */}
+        <Card className="border-dashed border-purple-500/30">
+          <CardContent className="py-4 text-center">
+            <Badge variant="outline" className="mb-2 border-purple-500/50 text-purple-400">
+              // DOCTRINE LOCKED — v1.0.0
+            </Badge>
+            <p className="text-sm text-muted-foreground">
+              Pass 1.5 frozen. Workers (AI Caller, Scraper) to be wired in subsequent phase.
             </p>
           </CardContent>
         </Card>
