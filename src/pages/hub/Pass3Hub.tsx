@@ -8,9 +8,7 @@ import { ArrowLeft, FileCheck, Loader2, AlertTriangle, Shield } from "lucide-rea
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
-import { Pass3ArtifactDisplay } from "@/components/Pass3ArtifactDisplay";
-import { Pass3DecisionForm } from "@/components/Pass3DecisionForm";
-import { Pass3DecisionRecord } from "@/components/Pass3DecisionRecord";
+import { Pass3PipelineCard } from "@/components/Pass3PipelineCard";
 
 interface ArtifactData {
   pass1_demand_gap_sqft: number | null;
@@ -131,8 +129,8 @@ const Pass3Hub = () => {
 
       setDecisionRecord(data);
       toast({ 
-        title: "Decision Recorded", 
-        description: `${decision.decision} decision saved with ID: ${data.pass3_run_id.slice(0, 12)}...` 
+        title: "Decision Committed", 
+        description: `${decision.decision} recorded: ${data.pass3_run_id.slice(0, 12)}...` 
       });
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to submit decision';
@@ -146,151 +144,126 @@ const Pass3Hub = () => {
     <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="border-b border-border bg-card">
-        <div className="container mx-auto px-6 py-6">
-          <Button variant="ghost" asChild className="mb-4">
+        <div className="container mx-auto px-6 py-4">
+          <Button variant="ghost" asChild className="mb-2">
             <Link to="/">
               <ArrowLeft className="mr-2 h-4 w-4" />
               Back to Overview
             </Link>
           </Button>
           <div className="flex items-center gap-3">
-            <div className="h-12 w-12 rounded-full bg-emerald-500/10 flex items-center justify-center">
-              <FileCheck className="h-6 w-6 text-emerald-500" />
+            <div className="h-10 w-10 rounded-full bg-emerald-500/10 flex items-center justify-center">
+              <FileCheck className="h-5 w-5 text-emerald-500" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h1 className="text-3xl font-bold text-foreground">Pass 3 — Decision Shell</h1>
+                <h1 className="text-2xl font-bold text-foreground">Pass 3 — Decision Pipeline</h1>
                 <Badge variant="outline">Commitment</Badge>
               </div>
-              <p className="text-muted-foreground">No math · No recalculation · Decision only</p>
+              <p className="text-sm text-muted-foreground">Inputs → Locks → Decision → Memory</p>
             </div>
           </div>
         </div>
       </header>
 
-      <main className="container mx-auto px-6 py-8">
+      <main className="container mx-auto px-6 py-6">
         {/* Doctrine Banner */}
         <Card className="mb-6 border-amber-500/30 bg-amber-500/5">
-          <CardContent className="py-4">
+          <CardContent className="py-3">
             <div className="flex items-start gap-3">
-              <Shield className="h-5 w-5 text-amber-500 mt-0.5" />
+              <Shield className="h-4 w-4 text-amber-500 mt-0.5" />
               <div className="text-sm">
                 <p className="font-medium text-amber-700 dark:text-amber-400">
-                  Pass 3 Doctrine: Cockpit Only
+                  Pass 3 Doctrine: Courtroom, Not Spreadsheet
                 </p>
-                <p className="text-muted-foreground mt-1">
-                  This shell consumes immutable artifacts from Pass 1, 1.5, and 2.
-                  No numeric fields are editable. Decision parameters only.
-                  Rationale is required — no silent approvals.
+                <p className="text-xs text-muted-foreground mt-1">
+                  No numeric fields editable · Decision only · Rationale required · Supersede-only lifecycle
                 </p>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <div className="grid lg:grid-cols-2 gap-6">
-          {/* Left Column: Input & Artifact Display */}
-          <div className="space-y-6">
-            {/* Artifact Input */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Load Artifact</CardTitle>
-                <CardDescription>
-                  Enter a compiled artifact ID from upstream passes
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label>Artifact ID *</Label>
-                  <Input
-                    value={artifactId}
-                    onChange={(e) => setArtifactId(e.target.value)}
-                    placeholder="e.g., zip_run_id or pass2_result_id"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>ZIP (optional)</Label>
-                  <Input
-                    value={zip}
-                    onChange={(e) => setZip(e.target.value)}
-                    placeholder="e.g., 15522"
-                    maxLength={5}
-                  />
-                </div>
-                <Button 
-                  onClick={fetchArtifact} 
-                  disabled={loading || !artifactId.trim()}
-                  className="w-full"
-                >
-                  {loading ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Fetching...
-                    </>
-                  ) : (
-                    "Fetch Artifact"
-                  )}
-                </Button>
-              </CardContent>
-            </Card>
+        {/* Artifact Loader */}
+        <Card className="mb-6">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base">Load Artifact</CardTitle>
+            <CardDescription className="text-xs">
+              Enter a compiled artifact ID from upstream passes
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex gap-3 items-end">
+              <div className="flex-1 space-y-1">
+                <Label className="text-xs">Artifact ID *</Label>
+                <Input
+                  value={artifactId}
+                  onChange={(e) => setArtifactId(e.target.value)}
+                  placeholder="e.g., zip_run_id or pass2_result_id"
+                  className="h-9"
+                />
+              </div>
+              <div className="w-28 space-y-1">
+                <Label className="text-xs">ZIP</Label>
+                <Input
+                  value={zip}
+                  onChange={(e) => setZip(e.target.value)}
+                  placeholder="15522"
+                  maxLength={5}
+                  className="h-9"
+                />
+              </div>
+              <Button 
+                onClick={fetchArtifact} 
+                disabled={loading || !artifactId.trim()}
+                className="h-9"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Loading...
+                  </>
+                ) : (
+                  "Fetch"
+                )}
+              </Button>
+            </div>
 
-            {/* Error Display */}
+            {/* Error */}
             {error && (
-              <Card className="border-destructive/50 bg-destructive/5">
-                <CardContent className="py-4">
-                  <div className="flex items-center gap-2 text-destructive">
-                    <AlertTriangle className="h-4 w-4" />
-                    <span className="text-sm">{error}</span>
-                  </div>
-                </CardContent>
-              </Card>
+              <div className="flex items-center gap-2 text-destructive text-sm mt-3">
+                <AlertTriangle className="h-4 w-4" />
+                <span>{error}</span>
+              </div>
             )}
+          </CardContent>
+        </Card>
 
-            {/* Artifact Display */}
-            {artifactResponse && (
-              <Pass3ArtifactDisplay
-                artifactId={artifactResponse.artifact_id}
-                zip={artifactResponse.zip}
-                artifactData={artifactResponse.artifact_data}
-                artifactValid={artifactResponse.artifact_valid}
-                validationErrors={artifactResponse.validation_errors}
-              />
-            )}
-          </div>
-
-          {/* Right Column: Decision Form & Record */}
-          <div className="space-y-6">
-            {/* Decision Form */}
-            {artifactResponse && !decisionRecord && (
-              <Pass3DecisionForm
-                artifactValid={artifactResponse.artifact_valid}
-                onSubmit={submitDecision}
-                isSubmitting={submitting}
-              />
-            )}
-
-            {/* Decision Record */}
-            {artifactResponse && (
-              <Pass3DecisionRecord
-                decision={decisionRecord}
-                previousDecisions={artifactResponse.previous_decisions}
-              />
-            )}
-
-            {/* Empty State */}
-            {!artifactResponse && (
-              <Card className="border-dashed">
-                <CardContent className="py-12 text-center text-muted-foreground">
-                  <FileCheck className="h-12 w-12 mx-auto mb-4 opacity-30" />
-                  <p className="font-medium">No Artifact Loaded</p>
-                  <p className="text-sm mt-1">
-                    Enter an artifact ID to view upstream data and record a decision
-                  </p>
-                </CardContent>
-              </Card>
-            )}
-          </div>
-        </div>
+        {/* Pipeline View */}
+        {artifactResponse ? (
+          <Pass3PipelineCard
+            artifactData={artifactResponse.artifact_data}
+            artifactId={artifactResponse.artifact_id}
+            zip={artifactResponse.zip || zip}
+            artifactValid={artifactResponse.artifact_valid}
+            validationErrors={artifactResponse.validation_errors}
+            onDecisionSubmit={submitDecision}
+            decisionRecord={decisionRecord}
+            isSubmitting={submitting}
+            previousDecisions={artifactResponse.previous_decisions}
+          />
+        ) : (
+          /* Empty State */
+          <Card className="border-dashed">
+            <CardContent className="py-16 text-center text-muted-foreground">
+              <FileCheck className="h-12 w-12 mx-auto mb-4 opacity-20" />
+              <p className="font-medium">No Artifact Loaded</p>
+              <p className="text-sm mt-1">
+                Enter an artifact ID above to view the decision pipeline
+              </p>
+            </CardContent>
+          </Card>
+        )}
       </main>
     </div>
   );
