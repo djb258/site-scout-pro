@@ -23,6 +23,7 @@ export interface UnitSize {
 
 // Data structure for competitor information we want to collect
 export interface CompetitorData {
+  id: string;                     // Unique identifier (UUID)
   name: string;
   address: string;
   zip: string;
@@ -30,6 +31,8 @@ export interface CompetitorData {
   units: UnitSize[];              // All unit sizes with prices
   total_sqft: number | null;      // Total facility square footage (if available)
   distance_miles?: number;
+  source?: string;                // Where we got the data (e.g., "perplexity", "manual")
+  fetched_at?: string;            // ISO timestamp when data was collected
 }
 
 // Helper to parse dimensions string like "10x10" into width/depth
