@@ -1,3 +1,4 @@
+import { lazy, Suspense } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -11,8 +12,10 @@ import Pass1Hub from "@/pages/hub/Pass1Hub";
 import Pass15Hub from "@/pages/hub/Pass15Hub";
 import Pass2Hub from "@/pages/hub/Pass2Hub";
 import Viability from "@/pages/Viability";
-import HiveMap from "@/pages/hive/Map";
 import NotFound from "@/pages/NotFound";
+
+// Lazy load map to avoid react-leaflet React instance conflicts
+const HiveMap = lazy(() => import("@/pages/hive/Map"));
 
 const queryClient = new QueryClient();
 
@@ -32,7 +35,7 @@ const App = () => (
           <Route path="/hub/pass1" element={<Pass1Hub />} />
           <Route path="/hub/pass15" element={<Pass15Hub />} />
           <Route path="/hub/pass2" element={<Pass2Hub />} />
-          <Route path="/map" element={<HiveMap />} />
+          <Route path="/map" element={<Suspense fallback={<div className="h-screen w-full flex items-center justify-center">Loading map...</div>}><HiveMap /></Suspense>} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
