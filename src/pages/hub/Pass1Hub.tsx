@@ -805,29 +805,45 @@ const Pass1Hub = () => {
                       <div className="grid grid-cols-2 md:grid-cols-5 gap-4 p-3 bg-muted/30 rounded-lg">
                         <div>
                           <p className="text-xs text-muted-foreground">Competitors</p>
-                          <p className="font-semibold">{result.competitors?.length || result.competition_summary.estimated_count}</p>
+                          <p className="font-semibold">{result.competitors?.length || 0}</p>
                         </div>
                         <div>
                           <p className="text-xs text-muted-foreground">Saturation</p>
-                          <Badge variant="outline" className={
-                            result.competition_summary.saturation_level === 'undersaturated' ? 'border-emerald-500/50 text-emerald-400' :
-                            result.competition_summary.saturation_level === 'moderate' ? 'border-amber-500/50 text-amber-400' :
-                            'border-red-500/50 text-red-400'
-                          }>
-                            {result.competition_summary.saturation_level}
-                          </Badge>
+                          {(result.competitors?.length || 0) > 0 ? (
+                            <Badge variant="outline" className={
+                              result.competition_summary.saturation_level === 'undersaturated' ? 'border-emerald-500/50 text-emerald-400' :
+                              result.competition_summary.saturation_level === 'moderate' ? 'border-amber-500/50 text-amber-400' :
+                              'border-red-500/50 text-red-400'
+                            }>
+                              {result.competition_summary.saturation_level}
+                            </Badge>
+                          ) : (
+                            <span className="text-muted-foreground">—</span>
+                          )}
                         </div>
                         <div>
                           <p className="text-xs text-muted-foreground">Rent (Low)</p>
-                          <p className="font-semibold font-mono">${result.competition_summary.rent_bands.low}</p>
+                          <p className="font-semibold font-mono">
+                            {(result.competitors?.length || 0) > 0 && result.competition_summary.rent_bands.low > 0 
+                              ? `$${result.competition_summary.rent_bands.low}` 
+                              : '—'}
+                          </p>
                         </div>
                         <div>
                           <p className="text-xs text-muted-foreground">Rent (Med)</p>
-                          <p className="font-semibold font-mono">${result.competition_summary.rent_bands.medium}</p>
+                          <p className="font-semibold font-mono">
+                            {(result.competitors?.length || 0) > 0 && result.competition_summary.rent_bands.medium > 0 
+                              ? `$${result.competition_summary.rent_bands.medium}` 
+                              : '—'}
+                          </p>
                         </div>
                         <div>
                           <p className="text-xs text-muted-foreground">Rent (High)</p>
-                          <p className="font-semibold font-mono">${result.competition_summary.rent_bands.high}</p>
+                          <p className="font-semibold font-mono">
+                            {(result.competitors?.length || 0) > 0 && result.competition_summary.rent_bands.high > 0 
+                              ? `$${result.competition_summary.rent_bands.high}` 
+                              : '—'}
+                          </p>
                         </div>
                       </div>
                       
