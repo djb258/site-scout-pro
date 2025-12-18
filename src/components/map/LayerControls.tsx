@@ -2,7 +2,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { MapPin, Search, Layers } from "lucide-react";
+import { Search, Layers, TrendingUp } from "lucide-react";
 import { useState } from "react";
 
 export interface LayerState {
@@ -11,6 +11,7 @@ export interface LayerState {
   countyLabels: boolean;
   zipPoints: boolean;
   zipLabels: boolean;
+  demandHeatmap: boolean;
 }
 
 interface LayerControlsProps {
@@ -133,6 +134,18 @@ const LayerControls = ({
               className={`text-sm cursor-pointer ${!layers.zipPoints ? 'text-muted-foreground/50' : ''}`}
             >
               ZIP Labels
+            </Label>
+          </div>
+
+          <div className="flex items-center gap-2 pt-2 border-t border-border/50">
+            <Checkbox
+              id="demandHeatmap"
+              checked={layers.demandHeatmap}
+              onCheckedChange={() => onLayerToggle("demandHeatmap")}
+            />
+            <Label htmlFor="demandHeatmap" className="text-sm cursor-pointer flex items-center gap-1.5">
+              <TrendingUp className="h-3 w-3 text-amber-500" />
+              Demand Heatmap
             </Label>
           </div>
         </div>

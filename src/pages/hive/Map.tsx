@@ -6,6 +6,7 @@ import LayerControls, { LayerState } from '@/components/map/LayerControls';
 import RadiusCircle from '@/components/map/RadiusCircle';
 import CountyLayer from '@/components/map/CountyLayer';
 import ZipLayer from '@/components/map/ZipLayer';
+import DemandLayer from '@/components/map/DemandLayer';
 
 // Component to handle map recenter
 const MapRecenter = ({ center }: { center: [number, number] }) => {
@@ -27,6 +28,7 @@ const HiveMap = () => {
     countyLabels: false,
     zipPoints: false,
     zipLabels: false,
+    demandHeatmap: false,
   });
 
   const [stats, setStats] = useState({
@@ -112,6 +114,11 @@ const HiveMap = () => {
             visible={layers.zipPoints}
             showLabels={layers.zipLabels}
             onZipCount={handleZipCount}
+          />
+          
+          <DemandLayer
+            center={center}
+            visible={layers.demandHeatmap}
           />
         </MapContainer>
       </div>

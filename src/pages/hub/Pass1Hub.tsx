@@ -741,51 +741,6 @@ const Pass1Hub = () => {
                   </Card>
                   )}
 
-                  {/* Demand Proxies */}
-                  {result.demand_proxies && (
-                  <Card className="border-border bg-card">
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-sm flex items-center gap-2">
-                        <Users className="h-4 w-4 text-amber-500" />
-                        Demand Proxies
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-3 text-sm">
-                      <div>
-                        <div className="flex justify-between mb-1">
-                          <span className="text-muted-foreground">Population Score</span>
-                          <span>{result.demand_proxies.scores.population_score}</span>
-                        </div>
-                        <div className="h-1.5 bg-muted rounded-full overflow-hidden">
-                          <div className="h-full bg-amber-500" style={{ width: `${result.demand_proxies.scores.population_score}%` }} />
-                        </div>
-                      </div>
-                      <div>
-                        <div className="flex justify-between mb-1">
-                          <span className="text-muted-foreground">Density Score</span>
-                          <span>{result.demand_proxies.scores.density_score}</span>
-                        </div>
-                        <div className="h-1.5 bg-muted rounded-full overflow-hidden">
-                          <div className="h-full bg-amber-500" style={{ width: `${result.demand_proxies.scores.density_score}%` }} />
-                        </div>
-                      </div>
-                      <div>
-                        <div className="flex justify-between mb-1">
-                          <span className="text-muted-foreground">Income Score</span>
-                          <span>{result.demand_proxies.scores.income_score}</span>
-                        </div>
-                        <div className="h-1.5 bg-muted rounded-full overflow-hidden">
-                          <div className="h-full bg-amber-500" style={{ width: `${result.demand_proxies.scores.income_score}%` }} />
-                        </div>
-                      </div>
-                      <Separator />
-                      <div className="flex justify-between font-medium">
-                        <span>Overall Demand</span>
-                        <span className="text-amber-400">{result.demand_proxies.demand_score}</span>
-                      </div>
-                    </CardContent>
-                  </Card>
-                  )}
 
                   {/* Competition Summary */}
                   {result.competition_summary && (
