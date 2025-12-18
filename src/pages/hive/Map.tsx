@@ -1,65 +1,120 @@
-import { MapContainer, TileLayer, Circle, CircleMarker, Popup } from 'react-leaflet';
+import { useState, useCallback, useEffect } from 'react';
+import { MapContainer, TileLayer, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
+import { supabase } from '@/integrations/supabase/client';
+import LayerControls, { LayerState } from '@/components/map/LayerControls';
+import RadiusCircle from '@/components/map/RadiusCircle';
+import CountyLayer from '@/components/map/CountyLayer';
+import ZipLayer from '@/components/map/ZipLayer';
 
-// Sample data for demonstration
-const sampleFacilities = [
-  { id: 1, lat: 39.0997, lng: -94.5786, name: "Kansas City Storage", sqft: 45000 },
-  { id: 2, lat: 39.1155, lng: -94.6268, name: "Westside Self Storage", sqft: 32000 },
-  { id: 3, lat: 39.0473, lng: -94.5885, name: "Midtown Mini Storage", sqft: 28000 },
-];
+// Component to handle map recenter
+const MapRecenter = ({ center }: { center: [number, number] }) => {
+  const map = useMap();
+  useEffect(() => {
+    map.setView(center, map.getZoom());
+  }, [center, map]);
+  return null;
+};
 
 const HiveMap = () => {
-  const defaultCenter: [number, number] = [39.0997, -94.5786]; // Kansas City
-  const defaultZoom = 11;
+  const [centerZip, setCenterZip] = useState('15522'); // Bedford, PA
+  const [center, setCenter] = useState<[number, number]>([40.0168, -78.5036]);
+  const [isLoading, setIsLoading] = useState(false);
+  
+  const [layers, setLayers] = useState<LayerState>({
+    radius: true,
+    countyLines: true,
+    countyLabels: false,
+    zipPoints: false,
+    zipLabels: false,
+  });
+
+  const [stats, setStats] = useState({
+    countiesInRadius: 0,
+    zipsInRadius: 0,
+  });
+
+  // Lookup ZIP coordinates from database
+  const handleCenterChange = async (zip: string) => {
+    setIsLoading(true);
+    
+    const { data, error } = await supabase
+      .from('us_zip_codes')
+      .select('lat, lng')
+      .eq('zip', zip)
+      .single();
+
+    if (data?.lat && data?.lng) {
+      setCenterZip(zip);
+      setCenter([data.lat, data.lng]);
+    } else {
+      console.error('ZIP not found:', zip, error);
+    }
+    
+    setIsLoading(false);
+  };
+
+  const handleLayerToggle = (layer: keyof LayerState) => {
+    setLayers((prev) => ({
+      ...prev,
+      [layer]: !prev[layer],
+    }));
+  };
+
+  const handleCountyCount = useCallback((count: number) => {
+    setStats((prev) => ({ ...prev, countiesInRadius: count }));
+  }, []);
+
+  const handleZipCount = useCallback((count: number) => {
+    setStats((prev) => ({ ...prev, zipsInRadius: count }));
+  }, []);
 
   return (
-    <div className="h-full w-full">
-      <MapContainer
-        center={defaultCenter}
-        zoom={defaultZoom}
-        style={{ height: '100%', width: '100%' }}
-      >
-        <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        />
-        
-        {/* Trade area circle */}
-        <Circle
-          center={defaultCenter}
-          radius={8000}
-          pathOptions={{
-            color: '#f59e0b',
-            fillColor: '#f59e0b',
-            fillOpacity: 0.1,
-            weight: 2,
-            dashArray: '5, 5'
-          }}
-        />
+    <div className="h-screen w-full flex bg-background">
+      {/* Sidebar */}
+      <LayerControls
+        centerZip={centerZip}
+        onCenterChange={handleCenterChange}
+        layers={layers}
+        onLayerToggle={handleLayerToggle}
+        stats={stats}
+        isLoading={isLoading}
+      />
 
-        {/* Facility markers */}
-        {sampleFacilities.map((facility) => (
-          <CircleMarker
-            key={facility.id}
-            center={[facility.lat, facility.lng]}
-            radius={8}
-            pathOptions={{
-              color: '#10b981',
-              fillColor: '#10b981',
-              fillOpacity: 0.8,
-              weight: 2
-            }}
-          >
-            <Popup>
-              <div className="text-sm">
-                <strong>{facility.name}</strong>
-                <br />
-                {facility.sqft.toLocaleString()} sqft
-              </div>
-            </Popup>
-          </CircleMarker>
-        ))}
-      </MapContainer>
+      {/* Map */}
+      <div className="flex-1 relative">
+        <MapContainer
+          center={center}
+          zoom={7}
+          style={{ height: '100%', width: '100%' }}
+          minZoom={5}
+          maxZoom={18}
+        >
+          <TileLayer
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          />
+          
+          <MapRecenter center={center} />
+          
+          {/* Layers in proper z-order */}
+          <RadiusCircle center={center} visible={layers.radius} />
+          
+          <CountyLayer
+            center={center}
+            visible={layers.countyLines}
+            showLabels={layers.countyLabels}
+            onCountyCount={handleCountyCount}
+          />
+          
+          <ZipLayer
+            center={center}
+            visible={layers.zipPoints}
+            showLabels={layers.zipLabels}
+            onZipCount={handleZipCount}
+          />
+        </MapContainer>
+      </div>
     </div>
   );
 };
