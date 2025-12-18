@@ -53,6 +53,114 @@ export type Database = {
         }
         Relationships: []
       }
+      competitor_facilities: {
+        Row: {
+          address: string | null
+          city: string | null
+          climate_controlled: boolean | null
+          confidence_score: number | null
+          county: string
+          created_at: string
+          facility_name: string
+          has_rv_boat: boolean | null
+          id: string
+          last_verified_at: string | null
+          lat: number | null
+          lng: number | null
+          phone: string | null
+          rent_10x10: number | null
+          rent_10x10_cc: number | null
+          rent_10x15: number | null
+          rent_10x15_cc: number | null
+          rent_10x20: number | null
+          rent_10x20_cc: number | null
+          rent_10x30: number | null
+          rent_5x10: number | null
+          rent_5x5: number | null
+          rent_high: number | null
+          rent_low: number | null
+          rent_medium: number | null
+          source: string | null
+          source_url: string | null
+          state: string
+          total_sqft: number | null
+          unit_count: number | null
+          updated_at: string
+          website_url: string | null
+          zip_code: string
+        }
+        Insert: {
+          address?: string | null
+          city?: string | null
+          climate_controlled?: boolean | null
+          confidence_score?: number | null
+          county: string
+          created_at?: string
+          facility_name: string
+          has_rv_boat?: boolean | null
+          id?: string
+          last_verified_at?: string | null
+          lat?: number | null
+          lng?: number | null
+          phone?: string | null
+          rent_10x10?: number | null
+          rent_10x10_cc?: number | null
+          rent_10x15?: number | null
+          rent_10x15_cc?: number | null
+          rent_10x20?: number | null
+          rent_10x20_cc?: number | null
+          rent_10x30?: number | null
+          rent_5x10?: number | null
+          rent_5x5?: number | null
+          rent_high?: number | null
+          rent_low?: number | null
+          rent_medium?: number | null
+          source?: string | null
+          source_url?: string | null
+          state: string
+          total_sqft?: number | null
+          unit_count?: number | null
+          updated_at?: string
+          website_url?: string | null
+          zip_code: string
+        }
+        Update: {
+          address?: string | null
+          city?: string | null
+          climate_controlled?: boolean | null
+          confidence_score?: number | null
+          county?: string
+          created_at?: string
+          facility_name?: string
+          has_rv_boat?: boolean | null
+          id?: string
+          last_verified_at?: string | null
+          lat?: number | null
+          lng?: number | null
+          phone?: string | null
+          rent_10x10?: number | null
+          rent_10x10_cc?: number | null
+          rent_10x15?: number | null
+          rent_10x15_cc?: number | null
+          rent_10x20?: number | null
+          rent_10x20_cc?: number | null
+          rent_10x30?: number | null
+          rent_5x10?: number | null
+          rent_5x5?: number | null
+          rent_high?: number | null
+          rent_low?: number | null
+          rent_medium?: number | null
+          source?: string | null
+          source_url?: string | null
+          state?: string
+          total_sqft?: number | null
+          unit_count?: number | null
+          updated_at?: string
+          website_url?: string | null
+          zip_code?: string
+        }
+        Relationships: []
+      }
       engine_logs: {
         Row: {
           created_at: string
