@@ -53,3 +53,9 @@ verify_jwt = false
 
 [functions.hub1_pass1_radius]
 verify_jwt = false
+
+[functions.hub1_pass1_census]
+verify_jwt = false
+
+[functions.hub1_pass1_demand]
+verify_jwt = false
