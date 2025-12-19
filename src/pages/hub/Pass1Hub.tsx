@@ -32,6 +32,7 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Pass1PipelineCard } from "@/components/Pass1PipelineCard";
+import { PipelineDocPanel } from "@/components/PipelineDocPanel";
 
 // ============================================================================
 // CONSTANTS (Match Edge Function)
@@ -486,6 +487,11 @@ const Pass1Hub = () => {
       </header>
 
       <main className="container mx-auto px-6 py-8">
+        {/* Pipeline Documentation */}
+        <div className="mb-6">
+          <PipelineDocPanel passNumber={1} />
+        </div>
+
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           
           {/* Left Column: Input Controls */}
