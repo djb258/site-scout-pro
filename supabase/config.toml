@@ -134,3 +134,17 @@ verify_jwt = false
 
 [functions.pass0_pin_emitter]
 verify_jwt = false
+
+# ================================================================
+# CCA Recon Flow — County Capability Assessment
+# Claude thinks. Neon remembers. Lovable orchestrates.
+# ================================================================
+
+[functions.cca_dispatch_recon]
+verify_jwt = false
+
+[functions.cca_write_profile]
+verify_jwt = false
+
+[functions.cca_get_profile]
+verify_jwt = false
