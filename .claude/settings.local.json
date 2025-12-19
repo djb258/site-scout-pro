@@ -15,7 +15,13 @@
       "Bash(./scripts/check_pass0_neon_ban.sh:*)",
       "Bash(./scripts/check_prd_ownership.sh:*)",
       "Bash(./scripts/check_cross_pass_imports.sh:*)",
-      "Bash(npx vitest run --reporter=verbose)"
+      "Bash(npx vitest run --reporter=verbose)",
+      "Bash(git commit:*)",
+      "Bash(gh pr view:*)",
+      "Bash(gh pr edit:*)",
+      "Bash(npx vitest:*)",
+      "Bash(cd:*)",
+      "Bash(git ls-tree:*)"
     ],
     "deny": [],
     "ask": []

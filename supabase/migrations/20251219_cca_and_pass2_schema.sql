@@ -5,9 +5,14 @@
 -- DOCTRINE:
 -- "Claude thinks. Neon remembers. Lovable orchestrates."
 --
--- CCA (ref schema) = HOW to collect data
--- Pass 2 (pass2 schema) = WHAT the jurisdiction facts are
--- Pass 3 = Consumes Pass 2 blindly, NEVER references CCA
+-- CCA (ref schema) = HOW to collect data (dispatch-only, TTL-governed)
+-- Pass 2 (pass2 schema) = WHAT the jurisdiction facts are (facts + provenance)
+-- Pass 3 = Consumes Pass 2 view blindly, NEVER references CCA
+--
+-- ENFORCEMENT:
+-- - Tables allow unknown everywhere (incremental hydration)
+-- - REQUIRED_FOR_ENVELOPE enforced at view/function level only
+-- - Pass 2 stores FACTS, not pipeline hints
 --
 -- ============================================================================
 
@@ -22,12 +27,12 @@ CREATE SCHEMA IF NOT EXISTS pass2;
 -- ENUM TYPES
 -- ============================================================================
 
--- CCA Enums
+-- CCA Enums (dispatch mechanics)
 CREATE TYPE ref.automation_method AS ENUM ('api', 'scrape', 'portal', 'manual');
 CREATE TYPE ref.coverage_level AS ENUM ('full', 'partial', 'insufficient');
 CREATE TYPE ref.recon_confidence AS ENUM ('low', 'medium', 'high');
 
--- Pass 2 Enums
+-- Pass 2 Enums (facts + provenance)
 CREATE TYPE pass2.ternary AS ENUM ('yes', 'no', 'unknown');
 CREATE TYPE pass2.knowledge_state AS ENUM ('known', 'unknown', 'blocked');
 CREATE TYPE pass2.source_type AS ENUM ('ordinance', 'pdf', 'portal', 'human');
@@ -40,8 +45,10 @@ CREATE TYPE pass2.asset_class AS ENUM ('self_storage', 'rv_storage', 'trailer_ya
 -- CCA TABLE (ref schema)
 -- ============================================================================
 --
--- This table stores the CCA Recon Agent output.
--- One row per county. TTL-governed refresh.
+-- DOCTRINE:
+-- CCA is cross-pass, TTL-governed, dispatch-only.
+-- It answers HOW to collect data, not WHAT the data is.
+-- All discovery mechanics live here. Pass 2 does not know HOW.
 --
 -- ============================================================================
 
@@ -80,8 +87,8 @@ CREATE TABLE ref.county_capability (
   pass2_coverage ref.coverage_level NOT NULL DEFAULT 'insufficient',
   pass2_notes TEXT,
 
-  -- Pass 2 detailed capability
-  pass2_zoning_model pass2.zoning_model,
+  -- Pass 2 detailed capability (HOW to hydrate, not WHAT the facts are)
+  pass2_zoning_model_detected pass2.zoning_model, -- What CCA detected, not the fact
   pass2_ordinance_format VARCHAR(20), -- 'html', 'pdf_searchable', 'pdf_scanned'
   pass2_has_gis BOOLEAN DEFAULT FALSE,
   pass2_has_online_ordinance BOOLEAN DEFAULT FALSE,
@@ -118,10 +125,10 @@ CREATE INDEX idx_cca_method_p0 ON ref.county_capability(pass0_method);
 CREATE INDEX idx_cca_method_p2 ON ref.county_capability(pass2_method);
 
 -- Comments
-COMMENT ON TABLE ref.county_capability IS 'CCA Recon Agent output. One row per county. TTL-governed.';
+COMMENT ON TABLE ref.county_capability IS 'CCA dispatch table. HOW to collect data. TTL-governed. Cross-pass.';
 COMMENT ON COLUMN ref.county_capability.pass0_method IS 'Best automation method for Pass 0 (permits/inspections)';
 COMMENT ON COLUMN ref.county_capability.pass2_method IS 'Best automation method for Pass 2 (jurisdiction facts)';
-COMMENT ON COLUMN ref.county_capability.expires_at IS 'Auto-computed from verified_at + ttl_months';
+COMMENT ON COLUMN ref.county_capability.pass2_zoning_model_detected IS 'What CCA detected during probe - NOT the authoritative fact';
 
 -- ============================================================================
 -- PASS 2 JURISDICTION CARD TABLES
@@ -129,38 +136,46 @@ COMMENT ON COLUMN ref.county_capability.expires_at IS 'Auto-computed from verifi
 --
 -- DOCTRINE:
 -- Pass 2 defines WHAT is true about a jurisdiction.
--- - Data may be known or unknown
--- - Absence of data is meaningful
--- - Pass 3 consumes this data without reinterpretation
---
--- Structure mirrors the canonical PASS2_JURISDICTION_CARD.md spec.
+-- - Tables store FACTS + PROVENANCE only
+-- - No pipeline hints, no method semantics
+-- - Unknown is valid everywhere (incremental hydration)
+-- - REQUIRED_FOR_ENVELOPE enforced at view/function level
 --
 -- ============================================================================
 
 -- ---------------------------------------------------------------------------
--- A. JURISDICTION IDENTITY
+-- A. JURISDICTION SCOPE (who governs, at what level)
 -- ---------------------------------------------------------------------------
 
-CREATE TABLE pass2.jurisdiction_identity (
+CREATE TABLE pass2.jurisdiction_scope (
   id BIGSERIAL PRIMARY KEY,
   county_id BIGINT NOT NULL UNIQUE REFERENCES ref.county_capability(county_id),
 
-  -- Identity (from CCA, duplicated for denormalization)
+  -- Scope (denormalized from CCA for query convenience)
   county_name VARCHAR(100) NOT NULL,
   state VARCHAR(2) NOT NULL,
   county_fips VARCHAR(5),
   asset_class pass2.asset_class NOT NULL DEFAULT 'self_storage',
 
-  -- Authority model
-  authority_model pass2.authority_model NOT NULL DEFAULT 'county',
-  zoning_model pass2.zoning_model NOT NULL DEFAULT 'county',
+  -- Authority (the FACTS about who governs)
+  authority_model pass2.authority_model,
+  authority_model_state pass2.knowledge_state NOT NULL DEFAULT 'unknown',
+  authority_model_source pass2.source_type,
+  authority_model_ref TEXT,
 
-  -- Controlling authority (with provenance)
+  zoning_model pass2.zoning_model,
+  zoning_model_state pass2.knowledge_state NOT NULL DEFAULT 'unknown',
+  zoning_model_source pass2.source_type,
+  zoning_model_ref TEXT,
+
+  -- Controlling authority
   controlling_authority_name TEXT,
+  controlling_authority_name_state pass2.knowledge_state NOT NULL DEFAULT 'unknown',
   controlling_authority_name_source pass2.source_type,
   controlling_authority_name_ref TEXT,
 
   controlling_authority_contact TEXT,
+  controlling_authority_contact_state pass2.knowledge_state NOT NULL DEFAULT 'unknown',
   controlling_authority_contact_source pass2.source_type,
   controlling_authority_contact_ref TEXT,
 
@@ -170,8 +185,10 @@ CREATE TABLE pass2.jurisdiction_identity (
   version INTEGER NOT NULL DEFAULT 1
 );
 
+COMMENT ON TABLE pass2.jurisdiction_scope IS 'Section A: Who governs and at what level';
+
 -- ---------------------------------------------------------------------------
--- B. USE VIABILITY
+-- B. USE VIABILITY (should we even continue?)
 -- ---------------------------------------------------------------------------
 
 CREATE TABLE pass2.use_viability (
@@ -184,7 +201,6 @@ CREATE TABLE pass2.use_viability (
   storage_allowed_source pass2.source_type,
   storage_allowed_ref TEXT,
   storage_allowed_scope pass2.authority_scope,
-  storage_allowed_verified_at TIMESTAMPTZ,
 
   -- Fatal prohibition
   fatal_prohibition pass2.ternary NOT NULL DEFAULT 'unknown',
@@ -214,8 +230,16 @@ CREATE TABLE pass2.use_viability (
   version INTEGER NOT NULL DEFAULT 1
 );
 
+COMMENT ON TABLE pass2.use_viability IS 'Section B: Binary gating - should we continue?';
+
 -- ---------------------------------------------------------------------------
--- C. ZONING ENVELOPE (REQUIRED_FOR_ENVELOPE)
+-- C. ZONING ENVELOPE (numeric constraints for geometry)
+-- ---------------------------------------------------------------------------
+--
+-- NOTE: envelope_complete is NOT stored here.
+-- It is computed at the view/function level.
+-- This allows incremental hydration without schema enforcement.
+--
 -- ---------------------------------------------------------------------------
 
 CREATE TABLE pass2.zoning_envelope (
@@ -284,14 +308,13 @@ CREATE TABLE pass2.zoning_envelope (
   buffer_roadway_source pass2.source_type,
   buffer_roadway_ref TEXT,
 
-  -- Envelope completeness flag
-  envelope_complete BOOLEAN NOT NULL DEFAULT FALSE,
-
   -- Audit
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   version INTEGER NOT NULL DEFAULT 1
 );
+
+COMMENT ON TABLE pass2.zoning_envelope IS 'Section C: Numeric constraints for geometry. REQUIRED_FOR_ENVELOPE enforced at view level.';
 
 -- ---------------------------------------------------------------------------
 -- D. FIRE & LIFE SAFETY
@@ -342,6 +365,8 @@ CREATE TABLE pass2.fire_life_safety (
   version INTEGER NOT NULL DEFAULT 1
 );
 
+COMMENT ON TABLE pass2.fire_life_safety IS 'Section D: Fire and life safety constraints';
+
 -- ---------------------------------------------------------------------------
 -- E. STORMWATER & ENVIRONMENTAL
 -- ---------------------------------------------------------------------------
@@ -387,6 +412,8 @@ CREATE TABLE pass2.stormwater_environmental (
   version INTEGER NOT NULL DEFAULT 1
 );
 
+COMMENT ON TABLE pass2.stormwater_environmental IS 'Section E: Stormwater and environmental constraints';
+
 -- ---------------------------------------------------------------------------
 -- F. PARKING & ACCESS
 -- ---------------------------------------------------------------------------
@@ -425,6 +452,8 @@ CREATE TABLE pass2.parking_access (
   version INTEGER NOT NULL DEFAULT 1
 );
 
+COMMENT ON TABLE pass2.parking_access IS 'Section F: Parking and access requirements';
+
 -- ============================================================================
 -- TRIGGERS
 -- ============================================================================
@@ -442,7 +471,7 @@ $$ LANGUAGE plpgsql;
 CREATE TRIGGER trg_cca_updated_at BEFORE UPDATE ON ref.county_capability
   FOR EACH ROW EXECUTE FUNCTION update_updated_at();
 
-CREATE TRIGGER trg_identity_updated_at BEFORE UPDATE ON pass2.jurisdiction_identity
+CREATE TRIGGER trg_scope_updated_at BEFORE UPDATE ON pass2.jurisdiction_scope
   FOR EACH ROW EXECUTE FUNCTION update_updated_at();
 
 CREATE TRIGGER trg_viability_updated_at BEFORE UPDATE ON pass2.use_viability
@@ -461,116 +490,7 @@ CREATE TRIGGER trg_parking_updated_at BEFORE UPDATE ON pass2.parking_access
   FOR EACH ROW EXECUTE FUNCTION update_updated_at();
 
 -- ============================================================================
--- ENVELOPE COMPLETENESS CHECK
--- ============================================================================
-
-CREATE OR REPLACE FUNCTION pass2.check_envelope_completeness()
-RETURNS TRIGGER AS $$
-BEGIN
-  -- REQUIRED_FOR_ENVELOPE: setbacks (front, side, rear), max_lot_coverage, max_height
-  NEW.envelope_complete := (
-    NEW.setback_front_state = 'known' AND
-    NEW.setback_side_state = 'known' AND
-    NEW.setback_rear_state = 'known' AND
-    NEW.max_lot_coverage_state = 'known' AND
-    NEW.max_height_state = 'known'
-  );
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE TRIGGER trg_envelope_completeness
-  BEFORE INSERT OR UPDATE ON pass2.zoning_envelope
-  FOR EACH ROW EXECUTE FUNCTION pass2.check_envelope_completeness();
-
--- ============================================================================
--- VIEWS FOR DOWNSTREAM CONSUMPTION
--- ============================================================================
-
--- CCA summary view (for Lovable dispatch)
-CREATE OR REPLACE VIEW ref.v_cca_summary AS
-SELECT
-  county_id,
-  state,
-  county_name,
-  pass0_method,
-  pass0_coverage,
-  pass2_method,
-  pass2_coverage,
-  confidence,
-  verified_at,
-  expires_at,
-  CASE WHEN expires_at < NOW() THEN TRUE ELSE FALSE END AS is_expired,
-  CASE WHEN expires_at < NOW() + INTERVAL '30 days' THEN TRUE ELSE FALSE END AS expires_soon
-FROM ref.county_capability;
-
-COMMENT ON VIEW ref.v_cca_summary IS 'CCA summary for Lovable dispatch decisions';
-
--- Pass 2 complete card view (for Pass 3 consumption)
-CREATE OR REPLACE VIEW pass2.v_jurisdiction_card_for_pass3 AS
-SELECT
-  i.county_id,
-  i.county_name,
-  i.state,
-  i.asset_class,
-  i.authority_model,
-  i.zoning_model,
-
-  -- Use viability (gating)
-  v.storage_allowed,
-  v.fatal_prohibition,
-  v.conditional_use_required,
-  v.discretionary_required,
-
-  -- Zoning envelope (REQUIRED_FOR_ENVELOPE)
-  e.setback_front,
-  e.setback_side,
-  e.setback_rear,
-  e.max_lot_coverage,
-  e.max_far,
-  e.min_open_space,
-  e.max_height,
-  e.max_stories,
-  e.buffer_residential,
-  e.buffer_waterway,
-  e.buffer_roadway,
-  e.envelope_complete,
-
-  -- Fire & life safety
-  f.fire_lane_required,
-  f.min_fire_lane_width,
-  f.max_hydrant_spacing,
-  f.fire_dept_access_required,
-  f.sprinkler_required,
-  f.adopted_fire_code,
-
-  -- Stormwater
-  s.detention_required,
-  s.retention_required,
-  s.max_impervious,
-  s.watershed_overlay,
-  s.floodplain_overlay,
-
-  -- Parking
-  p.parking_required,
-  p.parking_ratio,
-  p.truck_access_required,
-  p.min_driveway_width,
-
-  -- Meta
-  GREATEST(i.updated_at, v.updated_at, e.updated_at, f.updated_at, s.updated_at, p.updated_at) AS last_updated
-
-FROM pass2.jurisdiction_identity i
-LEFT JOIN pass2.use_viability v ON i.county_id = v.county_id
-LEFT JOIN pass2.zoning_envelope e ON i.county_id = e.county_id
-LEFT JOIN pass2.fire_life_safety f ON i.county_id = f.county_id
-LEFT JOIN pass2.stormwater_environmental s ON i.county_id = s.county_id
-LEFT JOIN pass2.parking_access p ON i.county_id = p.county_id;
-
-COMMENT ON VIEW pass2.v_jurisdiction_card_for_pass3 IS 'Complete jurisdiction card for Pass 3 consumption. Pass 3 reads this view blindly.';
-
--- ============================================================================
--- HELPER FUNCTIONS
+-- ENFORCEMENT FUNCTIONS (not table-level)
 -- ============================================================================
 
 -- Check if CCA needs refresh
@@ -591,17 +511,39 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Check if Pass 2 envelope is complete
+-- Check if Pass 2 envelope is complete (REQUIRED_FOR_ENVELOPE)
 CREATE OR REPLACE FUNCTION pass2.is_envelope_complete(p_county_id BIGINT)
 RETURNS BOOLEAN AS $$
 DECLARE
-  v_complete BOOLEAN;
+  v_front_state pass2.knowledge_state;
+  v_side_state pass2.knowledge_state;
+  v_rear_state pass2.knowledge_state;
+  v_coverage_state pass2.knowledge_state;
+  v_height_state pass2.knowledge_state;
 BEGIN
-  SELECT envelope_complete INTO v_complete
+  SELECT
+    setback_front_state,
+    setback_side_state,
+    setback_rear_state,
+    max_lot_coverage_state,
+    max_height_state
+  INTO
+    v_front_state,
+    v_side_state,
+    v_rear_state,
+    v_coverage_state,
+    v_height_state
   FROM pass2.zoning_envelope
   WHERE county_id = p_county_id;
 
-  RETURN COALESCE(v_complete, FALSE);
+  -- All REQUIRED_FOR_ENVELOPE fields must be 'known'
+  RETURN (
+    v_front_state = 'known' AND
+    v_side_state = 'known' AND
+    v_rear_state = 'known' AND
+    v_coverage_state = 'known' AND
+    v_height_state = 'known'
+  );
 END;
 $$ LANGUAGE plpgsql;
 
@@ -619,21 +561,155 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+-- Check if storage is allowed
+CREATE OR REPLACE FUNCTION pass2.is_storage_allowed(p_county_id BIGINT)
+RETURNS pass2.ternary AS $$
+DECLARE
+  v_allowed pass2.ternary;
+BEGIN
+  SELECT storage_allowed INTO v_allowed
+  FROM pass2.use_viability
+  WHERE county_id = p_county_id;
+
+  RETURN COALESCE(v_allowed, 'unknown');
+END;
+$$ LANGUAGE plpgsql;
+
 -- ============================================================================
--- GRANTS (adjust based on your roles)
+-- VIEWS FOR DOWNSTREAM CONSUMPTION
 -- ============================================================================
 
--- Read-only access for Pass 0
+-- CCA summary view (for Lovable dispatch)
+CREATE OR REPLACE VIEW ref.v_cca_dispatch AS
+SELECT
+  county_id,
+  state,
+  county_name,
+  county_fips,
+
+  -- Pass 0 dispatch
+  pass0_method,
+  pass0_source_pointer,
+  pass0_coverage,
+  pass0_vendor,
+
+  -- Pass 2 dispatch
+  pass2_method,
+  pass2_source_pointer,
+  pass2_coverage,
+  pass2_planning_url,
+
+  -- Meta
+  confidence,
+  verified_at,
+  expires_at,
+  CASE WHEN expires_at < NOW() THEN TRUE ELSE FALSE END AS is_expired,
+  CASE WHEN expires_at < NOW() + INTERVAL '30 days' THEN TRUE ELSE FALSE END AS expires_soon
+FROM ref.county_capability;
+
+COMMENT ON VIEW ref.v_cca_dispatch IS 'CCA dispatch view for Lovable. HOW to collect, not WHAT.';
+
+-- Pass 2 complete card view (for Pass 3 consumption)
+-- Includes computed envelope_complete field
+CREATE OR REPLACE VIEW pass2.v_jurisdiction_card_for_pass3 AS
+SELECT
+  s.county_id,
+  s.county_name,
+  s.state,
+  s.county_fips,
+  s.asset_class,
+  s.authority_model,
+  s.zoning_model,
+
+  -- Use viability (gating)
+  v.storage_allowed,
+  v.fatal_prohibition,
+  v.fatal_prohibition_description,
+  v.conditional_use_required,
+  v.discretionary_required,
+
+  -- Zoning envelope (REQUIRED_FOR_ENVELOPE)
+  e.setback_front,
+  e.setback_side,
+  e.setback_rear,
+  e.max_lot_coverage,
+  e.max_far,
+  e.min_open_space,
+  e.max_height,
+  e.max_stories,
+  e.buffer_residential,
+  e.buffer_waterway,
+  e.buffer_roadway,
+
+  -- Envelope complete (computed, not stored)
+  (
+    e.setback_front_state = 'known' AND
+    e.setback_side_state = 'known' AND
+    e.setback_rear_state = 'known' AND
+    e.max_lot_coverage_state = 'known' AND
+    e.max_height_state = 'known'
+  ) AS envelope_complete,
+
+  -- Fire & life safety
+  f.fire_lane_required,
+  f.min_fire_lane_width,
+  f.max_hydrant_spacing,
+  f.fire_dept_access_required,
+  f.sprinkler_required,
+  f.adopted_fire_code,
+
+  -- Stormwater
+  sw.detention_required,
+  sw.retention_required,
+  sw.max_impervious,
+  sw.watershed_overlay,
+  sw.floodplain_overlay,
+
+  -- Parking
+  p.parking_required,
+  p.parking_ratio,
+  p.parking_ratio_unit,
+  p.truck_access_required,
+  p.min_driveway_width,
+
+  -- Meta
+  GREATEST(
+    s.updated_at,
+    v.updated_at,
+    e.updated_at,
+    f.updated_at,
+    sw.updated_at,
+    p.updated_at
+  ) AS last_updated
+
+FROM pass2.jurisdiction_scope s
+LEFT JOIN pass2.use_viability v ON s.county_id = v.county_id
+LEFT JOIN pass2.zoning_envelope e ON s.county_id = e.county_id
+LEFT JOIN pass2.fire_life_safety f ON s.county_id = f.county_id
+LEFT JOIN pass2.stormwater_environmental sw ON s.county_id = sw.county_id
+LEFT JOIN pass2.parking_access p ON s.county_id = p.county_id;
+
+COMMENT ON VIEW pass2.v_jurisdiction_card_for_pass3 IS 'Complete jurisdiction card for Pass 3. Pass 3 reads this blindly. If Pass 2 lies, that is a Pass 2 bug.';
+
+-- ============================================================================
+-- GRANTS (uncomment and adjust based on your roles)
+-- ============================================================================
+
+-- CCA writers (recon agent via API)
+-- GRANT SELECT, INSERT, UPDATE ON ref.county_capability TO cca_writer;
+-- GRANT USAGE ON SEQUENCE ref.county_capability_id_seq TO cca_writer;
+
+-- Pass 0 readers
 -- GRANT SELECT ON ref.county_capability TO pass0_reader;
+-- GRANT SELECT ON ref.v_cca_dispatch TO pass0_reader;
 
--- Read-only access for Pass 2
--- GRANT SELECT ON ref.county_capability TO pass2_reader;
--- GRANT SELECT, INSERT, UPDATE ON pass2.jurisdiction_identity TO pass2_writer;
+-- Pass 2 writers (hydration workers)
+-- GRANT SELECT, INSERT, UPDATE ON pass2.jurisdiction_scope TO pass2_writer;
 -- GRANT SELECT, INSERT, UPDATE ON pass2.use_viability TO pass2_writer;
 -- GRANT SELECT, INSERT, UPDATE ON pass2.zoning_envelope TO pass2_writer;
 -- GRANT SELECT, INSERT, UPDATE ON pass2.fire_life_safety TO pass2_writer;
 -- GRANT SELECT, INSERT, UPDATE ON pass2.stormwater_environmental TO pass2_writer;
 -- GRANT SELECT, INSERT, UPDATE ON pass2.parking_access TO pass2_writer;
 
--- Read-only access for Pass 3
+-- Pass 3 readers (consumes blindly)
 -- GRANT SELECT ON pass2.v_jurisdiction_card_for_pass3 TO pass3_reader;

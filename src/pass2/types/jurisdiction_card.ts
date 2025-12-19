@@ -118,7 +118,7 @@ export interface TextField extends FieldProvenance {
 // A. JURISDICTION IDENTITY & SCOPE
 // =============================================================================
 
-export interface JurisdictionIdentity {
+export interface JurisdictionScope {
   /** County name */
   county_name: string;
 
@@ -131,11 +131,17 @@ export interface JurisdictionIdentity {
   /** Asset class being evaluated */
   asset_class: AssetClass;
 
-  /** Authority model */
-  authority_model: AuthorityModel;
+  /** Authority model (the FACT about who governs) */
+  authority_model: AuthorityModel | null;
+  authority_model_state: KnowledgeState;
+  authority_model_source: SourceType | null;
+  authority_model_ref: string | null;
 
-  /** Zoning model */
-  zoning_model: ZoningModel;
+  /** Zoning model (the FACT about zoning structure) */
+  zoning_model: ZoningModel | null;
+  zoning_model_state: KnowledgeState;
+  zoning_model_source: SourceType | null;
+  zoning_model_ref: string | null;
 
   /** Controlling authority name */
   controlling_authority_name: TextField;
@@ -328,8 +334,8 @@ export interface ParkingAccess {
  * - REQUIRED_FOR_ENVELOPE fields must be known for Pass 3 geometry
  */
 export interface JurisdictionCard {
-  /** Section A: Jurisdiction Identity & Scope */
-  identity: JurisdictionIdentity;
+  /** Section A: Jurisdiction Scope (who governs, at what level) */
+  scope: JurisdictionScope;
 
   /** Section B: Use Viability (Binary Gating) */
   use_viability: UseViability;

@@ -11,7 +11,7 @@
 
 import {
   JurisdictionCard,
-  JurisdictionIdentity,
+  JurisdictionScope,
   UseViability,
   ZoningEnvelope,
   FireLifeSafety,
@@ -21,6 +21,7 @@ import {
   TernaryField,
   TextField,
   AssetClass,
+  KnowledgeState,
 } from '../types/jurisdiction_card';
 
 // =============================================================================
@@ -163,19 +164,28 @@ export function createEmptyJurisdictionCard(
 ): JurisdictionCard {
   const now = new Date().toISOString();
 
-  const identity: JurisdictionIdentity = {
+  const scope: JurisdictionScope = {
     county_name: input.county_name,
     state: input.state,
     county_fips: input.county_fips,
     asset_class: input.asset_class ?? 'self_storage',
-    authority_model: 'county',
-    zoning_model: 'county',
+    // Authority model - unknown until hydrated
+    authority_model: null,
+    authority_model_state: 'unknown',
+    authority_model_source: null,
+    authority_model_ref: null,
+    // Zoning model - unknown until hydrated
+    zoning_model: null,
+    zoning_model_state: 'unknown',
+    zoning_model_source: null,
+    zoning_model_ref: null,
+    // Controlling authority
     controlling_authority_name: createUnknownText(),
     controlling_authority_contact: createUnknownText(),
   };
 
   return {
-    identity,
+    scope,
     use_viability: createEmptyUseViability(),
     zoning_envelope: createEmptyZoningEnvelope(),
     fire_life_safety: createEmptyFireLifeSafety(),
