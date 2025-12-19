@@ -138,6 +138,40 @@ verify_jwt = false
 [functions.hub0_get_status]
 verify_jwt = false
 
+[functions.start_pass0]
+verify_jwt = false
+
+[functions.start_pass15]
+verify_jwt = false
+
+[functions.start_pass3]
+verify_jwt = false
+
+# ================================================================
+# Pass 2 — Jurisdiction Cards & Underwriting
+# ================================================================
+
+[functions.pass2_get_jurisdiction_card]
+verify_jwt = false
+
+[functions.pass2_write_envelope]
+verify_jwt = false
+
+[functions.pass2_write_fire]
+verify_jwt = false
+
+[functions.pass2_write_parking]
+verify_jwt = false
+
+[functions.pass2_write_scope]
+verify_jwt = false
+
+[functions.pass2_write_stormwater]
+verify_jwt = false
+
+[functions.pass2_write_viability]
+verify_jwt = false
+
 # ================================================================
 # CCA Recon Flow — County Capability Assessment
 # Claude thinks. Neon remembers. Lovable orchestrates.
