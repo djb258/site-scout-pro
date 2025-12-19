@@ -12,6 +12,7 @@ const corsHeaders = {
 // Types
 interface SolverRunInput {
   mode: 'FORWARD' | 'REVERSE';
+  envelope_complete: boolean; // REQUIRED: Hard guard enforced
   observed: {
     zip?: string;
     population?: number;
@@ -416,9 +417,53 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  // Initialize Supabase client for logging
+  const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+  const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+  const supabase = createClient(supabaseUrl, supabaseKey);
+
   try {
     const input: SolverRunInput = await req.json();
     console.log('[SOLVER_RUN] Input received:', JSON.stringify(input, null, 2));
+
+    // =========================================================================
+    // HARD ENVELOPE GUARD — Pass 3 fails closed without envelope_complete
+    // =========================================================================
+    // DOCTRINE: No silent defaults. If envelope is incomplete, solver rejects.
+    // Log to master_failure_log for audit trail.
+    // =========================================================================
+    if (!input.envelope_complete) {
+      console.error('[SOLVER_RUN] BLOCKED: envelope_complete !== true');
+      
+      // Log to master_failure_log
+      await supabase.from('master_failure_log').insert({
+        process_id: PROCESS_ID,
+        pass_number: PASS_NUMBER,
+        step: 'envelope_guard',
+        error_code: 'ENVELOPE_INCOMPLETE',
+        error_message: 'Pass 3 requires envelope_complete=true. Solver run rejected.',
+        severity: 'error',
+        context: { 
+          county: input.observed?.county,
+          jurisdiction: input.observed?.jurisdiction,
+          mode: input.mode
+        }
+      });
+
+      return new Response(JSON.stringify({
+        solver_artifact_id: null,
+        blocked: true,
+        blocked_reason: 'ENVELOPE_INCOMPLETE: Jurisdiction card envelope is not complete. Fix Pass 2 data first.',
+        calculation_steps: [],
+        outputs: null,
+        warnings: [],
+        mode: input.mode,
+        timestamp: new Date().toISOString()
+      }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
 
     // Run solver based on mode
     const { steps, outputs, warnings } = input.mode === 'FORWARD'
@@ -451,22 +496,16 @@ serve(async (req) => {
     console.error('[SOLVER_RUN] Error:', error);
     const message = error instanceof Error ? error.message : 'Unknown error';
     
-    // Log error to master_failure_log
+    // Log error to master_failure_log (supabase client already initialized above)
     try {
-      const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-      const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-      const supabase = createClient(supabaseUrl, supabaseKey);
-      
-      await supabase.functions.invoke('log_failure', {
-        body: {
-          process_id: PROCESS_ID,
-          pass_number: PASS_NUMBER,
-          step: 'solver_execution',
-          error_code: 'SOLVER_ERROR',
-          error_message: message,
-          severity: 'error',
-          context: { error_type: error instanceof Error ? error.name : 'Unknown' }
-        }
+      await supabase.from('master_failure_log').insert({
+        process_id: PROCESS_ID,
+        pass_number: PASS_NUMBER,
+        step: 'solver_execution',
+        error_code: 'SOLVER_ERROR',
+        error_message: message,
+        severity: 'error',
+        context: { error_type: error instanceof Error ? error.name : 'Unknown' }
       });
     } catch (logError) {
       console.error('[SOLVER_RUN] Failed to log error:', logError);

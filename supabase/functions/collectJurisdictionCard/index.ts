@@ -250,17 +250,21 @@ Deno.serve(async (req) => {
 
     const durationMs = Date.now() - startTime;
 
+    // Extract county_name for STRUCTURAL column (first-class, CI-enforced)
+    const countyName = (cardPayload.county_name as string) || 'Unknown';
+
     // Write atomic record to Supabase staging (NOT Neon!)
     const { error: insertError } = await supabase.from('jurisdiction_card_drafts').insert({
       execution_id: executionId,
       county_id,
+      county_name: countyName, // STRUCTURAL: First-class column
       state_code,
       asset_class,
       status,
       envelope_complete: envelopeComplete,
       card_complete: cardComplete,
       fatal_prohibition: fatalProhibition,
-      card_payload: cardPayload,
+      card_payload: cardPayload, // ALLOWED: Copy for payload completeness
       field_states: fieldStates,
       provenance_log: provenanceLog,
       red_flags: redFlags,

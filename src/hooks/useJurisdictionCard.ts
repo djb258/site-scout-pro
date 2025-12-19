@@ -13,11 +13,8 @@ import { supabase } from "@/integrations/supabase/client";
  * 
  * No Neon reach-around - gravity flip is complete.
  * 
- * TODO: County name lookup via card_payload->>'county_name' is a TEMPORARY SHIM.
- * String matching violates authority-first doctrine. Either:
- * 1. Add county_name as first-class column, or
- * 2. Kill this fallback path in next pass
- * See idx_jc_drafts_county_name index comment.
+ * STRUCTURAL COLUMNS: county_name is a first-class column (not card_payload).
+ * CI enforces no card_payload identity field access.
  */
 
 export interface JurisdictionCard {
@@ -126,6 +123,7 @@ const DEFAULT_SOLVER_CARD: SolverJurisdictionCard = {
  */
 function mapDraftToCard(draft: {
   county_id: number;
+  county_name: string | null; // STRUCTURAL: First-class column
   state_code: string;
   envelope_complete: boolean;
   card_complete: boolean;
@@ -137,7 +135,7 @@ function mapDraftToCard(draft: {
   return {
     county_id: draft.county_id,
     state: draft.state_code,
-    county_name: (p.county_name as string) || `County ${draft.county_id}`,
+    county_name: draft.county_name || `County ${draft.county_id}`, // STRUCTURAL column, not payload
     county_fips: (p.county_fips as string) || null,
     
     envelope_complete: draft.envelope_complete,
@@ -202,35 +200,34 @@ export function useJurisdictionCard(): UseJurisdictionCardResult {
 
     try {
       // Read directly from Supabase staging table (NO edge function needed)
-      // Support both county_id (number) and county_name (string) lookups
-      const { data: drafts, error: queryError } = await supabase
+      // Uses composite index: idx_jc_drafts_lookup, idx_jc_drafts_county_name_structural
+      let query = supabase
         .from('jurisdiction_card_drafts')
         .select('*')
         .eq('state_code', stateCode)
         .in('status', ['validated', 'promoted'])
-        .order('collected_at', { ascending: false })
-        .limit(10);
+        .order('collected_at', { ascending: false });
+
+      // Use appropriate lookup based on input type (STRUCTURAL columns only)
+      if (typeof countyNameOrId === 'number') {
+        // Direct county_id lookup (authoritative)
+        query = query.eq('county_id', countyNameOrId);
+      } else {
+        // STRUCTURAL column lookup (CI-enforced, not payload spelunking)
+        query = query.ilike('county_name', `%${countyNameOrId}%`);
+      }
+
+      const { data: drafts, error: queryError } = await query.limit(10);
 
       if (queryError) throw queryError;
 
-      // Filter results based on input type
-      let matchedDraft = null;
-      if (drafts && drafts.length > 0) {
-        if (typeof countyNameOrId === 'number') {
-          matchedDraft = drafts.find(d => d.county_id === countyNameOrId) || null;
-        } else {
-          // For string lookup, check card_payload.county_name or just take first match for state
-          matchedDraft = drafts.find(d => {
-            const payload = d.card_payload as Record<string, unknown>;
-            const countyName = (payload?.county_name as string)?.toLowerCase();
-            return countyName === countyNameOrId.toLowerCase();
-          }) || drafts[0]; // Fallback to first result for state
-        }
-      }
+      // Use first match (already ordered by collected_at DESC)
+      const matchedDraft = drafts?.[0] || null;
 
       if (matchedDraft) {
         const mappedCard = mapDraftToCard({
           county_id: matchedDraft.county_id,
+          county_name: matchedDraft.county_name as string | null,
           state_code: matchedDraft.state_code,
           envelope_complete: matchedDraft.envelope_complete ?? false,
           card_complete: matchedDraft.card_complete ?? false,

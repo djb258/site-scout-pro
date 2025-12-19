@@ -414,6 +414,7 @@ export type Database = {
           card_payload: Json
           collected_at: string | null
           county_id: number
+          county_name: string | null
           created_at: string | null
           duration_ms: number | null
           envelope_complete: boolean | null
@@ -437,6 +438,7 @@ export type Database = {
           card_payload?: Json
           collected_at?: string | null
           county_id: number
+          county_name?: string | null
           created_at?: string | null
           duration_ms?: number | null
           envelope_complete?: boolean | null
@@ -460,6 +462,7 @@ export type Database = {
           card_payload?: Json
           collected_at?: string | null
           county_id?: number
+          county_name?: string | null
           created_at?: string | null
           duration_ms?: number | null
           envelope_complete?: boolean | null
