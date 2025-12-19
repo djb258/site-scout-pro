@@ -10,6 +10,7 @@ import Pass1Hub from "@/pages/hub/Pass1Hub";
 import Pass15Hub from "@/pages/hub/Pass15Hub";
 import Pass2Hub from "@/pages/hub/Pass2Hub";
 import Pass3Hub from "@/pages/hub/Pass3Hub";
+import CCAReconHub from "@/pages/hub/CCAReconHub";
 import NotFound from "@/pages/NotFound";
 
 // Lazy load map to avoid react-leaflet React instance conflicts
@@ -31,6 +32,7 @@ const App = () => (
             <Route path="/pass15" element={<Pass15Hub />} />
             <Route path="/pass2" element={<Pass2Hub />} />
             <Route path="/pass3" element={<Pass3Hub />} />
+            <Route path="/cca" element={<CCAReconHub />} />
             <Route path="/map" element={<Suspense fallback={<div className="h-screen w-full flex items-center justify-center">Loading map...</div>}><HiveMap /></Suspense>} />
           </Route>
           <Route path="*" element={<NotFound />} />
