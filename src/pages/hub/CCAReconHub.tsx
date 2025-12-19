@@ -1,9 +1,13 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useCCAProfiles, CCAProfile, DispatchResult } from "@/hooks/useCCAProfiles";
+import { useToast } from "@/hooks/use-toast";
 import { 
   Building2, 
   Clock, 
@@ -13,111 +17,36 @@ import {
   Search,
   Zap,
   FileText,
-  Phone,
   Globe,
   Bot,
   User,
   Calendar,
   MapPin,
-  ArrowRight
+  ArrowRight,
+  Info,
+  Loader2
 } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
 
 // Method icons and colors
-const METHOD_CONFIG = {
+const METHOD_CONFIG: Record<string, { icon: typeof Globe; label: string; color: string; bg: string }> = {
   // Pass 0 methods
   scrape_energov: { icon: Globe, label: "EnerGov Scraper", color: "text-blue-400", bg: "bg-blue-500/10" },
   scrape_onestop: { icon: Globe, label: "OneStop Scraper", color: "text-cyan-400", bg: "bg-cyan-500/10" },
   scrape_accela: { icon: Globe, label: "Accela Scraper", color: "text-indigo-400", bg: "bg-indigo-500/10" },
   api_permit: { icon: Zap, label: "Permit API", color: "text-emerald-400", bg: "bg-emerald-500/10" },
+  api: { icon: Zap, label: "API", color: "text-emerald-400", bg: "bg-emerald-500/10" },
+  scraper: { icon: Globe, label: "Scraper", color: "text-blue-400", bg: "bg-blue-500/10" },
+  portal: { icon: Globe, label: "Portal", color: "text-purple-400", bg: "bg-purple-500/10" },
   // Pass 2 methods
   api_zoning: { icon: Zap, label: "Zoning API", color: "text-green-400", bg: "bg-green-500/10" },
   scrape_gis: { icon: Globe, label: "GIS Scraper", color: "text-purple-400", bg: "bg-purple-500/10" },
   pdf_ocr: { icon: FileText, label: "PDF OCR", color: "text-amber-400", bg: "bg-amber-500/10" },
-  // Common
   manual: { icon: User, label: "Manual", color: "text-rose-400", bg: "bg-rose-500/10" },
+  none: { icon: User, label: "Not Configured", color: "text-muted-foreground", bg: "bg-muted/50" },
 };
 
-// Mock data - in production this would come from Neon via cca_get_profile
-const MOCK_COUNTY_PROFILES = [
-  {
-    county_id: "frederick_md",
-    county_name: "Frederick",
-    state: "MD",
-    pass0_method: "scrape_energov",
-    pass0_source_url: "https://frederickcountymd.gov/permits",
-    pass0_automation_confidence: 0.85,
-    pass2_method: "scrape_gis",
-    pass2_source_url: "https://gis.frederickcountymd.gov",
-    pass2_automation_confidence: 0.72,
-    recon_performed_by: "claude_code",
-    verified_at: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString(), // 15 days ago
-    ttl_days: 90,
-  },
-  {
-    county_id: "jefferson_wv",
-    county_name: "Jefferson",
-    state: "WV",
-    pass0_method: "manual",
-    pass0_source_url: null,
-    pass0_automation_confidence: 0,
-    pass2_method: "pdf_ocr",
-    pass2_source_url: "https://jeffersoncountywv.org/zoning-maps",
-    pass2_automation_confidence: 0.45,
-    recon_performed_by: "claude_code",
-    verified_at: new Date(Date.now() - 85 * 24 * 60 * 60 * 1000).toISOString(), // 85 days ago
-    ttl_days: 90,
-  },
-  {
-    county_id: "berkeley_wv",
-    county_name: "Berkeley",
-    state: "WV",
-    pass0_method: "scrape_onestop",
-    pass0_source_url: "https://berkeleycountywv.gov/onestop",
-    pass0_automation_confidence: 0.78,
-    pass2_method: "api_zoning",
-    pass2_source_url: "https://api.berkeleycounty.gov/zoning",
-    pass2_automation_confidence: 0.92,
-    recon_performed_by: "claude_code",
-    verified_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(), // 5 days ago
-    ttl_days: 90,
-  },
-  {
-    county_id: "loudoun_va",
-    county_name: "Loudoun",
-    state: "VA",
-    pass0_method: "api_permit",
-    pass0_source_url: "https://api.loudoun.gov/permits",
-    pass0_automation_confidence: 0.95,
-    pass2_method: "api_zoning",
-    pass2_source_url: "https://api.loudoun.gov/zoning",
-    pass2_automation_confidence: 0.88,
-    recon_performed_by: "claude_code",
-    verified_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(), // 2 days ago
-    ttl_days: 90,
-  },
-];
-
-function getTTLStatus(verifiedAt: string, ttlDays: number) {
-  const verified = new Date(verifiedAt);
-  const now = new Date();
-  const daysSinceVerified = Math.floor((now.getTime() - verified.getTime()) / (1000 * 60 * 60 * 24));
-  const daysRemaining = ttlDays - daysSinceVerified;
-  const percentRemaining = Math.max(0, Math.min(100, (daysRemaining / ttlDays) * 100));
-  
-  return {
-    daysSinceVerified,
-    daysRemaining,
-    percentRemaining,
-    isStale: daysRemaining <= 0,
-    isWarning: daysRemaining > 0 && daysRemaining <= 14,
-    isFresh: daysRemaining > 14,
-  };
-}
-
 function MethodBadge({ method }: { method: string }) {
-  const config = METHOD_CONFIG[method as keyof typeof METHOD_CONFIG] || METHOD_CONFIG.manual;
+  const config = METHOD_CONFIG[method?.toLowerCase()] || METHOD_CONFIG.manual;
   const Icon = config.icon;
   
   return (
@@ -128,49 +57,51 @@ function MethodBadge({ method }: { method: string }) {
   );
 }
 
-function TTLIndicator({ verifiedAt, ttlDays }: { verifiedAt: string; ttlDays: number }) {
-  const status = getTTLStatus(verifiedAt, ttlDays);
+function TTLIndicator({ profile }: { profile: CCAProfile }) {
+  const { metadata } = profile;
+  
+  const percentRemaining = Math.max(0, Math.min(100, (metadata.days_until_expiry / 90) * 100));
   
   return (
     <div className="space-y-1">
       <div className="flex items-center justify-between text-xs">
         <span className="text-muted-foreground">TTL Status</span>
         <span className={
-          status.isStale ? "text-destructive" : 
-          status.isWarning ? "text-amber-400" : 
+          metadata.is_expired ? "text-destructive" : 
+          metadata.expires_soon ? "text-amber-400" : 
           "text-emerald-400"
         }>
-          {status.isStale ? "STALE" : `${status.daysRemaining}d remaining`}
+          {metadata.is_expired ? "STALE" : `${metadata.days_until_expiry}d remaining`}
         </span>
       </div>
       <Progress 
-        value={status.percentRemaining} 
+        value={percentRemaining} 
         className={`h-1.5 ${
-          status.isStale ? "[&>div]:bg-destructive" : 
-          status.isWarning ? "[&>div]:bg-amber-500" : 
+          metadata.is_expired ? "[&>div]:bg-destructive" : 
+          metadata.expires_soon ? "[&>div]:bg-amber-500" : 
           "[&>div]:bg-emerald-500"
         }`}
       />
       <div className="flex items-center gap-1 text-xs text-muted-foreground">
         <Calendar className="w-3 h-3" />
-        <span>Verified {status.daysSinceVerified}d ago</span>
+        <span>Verified {new Date(metadata.verified_at).toLocaleDateString()}</span>
       </div>
     </div>
   );
 }
 
 function CountyProfileCard({ profile, onDispatch }: { 
-  profile: typeof MOCK_COUNTY_PROFILES[0]; 
-  onDispatch: (countyId: string) => void;
+  profile: CCAProfile; 
+  onDispatch: (countyId: number) => void;
 }) {
-  const ttlStatus = getTTLStatus(profile.verified_at, profile.ttl_days);
+  const { metadata } = profile;
   
   return (
-    <Card className={`relative overflow-hidden ${ttlStatus.isStale ? "border-destructive/50" : ""}`}>
+    <Card className={`relative overflow-hidden ${metadata.is_expired ? "border-destructive/50" : ""}`}>
       {/* Status indicator */}
       <div className={`absolute top-0 left-0 w-1 h-full ${
-        ttlStatus.isStale ? "bg-destructive" : 
-        ttlStatus.isWarning ? "bg-amber-500" : 
+        metadata.is_expired ? "bg-destructive" : 
+        metadata.expires_soon ? "bg-amber-500" : 
         "bg-emerald-500"
       }`} />
       
@@ -182,11 +113,11 @@ function CountyProfileCard({ profile, onDispatch }: {
               <CardTitle className="text-base">{profile.county_name} County</CardTitle>
               <CardDescription className="text-xs flex items-center gap-1">
                 <MapPin className="w-3 h-3" />
-                {profile.state} • {profile.county_id}
+                {profile.state} • {profile.county_fips || `ID: ${profile.county_id}`}
               </CardDescription>
             </div>
           </div>
-          {ttlStatus.isStale && (
+          {metadata.is_expired && (
             <Badge variant="destructive" className="text-xs">Needs Refresh</Badge>
           )}
         </div>
@@ -197,61 +128,53 @@ function CountyProfileCard({ profile, onDispatch }: {
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <span className="text-xs text-muted-foreground">Pass 0 (Permits)</span>
-            <MethodBadge method={profile.pass0_method} />
+            <MethodBadge method={profile.pass0.method} />
           </div>
-          {profile.pass0_source_url && (
-            <div className="text-xs text-muted-foreground truncate" title={profile.pass0_source_url}>
-              {profile.pass0_source_url}
+          {profile.pass0.source_url && (
+            <div className="text-xs text-muted-foreground truncate" title={profile.pass0.source_url}>
+              {profile.pass0.source_url}
             </div>
           )}
-          {profile.pass0_automation_confidence > 0 && (
-            <div className="flex items-center gap-2">
-              <Progress value={profile.pass0_automation_confidence * 100} className="h-1 flex-1" />
-              <span className="text-xs text-muted-foreground">
-                {Math.round(profile.pass0_automation_confidence * 100)}%
-              </span>
-            </div>
-          )}
+          <div className="flex items-center gap-2 text-xs">
+            <Badge variant="outline" className="text-xs py-0">{profile.pass0.coverage}</Badge>
+            {profile.pass0.has_api && <Badge variant="secondary" className="text-xs py-0">API</Badge>}
+            {profile.pass0.has_portal && <Badge variant="secondary" className="text-xs py-0">Portal</Badge>}
+          </div>
         </div>
         
         {/* Pass 2 Method */}
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <span className="text-xs text-muted-foreground">Pass 2 (Zoning)</span>
-            <MethodBadge method={profile.pass2_method} />
+            <MethodBadge method={profile.pass2.method} />
           </div>
-          {profile.pass2_source_url && (
-            <div className="text-xs text-muted-foreground truncate" title={profile.pass2_source_url}>
-              {profile.pass2_source_url}
+          {profile.pass2.source_url && (
+            <div className="text-xs text-muted-foreground truncate" title={profile.pass2.source_url}>
+              {profile.pass2.source_url}
             </div>
           )}
-          {profile.pass2_automation_confidence > 0 && (
-            <div className="flex items-center gap-2">
-              <Progress value={profile.pass2_automation_confidence * 100} className="h-1 flex-1" />
-              <span className="text-xs text-muted-foreground">
-                {Math.round(profile.pass2_automation_confidence * 100)}%
-              </span>
-            </div>
-          )}
+          <Badge variant="outline" className="text-xs py-0">{profile.pass2.coverage}</Badge>
         </div>
         
         {/* TTL Status */}
-        <TTLIndicator verifiedAt={profile.verified_at} ttlDays={profile.ttl_days} />
+        <TTLIndicator profile={profile} />
         
         {/* Recon info */}
         <div className="flex items-center justify-between pt-2 border-t border-border">
           <div className="flex items-center gap-1 text-xs text-muted-foreground">
-            <Bot className="w-3 h-3" />
-            <span>{profile.recon_performed_by}</span>
+            <Badge variant="secondary" className="text-xs py-0">
+              {metadata.confidence}
+            </Badge>
+            <span>v{metadata.version}</span>
           </div>
           <Button 
             size="sm" 
-            variant={ttlStatus.isStale ? "default" : "outline"}
+            variant={metadata.is_expired ? "default" : "outline"}
             className="h-7 text-xs"
             onClick={() => onDispatch(profile.county_id)}
           >
             <RefreshCw className="w-3 h-3 mr-1" />
-            {ttlStatus.isStale ? "Refresh" : "Re-run"}
+            {metadata.is_expired ? "Refresh" : "Re-run"}
           </Button>
         </div>
       </CardContent>
@@ -259,16 +182,16 @@ function CountyProfileCard({ profile, onDispatch }: {
   );
 }
 
-function DispatchPanel({ onDispatch }: { onDispatch: (zip: string, radius: number) => void }) {
+function DispatchPanel({ onDispatch, isLoading }: { 
+  onDispatch: (zip: string, radius: number) => void;
+  isLoading: boolean;
+}) {
   const [zip, setZip] = useState("");
   const [radius, setRadius] = useState("15");
-  const [isLoading, setIsLoading] = useState(false);
   
   const handleDispatch = async () => {
     if (!zip) return;
-    setIsLoading(true);
     await onDispatch(zip, parseInt(radius));
-    setIsLoading(false);
   };
   
   return (
@@ -310,7 +233,7 @@ function DispatchPanel({ onDispatch }: { onDispatch: (zip: string, radius: numbe
         >
           {isLoading ? (
             <>
-              <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
               Dispatching...
             </>
           ) : (
@@ -359,11 +282,25 @@ function DispatchPanel({ onDispatch }: { onDispatch: (zip: string, radius: numbe
   );
 }
 
-function SummaryCards({ profiles }: { profiles: typeof MOCK_COUNTY_PROFILES }) {
-  const staleCount = profiles.filter(p => getTTLStatus(p.verified_at, p.ttl_days).isStale).length;
-  const warningCount = profiles.filter(p => getTTLStatus(p.verified_at, p.ttl_days).isWarning).length;
-  const automatedP0 = profiles.filter(p => p.pass0_method !== "manual").length;
-  const automatedP2 = profiles.filter(p => p.pass2_method !== "manual").length;
+function SummaryCards({ profiles, isLoading }: { profiles: CCAProfile[]; isLoading: boolean }) {
+  if (isLoading) {
+    return (
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {[1,2,3,4].map(i => (
+          <Card key={i}>
+            <CardContent className="pt-6">
+              <Skeleton className="h-16" />
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    );
+  }
+
+  const staleCount = profiles.filter(p => p.metadata.is_expired).length;
+  const warningCount = profiles.filter(p => p.metadata.expires_soon).length;
+  const automatedP0 = profiles.filter(p => p.pass0.method !== "manual" && p.pass0.method !== "none").length;
+  const automatedP2 = profiles.filter(p => p.pass2.method !== "manual" && p.pass2.method !== "none").length;
   
   return (
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -396,7 +333,7 @@ function SummaryCards({ profiles }: { profiles: typeof MOCK_COUNTY_PROFILES }) {
           <div className="flex items-center justify-between">
             <div>
               <div className="text-2xl font-bold text-emerald-400">
-                {Math.round((automatedP0 / profiles.length) * 100)}%
+                {profiles.length > 0 ? Math.round((automatedP0 / profiles.length) * 100) : 0}%
               </div>
               <div className="text-xs text-muted-foreground">Pass 0 Automated</div>
             </div>
@@ -410,7 +347,7 @@ function SummaryCards({ profiles }: { profiles: typeof MOCK_COUNTY_PROFILES }) {
           <div className="flex items-center justify-between">
             <div>
               <div className="text-2xl font-bold text-blue-400">
-                {Math.round((automatedP2 / profiles.length) * 100)}%
+                {profiles.length > 0 ? Math.round((automatedP2 / profiles.length) * 100) : 0}%
               </div>
               <div className="text-xs text-muted-foreground">Pass 2 Automated</div>
             </div>
@@ -423,14 +360,14 @@ function SummaryCards({ profiles }: { profiles: typeof MOCK_COUNTY_PROFILES }) {
 }
 
 export default function CCAReconHub() {
-  const [profiles] = useState(MOCK_COUNTY_PROFILES);
+  const { profiles, isLoading, error, fetchProfile, dispatchRecon } = useCCAProfiles();
   const [searchTerm, setSearchTerm] = useState("");
+  const [lastDispatch, setLastDispatch] = useState<DispatchResult | null>(null);
   const { toast } = useToast();
   
   const filteredProfiles = profiles.filter(p => 
     p.county_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    p.state.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    p.county_id.toLowerCase().includes(searchTerm.toLowerCase())
+    p.state.toLowerCase().includes(searchTerm.toLowerCase())
   );
   
   const handleDispatch = async (zip: string, radius: number) => {
@@ -439,32 +376,31 @@ export default function CCAReconHub() {
       description: `Resolving counties for ZIP ${zip} within ${radius} miles...`,
     });
     
-    try {
-      const { data, error } = await supabase.functions.invoke("cca_dispatch_recon", {
-        body: { zip, radius_miles: radius }
-      });
-      
-      if (error) throw error;
-      
+    const result = await dispatchRecon(zip, radius);
+    
+    if (result) {
+      setLastDispatch(result);
       toast({
-        title: "Dispatch Complete",
-        description: `Found ${data?.counties_found || 0} counties, ${data?.counties_needing_recon || 0} need recon.`,
-      });
-    } catch (err) {
-      toast({
-        title: "Dispatch Failed",
-        description: err instanceof Error ? err.message : "Unknown error",
-        variant: "destructive",
+        title: result.status === 'error' ? "Dispatch Failed" : "Dispatch Complete",
+        description: result.status === 'all_fresh' 
+          ? `All ${result.counties_fresh.length} counties are fresh`
+          : `${result.counties_to_recon.length} counties queued for recon`,
+        variant: result.status === 'error' ? "destructive" : "default",
       });
     }
   };
   
-  const handleSingleDispatch = async (countyId: string) => {
+  const handleSingleDispatch = async (countyId: number) => {
     toast({
       title: "Refreshing County Profile",
-      description: `Triggering CCA recon for ${countyId}...`,
+      description: `Triggering CCA recon for county ${countyId}...`,
     });
-    // In production, this would call cca_dispatch_recon with force_refresh for this county
+    // Single county refresh would trigger cca_dispatch_recon with force_refresh
+    // For now, just refetch the profile
+    const profile = profiles.find(p => p.county_id === countyId);
+    if (profile) {
+      await fetchProfile(profile.county_name, profile.state);
+    }
   };
   
   return (
@@ -473,35 +409,59 @@ export default function CCAReconHub() {
       <div>
         <h1 className="text-2xl font-bold text-foreground">CCA Recon Dashboard</h1>
         <p className="text-muted-foreground mt-1">
-          County Capability Assessment — automation method registry
+          County Capability Assessment — automation method registry (LIVE DATA)
         </p>
       </div>
       
-      {/* Prime Rule */}
-      <Card className="bg-primary/5 border-primary/20">
-        <CardContent className="py-4">
-          <div className="flex items-center gap-3">
-            <Bot className="w-6 h-6 text-primary" />
-            <div className="text-sm">
-              <span className="font-semibold text-primary">Prime Rule:</span>
-              <span className="text-muted-foreground ml-2">
-                Claude thinks. Neon remembers. Lovable orchestrates.
-              </span>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Doctrine Banner */}
+      <Alert className="bg-primary/5 border-primary/20">
+        <Info className="h-4 w-4" />
+        <AlertDescription>
+          <span className="font-semibold text-primary">Doctrine:</span>
+          <span className="text-muted-foreground ml-2">
+            Claude thinks. Neon remembers. Lovable orchestrates. No mock data.
+          </span>
+        </AlertDescription>
+      </Alert>
+      
+      {/* Error Display */}
+      {error && (
+        <Alert variant="destructive">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
       
       {/* Summary Cards */}
-      <SummaryCards profiles={profiles} />
+      <SummaryCards profiles={profiles} isLoading={isLoading} />
       
       {/* Dispatch Panel */}
-      <DispatchPanel onDispatch={handleDispatch} />
+      <DispatchPanel onDispatch={handleDispatch} isLoading={isLoading} />
+      
+      {/* Last Dispatch Result */}
+      {lastDispatch && (
+        <Card className="border-amber-500/30 bg-amber-500/5">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm flex items-center gap-2">
+              <Clock className="w-4 h-4" />
+              Last Dispatch: {lastDispatch.status}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="text-xs text-muted-foreground">
+            {lastDispatch.counties_to_recon.length > 0 && (
+              <div>Queued: {lastDispatch.counties_to_recon.map(c => `${c.county_name}, ${c.state}`).join('; ')}</div>
+            )}
+            {lastDispatch.counties_fresh.length > 0 && (
+              <div>Fresh: {lastDispatch.counties_fresh.join('; ')}</div>
+            )}
+          </CardContent>
+        </Card>
+      )}
       
       {/* County Profiles */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold">County Profiles</h2>
+          <h2 className="text-lg font-semibold">County Profiles ({profiles.length})</h2>
           <div className="relative w-64">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input 
@@ -513,17 +473,44 @@ export default function CCAReconHub() {
           </div>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-          {filteredProfiles.map((profile) => (
-            <CountyProfileCard 
-              key={profile.county_id} 
-              profile={profile} 
-              onDispatch={handleSingleDispatch}
-            />
-          ))}
-        </div>
+        {isLoading && profiles.length === 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+            {[1, 2, 3].map(i => (
+              <Card key={i}>
+                <CardHeader>
+                  <Skeleton className="h-6 w-32" />
+                  <Skeleton className="h-4 w-24" />
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <Skeleton className="h-12" />
+                  <Skeleton className="h-12" />
+                  <Skeleton className="h-8" />
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        ) : profiles.length === 0 ? (
+          <Card className="border-dashed">
+            <CardContent className="py-12 text-center">
+              <Building2 className="w-12 h-12 mx-auto text-muted-foreground/50 mb-4" />
+              <p className="text-muted-foreground">
+                No county profiles loaded. Use the dispatch panel above to fetch profiles for a ZIP radius.
+              </p>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+            {filteredProfiles.map((profile) => (
+              <CountyProfileCard 
+                key={profile.county_id} 
+                profile={profile} 
+                onDispatch={handleSingleDispatch}
+              />
+            ))}
+          </div>
+        )}
         
-        {filteredProfiles.length === 0 && (
+        {profiles.length > 0 && filteredProfiles.length === 0 && (
           <div className="text-center py-12 text-muted-foreground">
             No counties found matching "{searchTerm}"
           </div>

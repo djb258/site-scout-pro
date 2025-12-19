@@ -216,6 +216,19 @@ const Pass3Hub = () => {
           </Alert>
         )}
 
+        {/* HARD STOP: Blocked or Error Jurisdiction */}
+        {(cardStatus === 'blocked' || cardStatus === 'error') && (
+          <Alert variant="destructive" className="mb-6">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertDescription>
+              <strong>CALCULATION DISABLED</strong> — Jurisdiction data is {cardStatus}. 
+              {cardStatus === 'blocked' 
+                ? ' Fatal prohibition detected. Cannot proceed with feasibility analysis.' 
+                : ' Unable to load jurisdiction constraints. Fix Pass 2 data first.'}
+            </AlertDescription>
+          </Alert>
+        )}
+
         {/* Controls Row */}
         <Card className="mb-6">
           <CardContent className="py-4">
@@ -224,11 +237,21 @@ const Pass3Hub = () => {
                 <SolverModeToggle mode={mode} onModeChange={setMode} disabled={isRunning} />
                 <SolverLockToggle isLocked={isLocked} onLockChange={setIsLocked} disabled={isRunning} />
               </div>
-              <Button onClick={runSolver} disabled={isRunning || isLoadingCard} size="lg" className="gap-2">
+              <Button 
+                onClick={runSolver} 
+                disabled={isRunning || isLoadingCard || cardStatus === 'blocked' || cardStatus === 'error'} 
+                size="lg" 
+                className="gap-2"
+              >
                 {isRunning ? (
                   <>
                     <Loader2 className="h-4 w-4 animate-spin" />
                     Running...
+                  </>
+                ) : cardStatus === 'blocked' || cardStatus === 'error' ? (
+                  <>
+                    <AlertTriangle className="h-4 w-4" />
+                    Calculation Blocked
                   </>
                 ) : (
                   <>
