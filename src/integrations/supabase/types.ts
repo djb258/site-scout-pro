@@ -407,6 +407,132 @@ export type Database = {
         }
         Relationships: []
       }
+      jurisdiction_card_drafts: {
+        Row: {
+          asset_class: string | null
+          card_complete: boolean | null
+          card_payload: Json
+          collected_at: string | null
+          county_id: number
+          created_at: string | null
+          duration_ms: number | null
+          envelope_complete: boolean | null
+          execution_id: string
+          failure_reason: string | null
+          fatal_prohibition: string | null
+          field_states: Json
+          id: string
+          neon_version_hash: string | null
+          promoted_at: string | null
+          provenance_log: Json
+          red_flags: Json | null
+          source_count: number | null
+          state_code: string
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          asset_class?: string | null
+          card_complete?: boolean | null
+          card_payload?: Json
+          collected_at?: string | null
+          county_id: number
+          created_at?: string | null
+          duration_ms?: number | null
+          envelope_complete?: boolean | null
+          execution_id: string
+          failure_reason?: string | null
+          fatal_prohibition?: string | null
+          field_states?: Json
+          id?: string
+          neon_version_hash?: string | null
+          promoted_at?: string | null
+          provenance_log?: Json
+          red_flags?: Json | null
+          source_count?: number | null
+          state_code: string
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          asset_class?: string | null
+          card_complete?: boolean | null
+          card_payload?: Json
+          collected_at?: string | null
+          county_id?: number
+          created_at?: string | null
+          duration_ms?: number | null
+          envelope_complete?: boolean | null
+          execution_id?: string
+          failure_reason?: string | null
+          fatal_prohibition?: string | null
+          field_states?: Json
+          id?: string
+          neon_version_hash?: string | null
+          promoted_at?: string | null
+          provenance_log?: Json
+          red_flags?: Json | null
+          source_count?: number | null
+          state_code?: string
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      jurisdiction_collection_log: {
+        Row: {
+          blocked_count: number | null
+          county_id: number
+          created_at: string | null
+          duration_ms: number | null
+          ended_at: string | null
+          execution_id: string
+          failure_reason: string | null
+          id: string
+          known_count: number | null
+          red_flags: Json | null
+          source_count: number | null
+          started_at: string | null
+          state_code: string
+          status: string | null
+          unknown_count: number | null
+        }
+        Insert: {
+          blocked_count?: number | null
+          county_id: number
+          created_at?: string | null
+          duration_ms?: number | null
+          ended_at?: string | null
+          execution_id: string
+          failure_reason?: string | null
+          id?: string
+          known_count?: number | null
+          red_flags?: Json | null
+          source_count?: number | null
+          started_at?: string | null
+          state_code: string
+          status?: string | null
+          unknown_count?: number | null
+        }
+        Update: {
+          blocked_count?: number | null
+          county_id?: number
+          created_at?: string | null
+          duration_ms?: number | null
+          ended_at?: string | null
+          execution_id?: string
+          failure_reason?: string | null
+          id?: string
+          known_count?: number | null
+          red_flags?: Json | null
+          source_count?: number | null
+          started_at?: string | null
+          state_code?: string
+          status?: string | null
+          unknown_count?: number | null
+        }
+        Relationships: []
+      }
       master_failure_log: {
         Row: {
           context: Json | null

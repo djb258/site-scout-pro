@@ -148,28 +148,17 @@ verify_jwt = false
 verify_jwt = false
 
 # ================================================================
-# Pass 2 — Jurisdiction Cards & Underwriting
+# Pass 2 — Jurisdiction Card Worker System (v1.0.0)
+# Supabase stages → Neon vault via explicit promotion ONLY
 # ================================================================
 
-[functions.pass2_get_jurisdiction_card]
+[functions.collectJurisdictionCard]
 verify_jwt = false
 
-[functions.pass2_write_envelope]
+[functions.validateJurisdictionCard]
 verify_jwt = false
 
-[functions.pass2_write_fire]
-verify_jwt = false
-
-[functions.pass2_write_parking]
-verify_jwt = false
-
-[functions.pass2_write_scope]
-verify_jwt = false
-
-[functions.pass2_write_stormwater]
-verify_jwt = false
-
-[functions.pass2_write_viability]
+[functions.promoteJurisdictionCardToVault]
 verify_jwt = false
 
 # ================================================================
