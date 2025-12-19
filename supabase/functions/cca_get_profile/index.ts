@@ -2,17 +2,18 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import postgres from 'https://deno.land/x/postgresjs@v3.4.4/mod.js';
 
 /**
- * CCA_GET_PROFILE Edge Function
+ * CCA_GET_PROFILE Edge Function (v2.0.0)
  * 
  * DOCTRINE: Read-only hydration for UI. Never modifies data.
+ * Updated to use ref.v_cca_dispatch view matching Claude Code spec.
  * 
  * Responsibilities:
- * 1. Fetch CCA profile for display
- * 2. Flag stale profiles
- * 3. Return method details for routing
+ * 1. Fetch CCA profile from dispatch view
+ * 2. Flag stale/expiring profiles
+ * 3. Return full method details for routing
  * 
  * process_id: cca_get_profile
- * version: v1.0.0
+ * version: v2.0.0
  */
 
 const corsHeaders = {
@@ -21,32 +22,37 @@ const corsHeaders = {
 };
 
 interface CCAProfile {
-  county_id: string;
-  county_name: string;
+  county_id: number;
   state: string;
+  county_name: string;
+  county_fips: string | null;
   
   pass0: {
     method: string;
+    coverage: string;
+    vendor: string | null;
     source_url: string | null;
-    automation_confidence: number | null;
-    notes: string | null;
+    has_api: boolean;
+    has_portal: boolean;
   };
   
   pass2: {
     method: string;
+    coverage: string;
     source_url: string | null;
-    automation_confidence: number | null;
-    notes: string | null;
+    planning_url: string | null;
+    ordinance_url: string | null;
+    zoning_map_url: string | null;
   };
   
   metadata: {
-    recon_performed_by: string | null;
-    recon_notes: string | null;
-    source_evidence: any[];
+    confidence: string;
     verified_at: string;
     expires_at: string;
-    is_stale: boolean;
-    days_until_stale: number;
+    is_expired: boolean;
+    expires_soon: boolean;
+    days_until_expiry: number;
+    version: number;
   };
 }
 
@@ -87,53 +93,17 @@ Deno.serve(async (req) => {
 
     sql = await getNeonConnection();
 
-    // Build query based on input
+    // Query from ref.v_cca_dispatch view
     let profileResult;
     if (county_id) {
       profileResult = await sql`
-        SELECT 
-          county_id,
-          county_name,
-          state,
-          pass0_method,
-          pass0_source_url,
-          pass0_automation_confidence,
-          pass0_notes,
-          pass2_method,
-          pass2_source_url,
-          pass2_automation_confidence,
-          pass2_notes,
-          recon_performed_by,
-          recon_notes,
-          source_evidence,
-          verified_at,
-          ttl_days,
-          (verified_at + (ttl_days || ' days')::interval) as expires_at
-        FROM ref.cca_county_profile
+        SELECT * FROM ref.v_cca_dispatch
         WHERE county_id = ${county_id}
         LIMIT 1
       `;
     } else {
       profileResult = await sql`
-        SELECT 
-          county_id,
-          county_name,
-          state,
-          pass0_method,
-          pass0_source_url,
-          pass0_automation_confidence,
-          pass0_notes,
-          pass2_method,
-          pass2_source_url,
-          pass2_automation_confidence,
-          pass2_notes,
-          recon_performed_by,
-          recon_notes,
-          source_evidence,
-          verified_at,
-          ttl_days,
-          (verified_at + (ttl_days || ' days')::interval) as expires_at
-        FROM ref.cca_county_profile
+        SELECT * FROM ref.v_cca_dispatch
         WHERE county_name ILIKE ${county_name}
           AND state = ${state}
         LIMIT 1
@@ -152,35 +122,36 @@ Deno.serve(async (req) => {
     }
 
     const row = profileResult[0];
-    const now = new Date();
-    const expiresAt = new Date(row.expires_at);
-    const isStale = expiresAt <= now;
-    const daysUntilStale = Math.ceil((expiresAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
 
     const profile: CCAProfile = {
       county_id: row.county_id,
-      county_name: row.county_name,
       state: row.state,
+      county_name: row.county_name,
+      county_fips: row.county_fips,
       pass0: {
         method: row.pass0_method,
+        coverage: row.pass0_coverage,
+        vendor: row.pass0_vendor,
         source_url: row.pass0_source_url,
-        automation_confidence: row.pass0_automation_confidence,
-        notes: row.pass0_notes,
+        has_api: row.pass0_has_api,
+        has_portal: row.pass0_has_portal,
       },
       pass2: {
         method: row.pass2_method,
+        coverage: row.pass2_coverage,
         source_url: row.pass2_source_url,
-        automation_confidence: row.pass2_automation_confidence,
-        notes: row.pass2_notes,
+        planning_url: row.pass2_planning_url,
+        ordinance_url: row.pass2_ordinance_url,
+        zoning_map_url: row.pass2_zoning_map_url,
       },
       metadata: {
-        recon_performed_by: row.recon_performed_by,
-        recon_notes: row.recon_notes,
-        source_evidence: row.source_evidence || [],
+        confidence: row.confidence,
         verified_at: row.verified_at,
         expires_at: row.expires_at,
-        is_stale: isStale,
-        days_until_stale: isStale ? 0 : daysUntilStale,
+        is_expired: row.is_expired,
+        expires_soon: row.expires_soon,
+        days_until_expiry: Math.round(row.days_until_expiry || 0),
+        version: row.version,
       },
     };
 
@@ -189,7 +160,7 @@ Deno.serve(async (req) => {
       profile,
     };
 
-    console.log(`[CCA_GET] Profile found: ${row.county_id}, stale: ${isStale}`);
+    console.log(`[CCA_GET v2] Profile found: ${row.county_id}, expired: ${row.is_expired}, version: ${row.version}`);
 
     await sql.end();
 
@@ -199,7 +170,7 @@ Deno.serve(async (req) => {
     );
 
   } catch (error) {
-    console.error('[CCA_GET] Error:', error);
+    console.error('[CCA_GET v2] Error:', error);
     if (sql) await sql.end();
 
     return new Response(
