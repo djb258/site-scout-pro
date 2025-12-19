@@ -427,29 +427,45 @@ serve(async (req) => {
     console.log('[SOLVER_RUN] Input received:', JSON.stringify(input, null, 2));
 
     // =========================================================================
-    // HARD ENVELOPE GUARD — Pass 3 fails closed without envelope_complete
+    // HARD ENVELOPE GUARD — Pass 3 FAILS CLOSED without envelope_complete
     // =========================================================================
-    // DOCTRINE: No silent defaults. If envelope is incomplete, solver rejects.
-    // Log to master_failure_log for audit trail.
+    // DOCTRINE: 
+    // - No try/catch bypass
+    // - No "solver defaults" allowed when blocked
+    // - No Neon writes attempted
+    // - No partial runs
     // =========================================================================
-    if (!input.envelope_complete) {
-      console.error('[SOLVER_RUN] BLOCKED: envelope_complete !== true');
+    if (input.envelope_complete !== true) {
+      const executionId = crypto.randomUUID();
+      const timestamp = new Date().toISOString();
       
-      // Log to master_failure_log
+      console.error(`[SOLVER_RUN] BLOCKED: envelope_complete !== true (execution_id: ${executionId})`);
+      
+      // Structured log entry (EXACT FORMAT per deliverable spec)
+      const blockLog = {
+        pass: 3,
+        status: "blocked",
+        reason: "ENVELOPE_INCOMPLETE",
+        county_id: input.observed?.county || null,
+        execution_id: executionId,
+        timestamp: timestamp,
+        mode: input.mode,
+        jurisdiction: input.observed?.jurisdiction || null
+      };
+      console.log('[SOLVER_RUN] BLOCK_LOG:', JSON.stringify(blockLog));
+      
+      // Log to master_failure_log for audit trail
       await supabase.from('master_failure_log').insert({
         process_id: PROCESS_ID,
         pass_number: PASS_NUMBER,
         step: 'envelope_guard',
         error_code: 'ENVELOPE_INCOMPLETE',
-        error_message: 'Pass 3 requires envelope_complete=true. Solver run rejected.',
+        error_message: 'Pass 3 requires envelope_complete=true. Solver run rejected. NO DEFAULTS COMPUTED.',
         severity: 'error',
-        context: { 
-          county: input.observed?.county,
-          jurisdiction: input.observed?.jurisdiction,
-          mode: input.mode
-        }
+        context: blockLog
       });
 
+      // FAIL CLOSED — no solver logic executed, no defaults, no partial runs
       return new Response(JSON.stringify({
         solver_artifact_id: null,
         blocked: true,
@@ -458,7 +474,8 @@ serve(async (req) => {
         outputs: null,
         warnings: [],
         mode: input.mode,
-        timestamp: new Date().toISOString()
+        timestamp: timestamp,
+        execution_id: executionId
       }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
