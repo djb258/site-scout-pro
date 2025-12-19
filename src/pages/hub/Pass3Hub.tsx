@@ -12,6 +12,7 @@ import { SolverTunables, type Tunables } from "@/components/solver/SolverTunable
 import { SolverOutputs } from "@/components/solver/SolverOutputs";
 import { SolverWaterfall } from "@/components/solver/SolverWaterfall";
 import { SolverDecisionGates } from "@/components/solver/SolverDecisionGates";
+import { PipelineDocPanel } from "@/components/PipelineDocPanel";
 
 interface ObservedInputs {
   zip?: string;
@@ -175,6 +176,11 @@ const Pass3Hub = () => {
       </div>
 
       <div className="container mx-auto px-6 py-6">
+        {/* Pipeline Documentation */}
+        <div className="mb-6">
+          <PipelineDocPanel passNumber={3} />
+        </div>
+
         {/* Controls Row */}
         <Card className="mb-6">
           <CardContent className="py-4">

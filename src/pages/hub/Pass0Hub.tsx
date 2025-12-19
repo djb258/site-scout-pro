@@ -10,6 +10,7 @@ import { Separator } from "@/components/ui/separator";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { PipelineDocPanel } from "@/components/PipelineDocPanel";
 import { 
   Radio, 
   Play, 
@@ -334,6 +335,9 @@ const Pass0Hub = () => {
       </div>
 
       <div className="container mx-auto px-6 py-8 space-y-6">
+        {/* Pipeline Documentation */}
+        <PipelineDocPanel passNumber={0} />
+
         {/* Pipeline Waterfall */}
         <Card className="border-border bg-card/50">
           <CardHeader className="pb-4">
