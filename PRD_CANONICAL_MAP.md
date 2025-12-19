@@ -1,6 +1,6 @@
 # PRD Canonical Map — Storage Site Scout
 
-**Last Updated:** 2025-12-18
+**Last Updated:** 2024-12-19
 **Purpose:** Single source of truth for documentation hierarchy and repository structure
 
 ---
@@ -48,25 +48,38 @@ DOCTRINE (Process Locks)
 
 **Location:** `ref` schema (NOT inside any pass)
 **Doctrine ID:** REF.CCA.00
+**Prime Rule:** "Claude thinks. Neon remembers. Lovable orchestrates."
 
 | Type | File | Purpose |
 |------|------|---------|
 | Doctrine | `docs/doctrine/CountyCapabilityAsset.md` | Cross-pass reference primitive |
 | ADR | `docs/adr/ADR-022-county-capability-asset.md` | CCA as infrastructure |
-| Checklist | `docs/checklists/CCA_COUNTY_CAPABILITY_COMPLIANCE.md` | Pre-ship compliance |
-| Migration | `supabase/migrations/20251218_county_capability_profiles.sql` | Database schema |
-| Types | `src/capability/types.ts` | TypeScript definitions |
-| Probe | `src/capability/CapabilityProbe.ts` | Capability detection |
+| ADR | `docs/adr/ADR-023-cca-pass2-schema-separation.md` | Schema separation |
+| PRD | `docs/prd/PRD_CCA_RECON_AGENT.md` | Recon agent requirements |
+| Checklist | `docs/checklists/CCA_RECON_AGENT_COMPLIANCE.md` | Pre-ship compliance |
+| Schema Ref | `docs/LOVABLE_SCHEMA_REFERENCE.md` | Schema for Lovable.dev |
+| Migration | `supabase/migrations/20251219_cca_and_pass2_schema.sql` | Database schema |
+| Types | `src/cca/agent/types.ts` | Recon agent types |
+| Agent | `src/cca/agent/CcaReconAgent.ts` | Recon agent implementation |
+| Probes | `src/cca/probes/Pass0DataProbe.ts` | Pass 0 capability probe |
+| Probes | `src/cca/probes/Pass2DataProbe.ts` | Pass 2 capability probe |
+| Consumers | `src/cca/consumers/Pass0Consumer.ts` | Pass 0 read-only API |
+| Consumers | `src/cca/consumers/Pass2Consumer.ts` | Pass 2 read-only API |
+| PR Template | `templates/pr/PULL_REQUEST_TEMPLATE_CCA.md` | CCA PR template |
 
 **Key Rules:**
 - CCA answers HOW to get data, not WHAT the rules are
-- Only CapabilityProbe writes to CCA (passes are read-only)
-- Pass 0 and Pass 2 both read CCA
+- CCA Recon Agent selects: API → Scrape → Portal → Manual
+- Only CCA Recon Agent writes to CCA (passes are read-only)
+- Pass 0 and Pass 2 both read CCA via consumer APIs
 - 12-month TTL with automatic expiration
+- Lovable orchestrates dispatch based on CCA output
 
 ---
 
 ## Pass 2: Constraint Compiler (SS.02.00)
+
+**Critical Doctrine:** "Pass 2 defines WHAT is true. CCA defines HOW to collect it."
 
 ### Current (Canonical)
 
@@ -74,12 +87,29 @@ DOCTRINE (Process Locks)
 |------|------|---------|
 | Doctrine | `docs/doctrine/SYSTEM_PROMPT_PASS2.md` | **Process lock** — Definitive rules |
 | Doctrine | `docs/doctrine/Pass2ReallyIs.md` | What Pass 2 actually is |
+| Spec | `docs/PASS2_JURISDICTION_CARD.md` | What to collect per county |
 | ADR | `docs/adr/ADR-019-pass2-really-is.md` | Why Pass 2 is a constraint compiler |
 | ADR | `docs/adr/ADR-020-pass2-constraint-compiler-position.md` | Architectural position |
 | ADR | `docs/adr/ADR-021-jurisdiction-card-hydration-pipeline.md` | Automated hydration |
+| ADR | `docs/adr/ADR-023-cca-pass2-schema-separation.md` | Schema separation |
 | PRD | `docs/prd/PRD_PASS2_JURISDICTION_CARD.md` | Jurisdiction card requirements |
 | PRS | `docs/prs/PRS_PASS2_CONSTRAINT_COMPILER.md` | Execution specification |
 | Checklist | `docs/checklists/PASS2_CONSTRAINT_COMPILER_COMPLIANCE.md` | Pre-ship compliance |
+| Checklist | `docs/checklists/PASS2_JURISDICTION_CARD_COMPLIANCE.md` | Schema compliance |
+| PR Template | `templates/pr/PULL_REQUEST_TEMPLATE_PASS2_JURISDICTION.md` | Pass 2 PR template |
+| Types | `src/pass2/types/jurisdiction_card.ts` | TypeScript types |
+| Factories | `src/pass2/factories/jurisdiction_card_factory.ts` | Factory functions |
+
+### Database Tables (pass2 schema)
+
+| Table | Purpose |
+|-------|---------|
+| `pass2.jurisdiction_scope` | Who governs, at what level |
+| `pass2.use_viability` | Should we continue? (gating) |
+| `pass2.zoning_envelope` | Numeric constraints for geometry |
+| `pass2.fire_life_safety` | Fire and safety constraints |
+| `pass2.stormwater_environmental` | Stormwater and environmental |
+| `pass2.parking_access` | Parking and access requirements |
 
 ### Spokes (9 Total)
 
@@ -244,6 +274,7 @@ DOCTRINE (Process Locks)
 | ADR-020 | Pass 2 Constraint Compiler Position | **Active** |
 | ADR-021 | Jurisdiction Card Hydration Pipeline | **Active** |
 | ADR-022 | County Capability Asset | **Active** |
+| ADR-023 | CCA and Pass 2 Schema Separation | **Active** |
 
 ---
 

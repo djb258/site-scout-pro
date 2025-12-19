@@ -1,8 +1,18 @@
 # PRD: Pass 2 Jurisdiction Card Completion Engine
 
 **Document ID:** PRD-PASS2-001
-**Status:** Derived from implementation
-**Reference:** ADR-019, `docs/doctrine/Pass2ReallyIs.md`
+**Status:** Active
+**Last Updated:** 2024-12-19
+**Reference:** ADR-019, ADR-023, `docs/PASS2_JURISDICTION_CARD.md`
+
+---
+
+## Critical Doctrine
+
+> **Pass 2 defines WHAT is true. CCA defines HOW to collect it.**
+
+Pass 2 does NOT know how data was collected. It only stores facts + provenance.
+See [ADR-023](../adr/ADR-023-cca-pass2-schema-separation.md) for schema separation.
 
 ---
 
@@ -197,9 +207,54 @@ Pass 2 is successful if:
 
 ---
 
+## Database Schema
+
+Pass 2 data is stored in 6 domain tables in the `pass2` schema.
+All tables FK to `ref.county_capability(county_id)`.
+
+### Tables
+
+| Table | Purpose |
+|-------|---------|
+| `pass2.jurisdiction_scope` | Who governs, at what level |
+| `pass2.use_viability` | Should we continue? (gating) |
+| `pass2.zoning_envelope` | Numeric constraints for geometry |
+| `pass2.fire_life_safety` | Fire and safety constraints |
+| `pass2.stormwater_environmental` | Stormwater and environmental |
+| `pass2.parking_access` | Parking and access requirements |
+
+### Per-Field Provenance
+
+Every fact field has provenance columns:
+```
+field_name              TYPE,
+field_name_state        knowledge_state,  -- known | unknown | blocked
+field_name_source       source_type,      -- ordinance | pdf | portal | human
+field_name_ref          TEXT              -- URL, document, section
+```
+
+### Views
+
+| View | Consumer | Purpose |
+|------|----------|---------|
+| `pass2.v_jurisdiction_card_for_pass3` | Pass 3 | Complete card with computed `envelope_complete` |
+
+### Functions
+
+| Function | Purpose |
+|----------|---------|
+| `pass2.is_envelope_complete(county_id)` | Check if REQUIRED_FOR_ENVELOPE fields are known |
+| `pass2.has_fatal_prohibition(county_id)` | Check if fatal_prohibition = 'yes' |
+| `pass2.is_storage_allowed(county_id)` | Get storage_allowed ternary value |
+
+See `supabase/migrations/20251219_cca_and_pass2_schema.sql` for full DDL.
+
+---
+
 ## References
 
-- ADR-019: Pass 2 Really Is
-- ADR-020: Pass 2 Architectural Position
-- PRS-PASS2-001: Pass 2 Execution Specification
-- Doctrine: `docs/doctrine/Pass2ReallyIs.md`
+- [ADR-019: Pass 2 Really Is](../adr/ADR-019-pass2-really-is.md)
+- [ADR-020: Pass 2 Constraint Compiler Position](../adr/ADR-020-pass2-constraint-compiler-position.md)
+- [ADR-023: CCA and Pass 2 Schema Separation](../adr/ADR-023-cca-pass2-schema-separation.md)
+- [Jurisdiction Card Spec](../PASS2_JURISDICTION_CARD.md)
+- [Lovable Schema Reference](../LOVABLE_SCHEMA_REFERENCE.md)
