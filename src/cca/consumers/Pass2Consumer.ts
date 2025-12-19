@@ -2,6 +2,12 @@
  * Pass 2 CCA Consumer — Read-only API for Pass 2 to consume CCA
  * ============================================================================
  *
+ * ✅ SAFE FOR UI/LOVABLE — READ-ONLY
+ *
+ * This module only reads from CCA. Safe to import anywhere.
+ *
+ * ============================================================================
+ *
  * DOCTRINE:
  * Pass 2 uses CCA to know HOW to hydrate jurisdiction cards.
  * This is a READ-ONLY API. Pass 2 may NEVER write to CCA.

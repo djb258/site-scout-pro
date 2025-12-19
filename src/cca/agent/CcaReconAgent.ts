@@ -2,6 +2,15 @@
  * CCA Recon Agent — County Capability Assessment
  * ============================================================================
  *
+ * ⛔ STAGE-1 WRITER — DO NOT IMPORT FROM UI OR LOVABLE ⛔
+ *
+ * This module produces data that writes to ref.county_capability.
+ * UI/Lovable must use src/cca/consumers/* instead.
+ *
+ * See LOCKS.md for import restrictions.
+ *
+ * ============================================================================
+ *
  * DOCTRINE:
  * "Claude thinks. Neon remembers. Lovable orchestrates."
  *

@@ -2,6 +2,12 @@
  * Pass 0 CCA Consumer — Read-only API for Pass 0 to consume CCA
  * ============================================================================
  *
+ * ✅ SAFE FOR UI/LOVABLE — READ-ONLY
+ *
+ * This module only reads from CCA. Safe to import anywhere.
+ *
+ * ============================================================================
+ *
  * DOCTRINE:
  * Pass 0 uses CCA to know HOW to collect permit and inspection data.
  * This is a READ-ONLY API. Pass 0 may NEVER write to CCA.

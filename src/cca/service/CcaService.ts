@@ -2,6 +2,15 @@
  * CCA Service — Standalone County Capability Asset Service
  * ============================================================================
  *
+ * ⛔ STAGE-1 WRITER — DO NOT IMPORT FROM UI OR LOVABLE ⛔
+ *
+ * This module has WRITE access to ref.county_capability.
+ * UI/Lovable must use src/cca/consumers/* instead.
+ *
+ * See LOCKS.md for import restrictions.
+ *
+ * ============================================================================
+ *
  * DOCTRINE:
  * This service runs INDEPENDENTLY and UPFRONT before any pass.
  * It answers: HOW do we collect information from this county?

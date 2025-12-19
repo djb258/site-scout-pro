@@ -2,6 +2,13 @@
  * Pass 2 — Jurisdiction Card Types
  * ============================================================================
  *
+ * ✅ SAFE FOR UI/LOVABLE — TYPES ONLY
+ *
+ * This module contains type definitions only. No write operations.
+ * Safe to import anywhere.
+ *
+ * ============================================================================
+ *
  * DOCTRINE:
  * This file represents ONE PAPER CARD PER COUNTY that a planner might
  * have filled out by hand.
