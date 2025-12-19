@@ -1,5 +1,12 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
+
+/**
+ * Jurisdiction Card Hook — reads from Supabase staging (NOT Neon)
+ * 
+ * DOCTRINE: Supabase stages working truth. This hook reads drafts directly.
+ * No edge function required for reads — Supabase handles it.
+ */
 
 export interface JurisdictionCard {
   county_id: number;
@@ -73,7 +80,7 @@ interface UseJurisdictionCardResult {
   error: string | null;
   warnings: string[];
   status: 'idle' | 'loading' | 'found' | 'not_found' | 'blocked' | 'error';
-  fetchCard: (countyName: string, state: string) => Promise<void>;
+  fetchCard: (countyNameOrId: string | number, stateCode: string) => Promise<void>;
 }
 
 // Default values when no data available
@@ -86,6 +93,68 @@ const DEFAULT_SOLVER_CARD: SolverJurisdictionCard = {
   fire_lane_width_ft: 24,
 };
 
+/**
+ * Extract card fields from staging draft payload
+ */
+function mapDraftToCard(draft: {
+  county_id: number;
+  state_code: string;
+  envelope_complete: boolean;
+  fatal_prohibition: string;
+  card_payload: Record<string, unknown>;
+}): JurisdictionCard {
+  const p = draft.card_payload;
+  
+  return {
+    county_id: draft.county_id,
+    state: draft.state_code,
+    county_name: (p.county_name as string) || `County ${draft.county_id}`,
+    county_fips: (p.county_fips as string) || null,
+    
+    envelope_complete: draft.envelope_complete,
+    has_fatal_prohibition: draft.fatal_prohibition === 'yes',
+    is_storage_allowed: (p.storage_allowed as 'yes' | 'no' | 'unknown') || 'unknown',
+    
+    authority_model: (p.authority_model as string) || null,
+    zoning_model: (p.zoning_model as string) || null,
+    controlling_authority_name: (p.controlling_authority_name as string) || null,
+    
+    storage_allowed: (p.storage_allowed as string) || 'unknown',
+    fatal_prohibition: draft.fatal_prohibition,
+    fatal_prohibition_description: (p.fatal_prohibition_description as string) || null,
+    conditional_use_required: (p.conditional_use_required as string) || 'unknown',
+    discretionary_required: (p.discretionary_required as string) || 'unknown',
+    
+    setback_front: (p.setback_front as number) || null,
+    setback_side: (p.setback_side as number) || null,
+    setback_rear: (p.setback_rear as number) || null,
+    max_lot_coverage: (p.max_lot_coverage as number) || null,
+    max_height: (p.max_height as number) || null,
+    max_stories: (p.max_stories as number) || null,
+    max_far: (p.max_far as number) || null,
+    buffer_residential: (p.landscape_buffer as number) || null,
+    buffer_waterway: null,
+    buffer_roadway: null,
+    
+    fire_lane_required: (p.fire_access_width as number) ? 'yes' : 'unknown',
+    min_fire_lane_width: (p.fire_access_width as number) || null,
+    sprinkler_required: (p.fire_sprinkler_required as string) || 'unknown',
+    adopted_fire_code: null,
+    
+    detention_required: (p.stormwater_detention_required as string) || 'unknown',
+    retention_required: (p.stormwater_retention_required as string) || 'unknown',
+    max_impervious: (p.impervious_limit_percent as number) || null,
+    watershed_overlay: 'unknown',
+    floodplain_overlay: 'unknown',
+    
+    parking_required: (p.parking_spaces_required as number) ? 'yes' : 'unknown',
+    parking_ratio: (p.parking_ratio as number) || null,
+    parking_ratio_unit: 'per 1000 sqft',
+    truck_access_required: 'unknown',
+    min_driveway_width: null,
+  };
+}
+
 export function useJurisdictionCard(): UseJurisdictionCardResult {
   const [card, setCard] = useState<JurisdictionCard | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -93,8 +162,8 @@ export function useJurisdictionCard(): UseJurisdictionCardResult {
   const [warnings, setWarnings] = useState<string[]>([]);
   const [status, setStatus] = useState<'idle' | 'loading' | 'found' | 'not_found' | 'blocked' | 'error'>('idle');
 
-  const fetchCard = useCallback(async (countyName: string, state: string) => {
-    if (!countyName || !state) return;
+  const fetchCard = useCallback(async (countyNameOrId: string | number, stateCode: string) => {
+    if (!countyNameOrId || !stateCode) return;
 
     setIsLoading(true);
     setError(null);
@@ -102,28 +171,68 @@ export function useJurisdictionCard(): UseJurisdictionCardResult {
     setStatus('loading');
 
     try {
-      const { data, error: fnError } = await supabase.functions.invoke('pass2_get_jurisdiction_card', {
-        body: { county_name: countyName, state },
-      });
+      // Read directly from Supabase staging table (NO edge function needed)
+      // Support both county_id (number) and county_name (string) lookups
+      const { data: drafts, error: queryError } = await supabase
+        .from('jurisdiction_card_drafts')
+        .select('*')
+        .eq('state_code', stateCode)
+        .in('status', ['validated', 'promoted'])
+        .order('collected_at', { ascending: false })
+        .limit(10);
 
-      if (fnError) throw fnError;
+      if (queryError) throw queryError;
 
-      if (data.status === 'found') {
-        setCard(data.card);
-        setWarnings(data.warnings || []);
-        setStatus('found');
-      } else if (data.status === 'blocked') {
-        setCard(data.card);
-        setWarnings(data.warnings || []);
-        setStatus('blocked');
-        setError(data.message);
-      } else if (data.status === 'not_found') {
+      // Filter results based on input type
+      let matchedDraft = null;
+      if (drafts && drafts.length > 0) {
+        if (typeof countyNameOrId === 'number') {
+          matchedDraft = drafts.find(d => d.county_id === countyNameOrId) || null;
+        } else {
+          // For string lookup, check card_payload.county_name or just take first match for state
+          matchedDraft = drafts.find(d => {
+            const payload = d.card_payload as Record<string, unknown>;
+            const countyName = (payload?.county_name as string)?.toLowerCase();
+            return countyName === countyNameOrId.toLowerCase();
+          }) || drafts[0]; // Fallback to first result for state
+        }
+      }
+
+      if (matchedDraft) {
+        const mappedCard = mapDraftToCard({
+          county_id: matchedDraft.county_id,
+          state_code: matchedDraft.state_code,
+          envelope_complete: matchedDraft.envelope_complete,
+          fatal_prohibition: matchedDraft.fatal_prohibition as string,
+          card_payload: matchedDraft.card_payload as Record<string, unknown>,
+        });
+
+        setCard(mappedCard);
+
+        // Generate warnings
+        const newWarnings: string[] = [];
+        if (!matchedDraft.envelope_complete) {
+          newWarnings.push('Envelope incomplete - some required fields missing');
+        }
+        if (matchedDraft.fatal_prohibition === 'yes') {
+          newWarnings.push('Fatal prohibition detected');
+          setStatus('blocked');
+          setError('Storage not allowed in this jurisdiction');
+        } else {
+          setStatus('found');
+        }
+        
+        const redFlags = matchedDraft.red_flags as string[] || [];
+        if (redFlags.length > 0) {
+          newWarnings.push(...redFlags);
+        }
+        
+        setWarnings(newWarnings);
+      } else {
+        // No validated/promoted draft found
         setCard(null);
         setStatus('not_found');
-        setWarnings(['Jurisdiction card not found - using defaults']);
-      } else {
-        setStatus('error');
-        setError(data.message || 'Unknown error');
+        setWarnings(['No jurisdiction card found - using defaults']);
       }
     } catch (err) {
       console.error('[useJurisdictionCard] Error:', err);
