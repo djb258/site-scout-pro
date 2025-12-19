@@ -70,7 +70,14 @@ verify_jwt = false
 verify_jwt = false
 
 # ================================================================
-# Hub 1.5 — Remediation Worker Functions (v0.1.0 SHELL)
+# Hub 1 — OSM Supply Data (v1.0.0)
+# ================================================================
+
+[functions.hub1_pass1_supply_osm]
+verify_jwt = false
+
+# ================================================================
+# Hub 1.5 — Remediation Worker Functions
 # ================================================================
 
 [functions.hub15_orchestrator]
@@ -95,6 +102,12 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.hub15_get_dashboard]
+verify_jwt = false
+
+[functions.hub15_competitor_search]
+verify_jwt = false
+
+[functions.hub15_promote_gaps]
 verify_jwt = false
 
 [functions.solver_run]

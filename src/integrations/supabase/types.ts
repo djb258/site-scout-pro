@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_cost_tracker: {
+        Row: {
+          cost_cents: number
+          created_at: string | null
+          id: string
+          metadata: Json | null
+          operation: string
+          run_id: string
+          service: string
+        }
+        Insert: {
+          cost_cents?: number
+          created_at?: string | null
+          id?: string
+          metadata?: Json | null
+          operation: string
+          run_id: string
+          service: string
+        }
+        Update: {
+          cost_cents?: number
+          created_at?: string | null
+          id?: string
+          metadata?: Json | null
+          operation?: string
+          run_id?: string
+          service?: string
+        }
+        Relationships: []
+      }
       calculators_state: {
         Row: {
           acres_available: number | null
