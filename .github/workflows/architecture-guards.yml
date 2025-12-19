@@ -62,10 +62,22 @@ jobs:
           chmod +x scripts/check_cross_pass_imports.sh
           ./scripts/check_cross_pass_imports.sh
 
+  payload-identity-guard:
+    name: Payload Identity Field Guard
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run Payload Identity Violation Check
+        run: |
+          chmod +x scripts/check_payload_identity_violation.sh
+          ./scripts/check_payload_identity_violation.sh
+
   summary:
     name: Architecture Guard Summary
     runs-on: ubuntu-latest
-    needs: [pass0-neon-ban, prd-ownership, cross-pass-imports]
+    needs: [pass0-neon-ban, prd-ownership, cross-pass-imports, payload-identity-guard]
     if: always()
     steps:
       - name: Check Results
@@ -77,10 +89,12 @@ jobs:
           echo "Pass 0 Neon Ban: ${{ needs.pass0-neon-ban.result }}"
           echo "PRD Ownership: ${{ needs.prd-ownership.result }}"
           echo "Cross-Pass Imports: ${{ needs.cross-pass-imports.result }}"
+          echo "Payload Identity Guard: ${{ needs.payload-identity-guard.result }}"
           echo ""
           if [[ "${{ needs.pass0-neon-ban.result }}" == "failure" ]] || \
              [[ "${{ needs.prd-ownership.result }}" == "failure" ]] || \
-             [[ "${{ needs.cross-pass-imports.result }}" == "failure" ]]; then
+             [[ "${{ needs.cross-pass-imports.result }}" == "failure" ]] || \
+             [[ "${{ needs.payload-identity-guard.result }}" == "failure" ]]; then
             echo "ARCHITECTURE VIOLATIONS DETECTED"
             echo "Fix all violations before merging."
             exit 1

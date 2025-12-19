@@ -125,12 +125,27 @@ const Pass3Hub = () => {
     }
   }, [observed.county, observed.jurisdiction, fetchCard]);
 
+  // HARD GUARD: envelope_complete is required for solver run
+  const envelopeComplete = jurisdictionData?.envelope_complete ?? false;
+  const canRunSolver = envelopeComplete && cardStatus !== 'blocked' && cardStatus !== 'error';
+
   const runSolver = async () => {
+    // Double-check envelope_complete before running (fail closed)
+    if (!envelopeComplete) {
+      toast({
+        title: "Calculation Blocked",
+        description: "Jurisdiction envelope is incomplete. Fix Pass 2 data first.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsRunning(true);
     try {
       const { data, error } = await supabase.functions.invoke('solver_run', {
         body: {
           mode,
+          envelope_complete: envelopeComplete, // REQUIRED: Pass to edge function
           observed,
           jurisdiction_card: solverCard,
           tunables,
@@ -138,6 +153,16 @@ const Pass3Hub = () => {
       });
 
       if (error) throw error;
+
+      // Handle blocked response from envelope guard
+      if (data?.blocked && data?.blocked_reason?.includes('ENVELOPE_INCOMPLETE')) {
+        toast({
+          title: "Calculation Blocked",
+          description: data.blocked_reason,
+          variant: "destructive",
+        });
+        return;
+      }
 
       setArtifact(data);
       toast({
@@ -222,11 +247,19 @@ const Pass3Hub = () => {
           </Alert>
         )}
         {cardStatus === 'found' && jurisdictionData && (
-          <Alert className="mb-6 border-emerald-500/30 bg-emerald-500/5">
-            <CheckCircle2 className="h-4 w-4 text-emerald-400" />
-            <AlertDescription className="text-emerald-200">
+          <Alert className={`mb-6 ${jurisdictionData.envelope_complete 
+            ? 'border-emerald-500/30 bg-emerald-500/5' 
+            : 'border-amber-500/30 bg-amber-500/5'}`}>
+            {jurisdictionData.envelope_complete ? (
+              <CheckCircle2 className="h-4 w-4 text-emerald-400" />
+            ) : (
+              <AlertTriangle className="h-4 w-4 text-amber-400" />
+            )}
+            <AlertDescription className={jurisdictionData.envelope_complete ? 'text-emerald-200' : 'text-amber-200'}>
               Jurisdiction card loaded: {jurisdictionData.county_name} County, {jurisdictionData.state}
-              {jurisdictionData.envelope_complete ? ' (envelope complete)' : ' (envelope incomplete)'}
+              {jurisdictionData.envelope_complete 
+                ? ' — envelope complete, solver ready' 
+                : ' — ENVELOPE INCOMPLETE: Solver disabled until Pass 2 data is fixed'}
             </AlertDescription>
           </Alert>
         )}
@@ -254,7 +287,7 @@ const Pass3Hub = () => {
               </div>
               <Button 
                 onClick={runSolver} 
-                disabled={isRunning || isLoadingCard || cardStatus === 'blocked' || cardStatus === 'error'} 
+                disabled={isRunning || isLoadingCard || !canRunSolver} 
                 size="lg" 
                 className="gap-2"
               >
@@ -263,10 +296,12 @@ const Pass3Hub = () => {
                     <Loader2 className="h-4 w-4 animate-spin" />
                     Running...
                   </>
-                ) : cardStatus === 'blocked' || cardStatus === 'error' ? (
+                ) : !canRunSolver ? (
                   <>
                     <AlertTriangle className="h-4 w-4" />
-                    Calculation Blocked
+                    {cardStatus === 'blocked' ? 'Fatal Prohibition' : 
+                     cardStatus === 'error' ? 'Data Error' : 
+                     'Envelope Incomplete'}
                   </>
                 ) : (
                   <>
