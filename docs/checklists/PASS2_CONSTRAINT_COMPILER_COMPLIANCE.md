@@ -114,6 +114,36 @@ No exceptions. No partial compliance.
 
 ---
 
+## Vault Guardian Compliance (CRITICAL)
+
+> Per ADR-025, Pass 2 MUST NOT read from or write to Neon.
+> Pass 2 uses Supabase staging tables ONLY.
+
+### Database Access Rules
+
+- [ ] Pass 2 does NOT import `NeonAdapter`
+- [ ] Pass 2 does NOT import `@neondatabase/serverless`
+- [ ] Pass 2 reads from `staging_jurisdiction_card_drafts` (Supabase)
+- [ ] Pass 2 writes to Supabase staging tables ONLY
+- [ ] Data enters Neon only via `promoteXxxToVault()` functions
+- [ ] CI guard `check_pass2_neon_ban.sh` passes
+
+### Staging Tables Used
+
+| Table | Operation |
+|-------|-----------|
+| `staging_jurisdiction_card_drafts` | READ/WRITE |
+| `staging_constraint_results` | WRITE |
+
+### Forbidden Operations
+
+- [ ] NO direct Neon SELECT queries
+- [ ] NO direct Neon INSERT/UPDATE
+- [ ] NO NeonAdapter method calls
+- [ ] NO pass2.* table writes
+
+---
+
 ## Doctrine Violations (Auto-Reject)
 
 Any of these trigger automatic rejection:
@@ -126,6 +156,7 @@ Any of these trigger automatic rejection:
 | `CCA_MUTATION` | Pass 2 writes to County Capability Asset |
 | `TIMELINE_ESTIMATION` | Permit duration or construction timeline |
 | `FALSE_CERTAINTY` | Substituting defaults for unknown values |
+| `NEON_ACCESS` | Direct Neon read or write from Pass 2 (ADR-025) |
 
 ---
 

@@ -1,6 +1,6 @@
 # PRD Canonical Map — Storage Site Scout
 
-**Last Updated:** 2024-12-19
+**Last Updated:** 2025-12-19
 **Purpose:** Single source of truth for documentation hierarchy and repository structure
 
 ---
@@ -25,6 +25,34 @@ DOCTRINE (Process Locks)
 > **New (CANONICAL):** 9 spokes, NO financial logic, constraint compilation only
 >
 > See ADR-019, ADR-020, and `SYSTEM_PROMPT_PASS2.md` for the definitive rules.
+
+---
+
+## Quick Reference: Vault Guardian Doctrine (2025-12-19)
+
+> **CRITICAL:** Neon is a **VAULT** that accepts ONLY promoted, validated, immutable records.
+>
+> **Allowed Consumers:** Pass 3 (vault loggers), CCA Service, save_to_vault, promoters
+> **Forbidden Consumers:** Pass 0, Pass 1, Pass 1.5, Pass 2, UI
+>
+> See ADR-025 (Vault Guardian Doctrine) for the definitive rules.
+
+### Database Access Rules
+
+| Pass | Database | Access |
+|------|----------|--------|
+| Pass 0 | N/A | **HARD BAN** - Edge only |
+| Pass 1 | Supabase | READ/WRITE |
+| Pass 1.5 | Supabase | READ/WRITE |
+| Pass 2 | Supabase staging | READ/WRITE |
+| Pass 3 | Neon vault | WRITE via `logXxxToVault()` |
+| CCA | Neon `ref.county_capability` | READ/WRITE |
+
+### Pass 3 Architecture (2025-12-19)
+
+> **IMPORTANT:** Pass 3 spokes are **VAULT LOGGERS**, not calculators.
+> All calculations are performed in Lovable.dev. Pass 3 receives results and
+> persists them to Neon vault via `logXxxToVault()` functions.
 
 ---
 
@@ -217,20 +245,28 @@ DOCTRINE (Process Locks)
 **Checklist:** `docs/checklists/PASS3_DESIGN_HUB_COMPLIANCE.md`
 **Directory:** `/src/pass3/design_hub/`
 
-### Spokes (9 Total)
-| Spoke | Doctrine ID | File |
-|-------|-------------|------|
-| SetbackEngine | SS.03.01 | `spokes/SetbackEngine.ts` |
-| CoverageEngine | SS.03.02 | `spokes/CoverageEngine.ts` |
-| UnitMixOptimizer | SS.03.03 | `spokes/UnitMixOptimizer.ts` |
-| PhasePlanner | SS.03.04 | `spokes/PhasePlanner.ts` |
-| BuildCostModel | SS.03.05 | `spokes/BuildCostModel.ts` |
-| NOIEngine | SS.03.06 | `spokes/NOIEngine.ts` |
-| DebtModel | SS.03.07 | `spokes/DebtModel.ts` |
-| MaxLandPrice | SS.03.08 | `spokes/MaxLandPrice.ts` |
-| IRRModel | SS.03.09 | `spokes/IRRModel.ts` |
+> **IMPORTANT (2025-12-19):** Pass 3 spokes are **VAULT LOGGERS**, not calculators.
+> All calculations are performed in Lovable.dev. Pass 3 receives results and
+> persists them to Neon vault via `logXxxToVault()` functions.
+>
+> See: ADR-025 (Vault Guardian Doctrine)
 
-**Note:** All financial calculations (NOI, DSCR, IRR) belong in Pass 3, NOT Pass 2.
+### Spokes (9 Total) — Vault Loggers
+
+| Spoke | Doctrine ID | Vault Function |
+|-------|-------------|----------------|
+| SetbackEngine | SS.03.01 | `logSetbackToVault()` |
+| CoverageEngine | SS.03.02 | `logCoverageToVault()` |
+| UnitMixOptimizer | SS.03.03 | `logUnitMixToVault()` |
+| PhasePlanner | SS.03.04 | `logPhasePlanToVault()` |
+| BuildCostModel | SS.03.05 | `logBuildCostToVault()` |
+| NOIEngine | SS.03.06 | `logNOIToVault()` |
+| DebtModel | SS.03.07 | `logDebtModelToVault()` |
+| MaxLandPrice | SS.03.08 | `logMaxLandPriceToVault()` |
+| IRRModel | SS.03.09 | `logIRRModelToVault()` |
+
+**Note:** All financial calculations (NOI, DSCR, IRR) are performed in Lovable.dev, NOT in this repo.
+Pass 3 spokes receive calculation results and persist them to Neon vault.
 
 ---
 
@@ -275,6 +311,8 @@ DOCTRINE (Process Locks)
 | ADR-021 | Jurisdiction Card Hydration Pipeline | **Active** |
 | ADR-022 | County Capability Asset | **Active** |
 | ADR-023 | CCA and Pass 2 Schema Separation | **Active** |
+| ADR-024 | Tool Selection Doctrine | **Active** |
+| ADR-025 | Vault Guardian Doctrine | **Active** |
 
 ---
 
@@ -282,11 +320,12 @@ DOCTRINE (Process Locks)
 
 When conflicts arise, resolve using this priority:
 
-1. **SYSTEM_PROMPT_PASS2.md** — Highest authority for Pass 2
-2. **CountyCapabilityAsset.md** — Highest authority for CCA
-3. **ADRs** — Architectural decisions
-4. **PRDs** — Product requirements
-5. **Checklists** — Compliance gates
+1. **ADR-025 Vault Guardian Doctrine** — Highest authority for database access
+2. **SYSTEM_PROMPT_PASS2.md** — Highest authority for Pass 2
+3. **CountyCapabilityAsset.md** — Highest authority for CCA
+4. **ADRs** — Architectural decisions
+5. **PRDs** — Product requirements
+6. **Checklists** — Compliance gates
 
 ---
 

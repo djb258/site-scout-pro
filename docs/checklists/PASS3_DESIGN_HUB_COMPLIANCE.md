@@ -1,8 +1,16 @@
 # Hub Compliance Checklist — PASS3_DESIGN_HUB
 
 **Doctrine ID:** SS.03.00
-**Last Updated:** 2025-12-17
+**Last Updated:** 2025-12-19
 **Status:** [ ] Compliant / [ ] Non-Compliant
+
+---
+
+> **IMPORTANT (2025-12-19):** Pass 3 spokes are **VAULT LOGGERS**, not calculators.
+> All calculations are performed in Lovable.dev. Pass 3 receives results and
+> persists them to Neon vault via `logXxxToVault()` functions.
+>
+> See: ADR-025 (Vault Guardian Doctrine)
 
 ---
 
@@ -131,6 +139,42 @@ No exceptions. No partial compliance.
 | 25% NOI haircut stress test | [x] |
 | Debt survivability at 6%/25yr | [x] |
 | 85% occupancy phase trigger | [x] |
+
+---
+
+## Vault Guardian Compliance (CRITICAL)
+
+> Per ADR-025, Pass 3 spokes are **VAULT LOGGERS** that receive results from
+> Lovable.dev and persist them to Neon vault.
+
+### Vault Logger Architecture
+
+- [x] Pass 3 spokes do NOT perform calculations
+- [x] Pass 3 receives results from Lovable.dev
+- [x] Pass 3 writes via `logXxxToVault()` functions ONLY
+- [x] Each spoke exports `logXxxToVault(opportunityId, result)` function
+- [x] Legacy `runXxx()` functions marked deprecated
+
+### Approved Vault Operations
+
+| Spoke | Vault Function |
+|-------|---------------|
+| SetbackEngine | `logSetbackToVault()` |
+| CoverageEngine | `logCoverageToVault()` |
+| UnitMixOptimizer | `logUnitMixToVault()` |
+| PhasePlanner | `logPhasePlanToVault()` |
+| BuildCostModel | `logBuildCostToVault()` |
+| NOIEngine | `logNOIToVault()` |
+| DebtModel | `logDebtModelToVault()` |
+| MaxLandPrice | `logMaxLandPriceToVault()` |
+| IRRModel | `logIRRModelToVault()` |
+
+### Database Access Rules
+
+- [x] Pass 3 CAN import `NeonAdapter` (for vault writes)
+- [x] Pass 3 writes to `vault.opportunities` ONLY
+- [x] All writes use `neonAdapter.insertVaultRecord()`
+- [x] CI guard `check_vault_write_pattern.sh` passes
 
 ---
 

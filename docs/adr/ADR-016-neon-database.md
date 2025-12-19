@@ -225,8 +225,35 @@ try {
 3. Use Neon branching for staging/testing
 4. Promote branches to production via Neon console
 
+## Vault Guardian Doctrine (Added 2025-12-19)
+
+> **IMPORTANT**: Per ADR-025, Neon is a **VAULT** that accepts ONLY promoted, validated, immutable records.
+
+### Allowed NeonAdapter Consumers
+
+| Consumer | Permission |
+|----------|------------|
+| Pass 3 Design Hub | WRITE via `logXxxToVault()` |
+| Vault promotion functions | WRITE via `promoteXxxToVault()` |
+| save_to_vault edge function | WRITE |
+| CCA Service | READ/WRITE `ref.county_capability` |
+
+### Forbidden NeonAdapter Consumers
+
+| Consumer | Ban Type |
+|----------|----------|
+| Pass 0 Radar Hub | **HARD BAN** |
+| Pass 1 Structure Hub | FORBIDDEN |
+| Pass 1.5 Rent Recon Hub | FORBIDDEN |
+| Pass 2 Underwriting Hub | FORBIDDEN |
+| UI Components | FORBIDDEN |
+
+Pass 0-2 must use **Supabase staging tables**. Data enters Neon only via explicit promotion functions.
+
 ## Related Documents
 
+- [ADR-025-vault-guardian-doctrine.md](ADR-025-vault-guardian-doctrine.md) - Vault Guardian Doctrine
+- [VAULT_GUARDIAN_REPORT.md](../audits/VAULT_GUARDIAN_REPORT.md) - Vault Guardian audit report
 - [ERD_HUB_SPOKE.md](../ERD_HUB_SPOKE.md) - Full hub-and-spoke entity relationship diagram
 - [ZIP_REPLICA_SYNC_DOCTRINE.md](../doctrine/ZIP_REPLICA_SYNC_DOCTRINE.md) - Neon→Lovable replica sync doctrine
 - [PRD_DATA_LAYER_HUB.md](../prd/PRD_DATA_LAYER_HUB.md) - Data Layer Hub PRD
