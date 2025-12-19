@@ -1,4 +1,8 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+const PROCESS_ID = 'solver_run';
+const PASS_NUMBER = 3;
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -446,6 +450,28 @@ serve(async (req) => {
   } catch (error) {
     console.error('[SOLVER_RUN] Error:', error);
     const message = error instanceof Error ? error.message : 'Unknown error';
+    
+    // Log error to master_failure_log
+    try {
+      const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+      const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+      const supabase = createClient(supabaseUrl, supabaseKey);
+      
+      await supabase.functions.invoke('log_failure', {
+        body: {
+          process_id: PROCESS_ID,
+          pass_number: PASS_NUMBER,
+          step: 'solver_execution',
+          error_code: 'SOLVER_ERROR',
+          error_message: message,
+          severity: 'error',
+          context: { error_type: error instanceof Error ? error.name : 'Unknown' }
+        }
+      });
+    } catch (logError) {
+      console.error('[SOLVER_RUN] Failed to log error:', logError);
+    }
+    
     return new Response(
       JSON.stringify({ error: message }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

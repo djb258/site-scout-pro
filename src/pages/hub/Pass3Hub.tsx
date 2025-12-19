@@ -3,9 +3,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Calculator, Play, Loader2, AlertTriangle, CheckCircle2 } from "lucide-react";
+import { Calculator, Play, Loader2, AlertTriangle, CheckCircle2, ChevronDown } from "lucide-react";
 import { SolverModeToggle } from "@/components/solver/SolverModeToggle";
 import { SolverLockToggle } from "@/components/solver/SolverLockToggle";
 import { SolverObservedInputs } from "@/components/solver/SolverObservedInputs";
@@ -15,6 +16,7 @@ import { SolverWaterfall } from "@/components/solver/SolverWaterfall";
 import { SolverDecisionGates } from "@/components/solver/SolverDecisionGates";
 import { PipelineDocPanel } from "@/components/PipelineDocPanel";
 import { ToolGovernanceCard } from "@/components/ToolGovernanceCard";
+import { ProductionReadinessPanel } from "@/components/ProductionReadinessPanel";
 import { useJurisdictionCard, type SolverJurisdictionCard } from "@/hooks/useJurisdictionCard";
 
 interface ObservedInputs {
@@ -179,6 +181,19 @@ const Pass3Hub = () => {
       </div>
 
       <div className="container mx-auto px-6 py-6">
+        {/* Production Readiness Panel (Collapsible) */}
+        <Collapsible className="mb-6">
+          <CollapsibleTrigger asChild>
+            <Button variant="outline" className="w-full justify-between">
+              <span>System Production Readiness</span>
+              <ChevronDown className="h-4 w-4" />
+            </Button>
+          </CollapsibleTrigger>
+          <CollapsibleContent className="mt-4">
+            <ProductionReadinessPanel />
+          </CollapsibleContent>
+        </Collapsible>
+
         {/* Pipeline Documentation & Governance */}
         <div className="grid grid-cols-12 gap-6 mb-6">
           <div className="col-span-8">

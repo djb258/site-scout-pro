@@ -185,3 +185,17 @@ verify_jwt = false
 
 [functions.cca_get_profile]
 verify_jwt = false
+
+# ================================================================
+# Master Failure Log — Centralized Error Tracking
+# ================================================================
+
+[functions.log_failure]
+verify_jwt = false
+
+# ================================================================
+# Production Readiness Check
+# ================================================================
+
+[functions.get_readiness_status]
+verify_jwt = false

@@ -407,6 +407,54 @@ export type Database = {
         }
         Relationships: []
       }
+      master_failure_log: {
+        Row: {
+          context: Json | null
+          created_at: string | null
+          error_code: string
+          error_message: string | null
+          id: string
+          pass_number: number
+          process_id: string
+          resolution_notes: string | null
+          resolved: boolean | null
+          resolved_at: string | null
+          run_id: string | null
+          severity: string | null
+          step: string
+        }
+        Insert: {
+          context?: Json | null
+          created_at?: string | null
+          error_code: string
+          error_message?: string | null
+          id?: string
+          pass_number: number
+          process_id: string
+          resolution_notes?: string | null
+          resolved?: boolean | null
+          resolved_at?: string | null
+          run_id?: string | null
+          severity?: string | null
+          step: string
+        }
+        Update: {
+          context?: Json | null
+          created_at?: string | null
+          error_code?: string
+          error_message?: string | null
+          id?: string
+          pass_number?: number
+          process_id?: string
+          resolution_notes?: string | null
+          resolved?: boolean | null
+          resolved_at?: string | null
+          run_id?: string | null
+          severity?: string | null
+          step?: string
+        }
+        Relationships: []
+      }
       pass_1_5_attempt_log: {
         Row: {
           attempt_number: number

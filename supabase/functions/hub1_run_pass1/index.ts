@@ -537,6 +537,53 @@ serve(async (req) => {
 
     console.log(`[HUB1_PASS1] Completed run ${run_id}: ${decision} (score: ${finalScore})`);
 
+    // ========================================================================
+    // STEP 9: PASS 1.5 PROMOTION (Conditional)
+    // ========================================================================
+    // If competition confidence is "low" and we have gaps, enqueue to Pass 1.5
+    if (competition_confidence === 'low' && estimatedCompetitorCount > 0) {
+      console.log(`[HUB1_PASS1] Low competition confidence - promoting to Pass 1.5`);
+      
+      try {
+        // Call hub15_enqueue_gaps to create gap queue entries
+        const { error: enqueueError } = await supabase.functions.invoke('hub15_enqueue_gaps', {
+          body: {
+            run_id: crypto.randomUUID(), // New run_id for Pass 1.5
+            pass1_run_id: run_id,
+            zip,
+            county: typedZipData.county_name,
+            state: typedZipData.state_id,
+            competition_summary: competitionSummary,
+          }
+        });
+        
+        if (enqueueError) {
+          console.error(`[HUB1_PASS1] Failed to enqueue gaps: ${enqueueError.message}`);
+          // Log failure to master_failure_log
+          await supabase.functions.invoke('log_failure', {
+            body: {
+              process_id: PROCESS_ID,
+              pass_number: 1,
+              run_id,
+              step: 'pass15_promotion',
+              error_code: 'ENQUEUE_FAILED',
+              error_message: enqueueError.message,
+              severity: 'warning',
+              context: { zip, county: typedZipData.county_name }
+            }
+          });
+        } else {
+          await logStep(run_id, 'pass15_promotion', 'completed', {
+            promoted: true,
+            reason: 'low_competition_confidence'
+          });
+        }
+      } catch (promoError) {
+        console.error('[HUB1_PASS1] Pass 1.5 promotion error:', promoError);
+        // Non-fatal - continue with response
+      }
+    }
+
     return new Response(JSON.stringify(response), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });

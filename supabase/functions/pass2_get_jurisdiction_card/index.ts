@@ -14,8 +14,11 @@ import postgres from 'https://deno.land/x/postgresjs@v3.4.4/mod.js';
  * 4. Return all facts needed for solver
  * 
  * process_id: pass2_get_jurisdiction_card
- * version: v1.0.0
+ * version: v1.0.1 — Now logs errors to master_failure_log
  */
+
+const PROCESS_ID = 'pass2_get_jurisdiction_card';
+const PASS_NUMBER = 2;
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -181,6 +184,28 @@ Deno.serve(async (req) => {
   } catch (error) {
     console.error('[PASS2_GET_CARD] Error:', error);
     if (sql) await sql.end();
+    
+    // Log error to master_failure_log
+    try {
+      const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+      const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+      const supabase = createClient(supabaseUrl, supabaseKey);
+      
+      await supabase.functions.invoke('log_failure', {
+        body: {
+          process_id: PROCESS_ID,
+          pass_number: PASS_NUMBER,
+          step: 'fetch_jurisdiction_card',
+          error_code: 'NEON_QUERY_ERROR',
+          error_message: error instanceof Error ? error.message : 'Unknown error',
+          severity: 'error',
+          context: { error_type: error instanceof Error ? error.name : 'Unknown' }
+        }
+      });
+    } catch (logError) {
+      console.error('[PASS2_GET_CARD] Failed to log error:', logError);
+    }
+    
     return new Response(
       JSON.stringify({ status: 'error', message: error instanceof Error ? error.message : 'Unknown error' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
