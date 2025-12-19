@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Calculator, Play, Loader2 } from "lucide-react";
+import { Calculator, Play, Loader2, AlertTriangle, CheckCircle2 } from "lucide-react";
 import { SolverModeToggle } from "@/components/solver/SolverModeToggle";
 import { SolverLockToggle } from "@/components/solver/SolverLockToggle";
 import { SolverObservedInputs } from "@/components/solver/SolverObservedInputs";
@@ -14,6 +15,7 @@ import { SolverWaterfall } from "@/components/solver/SolverWaterfall";
 import { SolverDecisionGates } from "@/components/solver/SolverDecisionGates";
 import { PipelineDocPanel } from "@/components/PipelineDocPanel";
 import { ToolGovernanceCard } from "@/components/ToolGovernanceCard";
+import { useJurisdictionCard, type SolverJurisdictionCard } from "@/hooks/useJurisdictionCard";
 
 interface ObservedInputs {
   zip?: string;
@@ -24,15 +26,6 @@ interface ObservedInputs {
   parcel_depth_ft?: number;
   county?: string;
   jurisdiction?: string;
-}
-
-interface JurisdictionCard {
-  front_setback_ft: number;
-  side_setback_ft: number;
-  rear_setback_ft: number;
-  max_lot_coverage_pct: number;
-  stormwater_requirement_pct: number;
-  fire_lane_width_ft: number;
 }
 
 interface CalculationStep {
@@ -88,17 +81,19 @@ const DEFAULT_TUNABLES: Tunables = {
   fire_lane_width_ft: 24,
 };
 
-const DEFAULT_JURISDICTION_CARD: JurisdictionCard = {
-  front_setback_ft: 50,
-  side_setback_ft: 25,
-  rear_setback_ft: 30,
-  max_lot_coverage_pct: 60,
-  stormwater_requirement_pct: 15,
-  fire_lane_width_ft: 24,
-};
-
 const Pass3Hub = () => {
   const { toast } = useToast();
+  
+  // Jurisdiction card from Pass 2
+  const { 
+    card: jurisdictionData, 
+    solverCard, 
+    isLoading: isLoadingCard, 
+    error: cardError,
+    warnings: cardWarnings,
+    status: cardStatus,
+    fetchCard 
+  } = useJurisdictionCard();
   
   // Solver state
   const [mode, setMode] = useState<'FORWARD' | 'REVERSE'>('REVERSE');
@@ -116,10 +111,17 @@ const Pass3Hub = () => {
     existing_supply_sf: 150000,
   });
   const [tunables, setTunables] = useState<Tunables>(DEFAULT_TUNABLES);
-  const [jurisdictionCard] = useState<JurisdictionCard>(DEFAULT_JURISDICTION_CARD);
   
   // Output state
   const [artifact, setArtifact] = useState<SolverArtifact | null>(null);
+
+  // Fetch jurisdiction card when county/jurisdiction changes
+  useEffect(() => {
+    if (observed.county && observed.jurisdiction) {
+      const state = observed.jurisdiction.split(',')[1]?.trim() || 'WV';
+      fetchCard(observed.county, state);
+    }
+  }, [observed.county, observed.jurisdiction, fetchCard]);
 
   const runSolver = async () => {
     setIsRunning(true);
@@ -128,7 +130,7 @@ const Pass3Hub = () => {
         body: {
           mode,
           observed,
-          jurisdiction_card: jurisdictionCard,
+          jurisdiction_card: solverCard,
           tunables,
         },
       });
@@ -187,6 +189,33 @@ const Pass3Hub = () => {
           </div>
         </div>
 
+        {/* Jurisdiction Card Status */}
+        {cardError && (
+          <Alert variant="destructive" className="mb-6">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertDescription>
+              {cardError} - Using default jurisdiction values
+            </AlertDescription>
+          </Alert>
+        )}
+        {cardWarnings.length > 0 && !cardError && (
+          <Alert className="mb-6 border-amber-500/30 bg-amber-500/5">
+            <AlertTriangle className="h-4 w-4 text-amber-400" />
+            <AlertDescription className="text-amber-200">
+              {cardWarnings.join('; ')}
+            </AlertDescription>
+          </Alert>
+        )}
+        {cardStatus === 'found' && jurisdictionData && (
+          <Alert className="mb-6 border-emerald-500/30 bg-emerald-500/5">
+            <CheckCircle2 className="h-4 w-4 text-emerald-400" />
+            <AlertDescription className="text-emerald-200">
+              Jurisdiction card loaded: {jurisdictionData.county_name} County, {jurisdictionData.state}
+              {jurisdictionData.envelope_complete ? ' (envelope complete)' : ' (envelope incomplete)'}
+            </AlertDescription>
+          </Alert>
+        )}
+
         {/* Controls Row */}
         <Card className="mb-6">
           <CardContent className="py-4">
@@ -195,7 +224,7 @@ const Pass3Hub = () => {
                 <SolverModeToggle mode={mode} onModeChange={setMode} disabled={isRunning} />
                 <SolverLockToggle isLocked={isLocked} onLockChange={setIsLocked} disabled={isRunning} />
               </div>
-              <Button onClick={runSolver} disabled={isRunning} size="lg" className="gap-2">
+              <Button onClick={runSolver} disabled={isRunning || isLoadingCard} size="lg" className="gap-2">
                 {isRunning ? (
                   <>
                     <Loader2 className="h-4 w-4 animate-spin" />
@@ -219,7 +248,7 @@ const Pass3Hub = () => {
             <SolverObservedInputs
               mode={mode}
               observed={observed}
-              jurisdictionCard={jurisdictionCard}
+              jurisdictionCard={solverCard}
               onObservedChange={setObserved}
               isLocked={isLocked}
             />
