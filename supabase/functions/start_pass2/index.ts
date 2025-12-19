@@ -9,9 +9,10 @@ import postgres from "https://deno.land/x/postgresjs@v3.4.4/mod.js";
  * - Lovable.dev is a cockpit, not an engine
  * - All authoritative data comes from Neon
  * - No local computation, no inference, no guessing
+ * - Routes based on CCA profile pass2_method
  * 
  * process_id: start_pass2
- * version: v2.0.0
+ * version: v2.1.0
  * 
  * DO NOT MODIFY — downstream depends on this shape
  */
@@ -26,7 +27,7 @@ const corsHeaders = {
 // ============================================================================
 
 interface Pass2Response {
-  status: 'ELIGIBLE' | 'HOLD_INCOMPLETE' | 'NO_GO' | 'SCHEMA_INCOMPLETE';
+  status: 'ELIGIBLE' | 'HOLD_INCOMPLETE' | 'NO_GO' | 'SCHEMA_INCOMPLETE' | 'QUEUED_MANUAL';
   jurisdiction_card_complete: boolean;
   missing_required_fields: string[];
   blocked_fields: string[];
@@ -37,6 +38,12 @@ interface Pass2Response {
     zoning_model: string;
     county_name: string;
     state: string;
+  } | null;
+  cca_profile: {
+    pass2_method: string;
+    pass2_source_url: string | null;
+    pass2_automation_confidence: number | null;
+    is_stale: boolean;
   } | null;
   next_actions: string[];
   zip_metadata: {
@@ -51,6 +58,7 @@ interface Pass2Response {
     jurisdiction_constraints_exists: boolean;
     jurisdiction_prohibitions_exists: boolean;
     ref_county_capability_exists: boolean;
+    cca_county_profile_exists: boolean;
   };
   timestamp: string;
 }
@@ -355,6 +363,7 @@ serve(async (req) => {
         blocked_fields: NON_AUTOMATABLE_FIELDS,
         fatal_prohibitions: [],
         county_capability: null,
+        cca_profile: null,
         next_actions: ['Neon database connection not available', 'Configure NEON_DATABASE_URL secret'],
         zip_metadata: null,
         schema_status: {
@@ -362,6 +371,7 @@ serve(async (req) => {
           jurisdiction_constraints_exists: false,
           jurisdiction_prohibitions_exists: false,
           ref_county_capability_exists: false,
+          cca_county_profile_exists: false,
         },
         timestamp: new Date().toISOString(),
       };
@@ -387,6 +397,7 @@ serve(async (req) => {
         blocked_fields: NON_AUTOMATABLE_FIELDS,
         fatal_prohibitions: [],
         county_capability: null,
+        cca_profile: null,
         next_actions: [`ZIP ${zip} not found in database`, 'Verify ZIP code and retry'],
         zip_metadata: null,
         schema_status: {
@@ -394,6 +405,7 @@ serve(async (req) => {
           jurisdiction_constraints_exists: true,
           jurisdiction_prohibitions_exists: true,
           ref_county_capability_exists: true,
+          cca_county_profile_exists: false,
         },
         timestamp: new Date().toISOString(),
       };
@@ -418,6 +430,7 @@ serve(async (req) => {
       jurisdiction_constraints_exists: await checkTableExists(sql, 'pass2', 'jurisdiction_constraints'),
       jurisdiction_prohibitions_exists: await checkTableExists(sql, 'pass2', 'jurisdiction_prohibitions'),
       ref_county_capability_exists: await checkTableExists(sql, 'ref', 'ref_county_capability'),
+      cca_county_profile_exists: await checkTableExists(sql, 'ref', 'cca_county_profile'),
     };
 
     console.log('[start_pass2] Schema status:', schemaStatus);
@@ -462,6 +475,7 @@ serve(async (req) => {
         county_name: countyName,
         state: state,
       },
+      cca_profile: null, // CCA profile lookup can be added when needed
       next_actions: analysis.next_actions,
       zip_metadata: {
         zip: zipMetadata.zip,
