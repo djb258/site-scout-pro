@@ -3,6 +3,8 @@
  * ============================================================================
  *
  * DOCTRINE:
+ * "Claude thinks. Neon remembers. Lovable orchestrates."
+ *
  * CCA is a STANDALONE service that runs UPFRONT before any pass.
  * It answers: HOW do we collect information from this county?
  *             WHAT information is available to collect?
@@ -18,6 +20,10 @@
  *   CCA (ref schema)  = HOW to collect data
  *   Pass 2 (pass2 schema) = WHAT the jurisdiction facts are
  *   Pass 3 = Consumes Pass 2 blindly, NEVER references CCA
+ *
+ * FLOW:
+ *   Lovable → County Resolver → Dedupe (Neon) → CCA Recon Agent
+ *         → Neon (persist) → Lovable (dispatch workers)
  *
  * ============================================================================
  */
@@ -112,6 +118,29 @@ export {
 } from './consumers/Pass2Consumer';
 
 // =============================================================================
+// RECON AGENT
+// =============================================================================
+
+export {
+  // Types
+  AutomationMethod,
+  CoverageLevel,
+  ReconConfidence,
+  CcaReconInput,
+  CcaReconOutput,
+  CcaReconBatchInput,
+  CcaReconBatchOutput,
+  AgentStatus,
+  AgentProgress,
+  AUTOMATION_PRIORITY,
+  // Agent
+  CcaReconAgent,
+  getCcaReconAgent,
+  reconCounty,
+  reconBatch,
+} from './agent';
+
+// =============================================================================
 // QUICK REFERENCE
 // =============================================================================
 
@@ -171,4 +200,31 @@ export {
  *      // Need to probe first
  *    }
  *    ```
+ *
+ * 5. CCA RECON AGENT (Lovable → Claude → Neon flow):
+ *    ```
+ *    import { reconCounty, reconBatch } from '@/cca';
+ *
+ *    // Single county recon
+ *    const result = await reconCounty({
+ *      county_id: 123,
+ *      state: 'TX',
+ *      county_name: 'Harris',
+ *    });
+ *
+ *    // result.pass0_method: 'api' | 'scrape' | 'portal' | 'manual'
+ *    // result.pass2_method: 'api' | 'scrape' | 'portal' | 'manual'
+ *
+ *    // Batch recon
+ *    const batchResult = await reconBatch({
+ *      counties: [
+ *        { county_id: 123, state: 'TX', county_name: 'Harris' },
+ *        { county_id: 456, state: 'FL', county_name: 'Miami-Dade' },
+ *      ],
+ *      concurrency_limit: 3,
+ *    });
+ *    ```
+ *
+ * PRIME RULE:
+ * "Claude thinks. Neon remembers. Lovable orchestrates."
  */
