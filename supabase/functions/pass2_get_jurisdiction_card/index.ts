@@ -89,8 +89,18 @@ interface GetCardResult {
 }
 
 async function getNeonConnection() {
-  const neonUrl = Deno.env.get('NEON_DATABASE_URL');
+  let neonUrl = Deno.env.get('NEON_DATABASE_URL');
   if (!neonUrl) throw new Error('NEON_DATABASE_URL not configured');
+  
+  // Clean up URL if it has psql prefix or quotes (common copy-paste issue)
+  neonUrl = neonUrl.trim();
+  if (neonUrl.startsWith('psql ')) {
+    neonUrl = neonUrl.replace(/^psql\s+/, '');
+  }
+  // Remove surrounding quotes
+  neonUrl = neonUrl.replace(/^['"]|['"]$/g, '');
+  
+  console.log('[NEON] Connecting with cleaned URL prefix:', neonUrl.substring(0, 30) + '...');
   return postgres(neonUrl, { ssl: 'require' });
 }
 
