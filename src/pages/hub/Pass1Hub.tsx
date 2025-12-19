@@ -33,6 +33,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { Pass1PipelineCard } from "@/components/Pass1PipelineCard";
 import { PipelineDocPanel } from "@/components/PipelineDocPanel";
+import { ToolGovernanceCard } from "@/components/ToolGovernanceCard";
 
 // ============================================================================
 // CONSTANTS (Match Edge Function)
@@ -487,9 +488,14 @@ const Pass1Hub = () => {
       </header>
 
       <main className="container mx-auto px-6 py-8">
-        {/* Pipeline Documentation */}
-        <div className="mb-6">
-          <PipelineDocPanel passNumber={1} />
+        {/* Pipeline Documentation & Governance */}
+        <div className="grid grid-cols-12 gap-6 mb-6">
+          <div className="col-span-8">
+            <PipelineDocPanel passNumber={1} />
+          </div>
+          <div className="col-span-4">
+            <ToolGovernanceCard passNumber={1} />
+          </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

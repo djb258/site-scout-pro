@@ -11,6 +11,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { PipelineDocPanel } from "@/components/PipelineDocPanel";
+import { ToolGovernanceCard } from "@/components/ToolGovernanceCard";
 import { 
   Radio, 
   Play, 
@@ -335,8 +336,15 @@ const Pass0Hub = () => {
       </div>
 
       <div className="container mx-auto px-6 py-8 space-y-6">
-        {/* Pipeline Documentation */}
-        <PipelineDocPanel passNumber={0} />
+        {/* Pipeline Documentation & Governance */}
+        <div className="grid grid-cols-12 gap-6">
+          <div className="col-span-8">
+            <PipelineDocPanel passNumber={0} />
+          </div>
+          <div className="col-span-4">
+            <ToolGovernanceCard passNumber={0} />
+          </div>
+        </div>
 
         {/* Pipeline Waterfall */}
         <Card className="border-border bg-card/50">

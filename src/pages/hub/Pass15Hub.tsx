@@ -3,6 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { PipelineDocPanel } from "@/components/PipelineDocPanel";
+import { ToolGovernanceCard } from "@/components/ToolGovernanceCard";
 import { 
   MapPin, 
   Search, 
@@ -385,8 +386,15 @@ export default function Pass15Hub() {
         </div>
       </div>
 
-      {/* Pipeline Documentation */}
-      <PipelineDocPanel passNumber={1.5} />
+      {/* Pipeline Documentation & Governance */}
+      <div className="grid grid-cols-12 gap-6">
+        <div className="col-span-8">
+          <PipelineDocPanel passNumber={1.5} />
+        </div>
+        <div className="col-span-4">
+          <ToolGovernanceCard passNumber={1.5} />
+        </div>
+      </div>
     </div>
   );
 }
