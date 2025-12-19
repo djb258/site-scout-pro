@@ -240,32 +240,85 @@ serve(async (req) => {
   console.log(`[${PROCESS_ID}] Loaded demand data:`, Object.fromEntries(demandByBand));
 
   // ==========================================================================
-  // MOCK SUPPLY INGEST (v1.0.0)
+  // SUPPLY INGEST: Try OSM first, fallback to mock (v1.1.0)
   // ==========================================================================
-  const seed = hashCode(run_id);
-  const supplyRows: SupplyFacility[] = [];
+  let supplyRows: SupplyFacility[] = [];
+  let supplySource = "mock";
 
-  // Generate ~1 facility per 8-12 ZIPs (deterministic)
-  const facilityInterval = 8 + Math.floor(seededRandom(seed, 0) * 5); // 8-12
-  
-  radiusZips.forEach((rz, index) => {
-    // Only create facility at intervals
-    if (index % facilityInterval === 0) {
-      const sqftBase = 10000 + Math.floor(seededRandom(seed, index) * 70000); // 10k-80k
-      const confidence: "low" | "medium" = seededRandom(seed, index + 1000) > 0.6 ? "medium" : "low";
-      
-      supplyRows.push({
-        run_id,
-        zip: rz.zip,
-        facility_name: `Storage Facility ${index + 1}`,
-        estimated_sqft: sqftBase,
-        source: "mock",
-        confidence, // NEVER "high"
-      });
+  // Try to call OSM supply function first (zero cost)
+  try {
+    console.log(`[${PROCESS_ID}] Attempting OSM supply fetch...`);
+    
+    const osmResponse = await fetch(`${supabaseUrl}/functions/v1/hub1_pass1_supply_osm`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${supabaseKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ run_id, origin_zip, radius_miles: 30 }),
+    });
+
+    if (osmResponse.ok) {
+      const osmData = await osmResponse.json();
+      if (osmData.success && osmData.facility_count > 0) {
+        console.log(`[${PROCESS_ID}] OSM returned ${osmData.facility_count} real facilities`);
+        supplySource = "osm_overpass";
+        
+        // OSM function already inserts to pass1_supply_snapshot, so we need to read them back
+        const { data: osmFacilities } = await supabase
+          .from("pass1_supply_snapshot")
+          .select("*")
+          .eq("run_id", run_id)
+          .eq("source", "osm_overpass");
+        
+        if (osmFacilities && osmFacilities.length > 0) {
+          supplyRows = osmFacilities.map(f => ({
+            run_id: f.run_id,
+            zip: f.zip,
+            facility_name: f.facility_name,
+            estimated_sqft: Number(f.estimated_sqft),
+            source: f.source,
+            confidence: f.confidence as "low" | "medium",
+          }));
+        }
+      } else {
+        console.log(`[${PROCESS_ID}] OSM returned no facilities, falling back to mock`);
+      }
+    } else {
+      console.log(`[${PROCESS_ID}] OSM request failed, falling back to mock`);
     }
-  });
+  } catch (osmError) {
+    console.error(`[${PROCESS_ID}] OSM error, falling back to mock:`, osmError);
+  }
 
-  console.log(`[${PROCESS_ID}] Generated ${supplyRows.length} mock facilities`);
+  // Fallback to mock if OSM didn't return data
+  if (supplyRows.length === 0) {
+    const seed = hashCode(run_id);
+    
+    // Generate ~1 facility per 8-12 ZIPs (deterministic)
+    const facilityInterval = 8 + Math.floor(seededRandom(seed, 0) * 5); // 8-12
+    
+    radiusZips.forEach((rz, index) => {
+      // Only create facility at intervals
+      if (index % facilityInterval === 0) {
+        const sqftBase = 10000 + Math.floor(seededRandom(seed, index) * 70000); // 10k-80k
+        const confidence: "low" | "medium" = seededRandom(seed, index + 1000) > 0.6 ? "medium" : "low";
+        
+        supplyRows.push({
+          run_id,
+          zip: rz.zip,
+          facility_name: `Storage Facility ${index + 1}`,
+          estimated_sqft: sqftBase,
+          source: "mock",
+          confidence, // NEVER "high"
+        });
+      }
+    });
+    
+    console.log(`[${PROCESS_ID}] Generated ${supplyRows.length} mock facilities (OSM fallback)`);
+  } else {
+    console.log(`[${PROCESS_ID}] Using ${supplyRows.length} real facilities from ${supplySource}`);
+  }
 
   // ==========================================================================
   // EMPTY SUPPLY GATE

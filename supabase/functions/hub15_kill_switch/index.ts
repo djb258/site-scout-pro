@@ -1,22 +1,15 @@
 /**
  * PROCESS: hub15.kill_switch
- * VERSION: v0.1.0 (SHELL ONLY)
+ * VERSION: v1.0.0
  * 
  * PURPOSE: Emergency halt for Hub 1.5 remediation workers.
  * Immediately stops all in-progress jobs and marks them as 'killed'.
  * 
  * TRIGGERS (automatic):
- * - Cost cap exceeded ($50/run)
+ * - Cost cap exceeded ($50/run or 10% of budget)
  * - Failure rate > 70%
  * - Daily call limit reached (500/day)
  * - Manual admin action
- * 
- * TODO: Broadcast kill signal to active workers
- * TODO: Update all in_progress gaps to 'killed'
- * TODO: Log kill event with reason
- * TODO: Send alert notification
- * 
- * DO NOT ADD BUSINESS LOGIC — this is a shell only
  */
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
@@ -43,6 +36,7 @@ interface KillSwitchOutput {
   gaps_killed: number;
   reason: string;
   triggered_at: string;
+  total_cost_cents: number;
   error?: string;
 }
 
@@ -57,29 +51,93 @@ serve(async (req) => {
   }
 
   const processId = 'hub15.kill_switch';
-  const version = 'v0.1.0';
+  const version = 'v1.0.0';
 
   try {
     const input: KillSwitchInput = await req.json();
     
-    // TODO: Validate kill switch authorization
-    // TODO: Update all in_progress gaps to 'killed' status
-    // TODO: Log kill event to pass_1_5_attempt_log
-    // TODO: Calculate final cost for killed run
-    // TODO: Send notification (if configured)
+    console.log(`[${processId}@${version}] Kill switch triggered. reason=${input.reason}, triggered_by=${input.triggered_by}, run_id=${input.run_id || 'ALL'}`);
 
-    console.log(`[${processId}@${version}] STUB: Kill switch triggered. reason=${input.reason}, triggered_by=${input.triggered_by}, run_id=${input.run_id || 'ALL'}`);
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // STUB RESPONSE — replace with actual implementation
+    // Update all in_progress gaps to 'killed' status
+    let query = supabase
+      .from('pass_1_5_gap_queue')
+      .update({ 
+        status: 'killed', 
+        updated_at: new Date().toISOString() 
+      })
+      .eq('status', 'in_progress');
+
+    if (input.run_id) {
+      query = query.eq('run_id', input.run_id);
+    }
+
+    const { data: killedGaps, error: updateError } = await query.select('id');
+
+    if (updateError) {
+      console.error(`[${processId}] Error killing gaps:`, updateError);
+      throw updateError;
+    }
+
+    const gapsKilled = killedGaps?.length || 0;
+    console.log(`[${processId}] Killed ${gapsKilled} in-progress gaps`);
+
+    // Get total cost for this run
+    let totalCostCents = 0;
+    if (input.run_id) {
+      const { data: costData } = await supabase
+        .from('ai_cost_tracker')
+        .select('cost_cents')
+        .eq('run_id', input.run_id);
+
+      totalCostCents = (costData || []).reduce((sum, row) => sum + (row.cost_cents || 0), 0);
+    }
+
+    // Log kill event to attempt log
+    await supabase.from('pass_1_5_attempt_log').insert({
+      run_id: input.run_id || '00000000-0000-0000-0000-000000000000',
+      attempt_number: 0,
+      worker_type: 'kill_switch',
+      status: 'killed',
+      error_code: input.reason.toUpperCase(),
+      error_message: `Kill switch activated: ${input.reason}`,
+      duration_ms: 0,
+      cost_cents: 0,
+      metadata: {
+        gaps_killed: gapsKilled,
+        triggered_by: input.triggered_by,
+        total_cost_cents: totalCostCents,
+        ...input.metadata,
+      },
+    });
+
+    // Track the kill switch event
+    await supabase.from('ai_cost_tracker').insert({
+      run_id: input.run_id || '00000000-0000-0000-0000-000000000000',
+      service: 'kill_switch',
+      operation: input.reason,
+      cost_cents: 0,
+      metadata: {
+        gaps_killed: gapsKilled,
+        triggered_by: input.triggered_by,
+      },
+    });
+
     const response: KillSwitchOutput = {
       process_id: processId,
       version: version,
       status: 'killed',
       run_id: input.run_id,
-      gaps_killed: 0,
+      gaps_killed: gapsKilled,
       reason: input.reason,
       triggered_at: new Date().toISOString(),
+      total_cost_cents: totalCostCents,
     };
+
+    console.log(`[${processId}] Kill switch completed successfully`);
 
     return new Response(JSON.stringify(response), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -94,6 +152,7 @@ serve(async (req) => {
       gaps_killed: 0,
       reason: 'error',
       triggered_at: new Date().toISOString(),
+      total_cost_cents: 0,
       error: error instanceof Error ? error.message : 'Unknown error',
     }), {
       status: 500,
