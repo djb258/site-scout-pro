@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -13,6 +13,7 @@ import { SolverOutputs } from "@/components/solver/SolverOutputs";
 import { SolverWaterfall } from "@/components/solver/SolverWaterfall";
 import { SolverDecisionGates } from "@/components/solver/SolverDecisionGates";
 import { PipelineDocPanel } from "@/components/PipelineDocPanel";
+import { ToolGovernanceCard } from "@/components/ToolGovernanceCard";
 
 interface ObservedInputs {
   zip?: string;
@@ -176,9 +177,14 @@ const Pass3Hub = () => {
       </div>
 
       <div className="container mx-auto px-6 py-6">
-        {/* Pipeline Documentation */}
-        <div className="mb-6">
-          <PipelineDocPanel passNumber={3} />
+        {/* Pipeline Documentation & Governance */}
+        <div className="grid grid-cols-12 gap-6 mb-6">
+          <div className="col-span-8">
+            <PipelineDocPanel passNumber={3} />
+          </div>
+          <div className="col-span-4">
+            <ToolGovernanceCard passNumber={3} />
+          </div>
         </div>
 
         {/* Controls Row */}

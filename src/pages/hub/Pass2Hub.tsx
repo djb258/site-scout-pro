@@ -15,6 +15,7 @@ import { Pass2Prohibitions } from "@/components/Pass2Prohibitions";
 import { Pass2NextActions } from "@/components/Pass2NextActions";
 import { Pass2SchemaStatus } from "@/components/Pass2SchemaStatus";
 import { PipelineDocPanel } from "@/components/PipelineDocPanel";
+import { ToolGovernanceCard } from "@/components/ToolGovernanceCard";
 
 /**
  * Pass 2 — Constraint Compiler Hub
@@ -134,9 +135,14 @@ const Pass2Hub = () => {
       </header>
 
       <main className="container mx-auto px-6 py-8">
-        {/* Pipeline Documentation */}
-        <div className="mb-6">
-          <PipelineDocPanel passNumber={2} />
+        {/* Pipeline Documentation & Governance */}
+        <div className="grid grid-cols-12 gap-6 mb-6">
+          <div className="col-span-8">
+            <PipelineDocPanel passNumber={2} />
+          </div>
+          <div className="col-span-4">
+            <ToolGovernanceCard passNumber={2} />
+          </div>
         </div>
 
         {/* Doctrine Banner */}
