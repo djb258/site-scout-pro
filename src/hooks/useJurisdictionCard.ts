@@ -2,10 +2,22 @@ import { useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 /**
- * Jurisdiction Card Hook — reads from Supabase staging (NOT Neon)
+ * useJurisdictionCard Hook
  * 
- * DOCTRINE: Supabase stages working truth. This hook reads drafts directly.
- * No edge function required for reads — Supabase handles it.
+ * READ-ONLY, SUPABASE-FIRST jurisdiction card retrieval.
+ * Queries jurisdiction_card_drafts staging table directly.
+ * 
+ * IMPORTANT: This hook exposes BOTH envelope_complete and card_complete:
+ * - envelope_complete: Required fields for solver calculations are known
+ * - card_complete: All fields researched (known OR blocked)
+ * 
+ * No Neon reach-around - gravity flip is complete.
+ * 
+ * TODO: County name lookup via card_payload->>'county_name' is a TEMPORARY SHIM.
+ * String matching violates authority-first doctrine. Either:
+ * 1. Add county_name as first-class column, or
+ * 2. Kill this fallback path in next pass
+ * See idx_jc_drafts_county_name index comment.
  */
 
 export interface JurisdictionCard {
@@ -14,8 +26,9 @@ export interface JurisdictionCard {
   county_name: string;
   county_fips: string | null;
   
-  // Status
+  // Status - both completeness flags exposed
   envelope_complete: boolean;
+  card_complete: boolean; // All fields researched (known OR blocked)
   has_fatal_prohibition: boolean;
   is_storage_allowed: 'yes' | 'no' | 'unknown';
   
@@ -64,6 +77,16 @@ export interface JurisdictionCard {
   min_driveway_width: number | null;
 }
 
+/**
+ * SolverJurisdictionCard — SOLVER ARTIFACT ONLY
+ * 
+ * WARNING: These defaults are for solver calculations, NOT jurisdiction truth.
+ * Do NOT use these values for UI display or Pass 3 decision logic
+ * without explicit envelope_complete/card_complete validation.
+ * 
+ * If card_complete=false or envelope_complete=false, these values
+ * may be defaults, not actual researched jurisdiction requirements.
+ */
 export interface SolverJurisdictionCard {
   front_setback_ft: number;
   side_setback_ft: number;
@@ -83,7 +106,12 @@ interface UseJurisdictionCardResult {
   fetchCard: (countyNameOrId: string | number, stateCode: string) => Promise<void>;
 }
 
-// Default values when no data available
+/**
+ * DEFAULT_SOLVER_CARD — SOLVER ARTIFACT, NOT JURISDICTION TRUTH
+ * 
+ * These are fallback values when no jurisdiction data exists.
+ * Pass 3 logic MUST check envelope_complete before trusting solver outputs.
+ */
 const DEFAULT_SOLVER_CARD: SolverJurisdictionCard = {
   front_setback_ft: 50,
   side_setback_ft: 25,
@@ -100,6 +128,7 @@ function mapDraftToCard(draft: {
   county_id: number;
   state_code: string;
   envelope_complete: boolean;
+  card_complete: boolean;
   fatal_prohibition: string;
   card_payload: Record<string, unknown>;
 }): JurisdictionCard {
@@ -112,6 +141,7 @@ function mapDraftToCard(draft: {
     county_fips: (p.county_fips as string) || null,
     
     envelope_complete: draft.envelope_complete,
+    card_complete: draft.card_complete,
     has_fatal_prohibition: draft.fatal_prohibition === 'yes',
     is_storage_allowed: (p.storage_allowed as 'yes' | 'no' | 'unknown') || 'unknown',
     
@@ -202,7 +232,8 @@ export function useJurisdictionCard(): UseJurisdictionCardResult {
         const mappedCard = mapDraftToCard({
           county_id: matchedDraft.county_id,
           state_code: matchedDraft.state_code,
-          envelope_complete: matchedDraft.envelope_complete,
+          envelope_complete: matchedDraft.envelope_complete ?? false,
+          card_complete: matchedDraft.card_complete ?? false,
           fatal_prohibition: matchedDraft.fatal_prohibition as string,
           card_payload: matchedDraft.card_payload as Record<string, unknown>,
         });
