@@ -36,8 +36,10 @@
  * ============================================================================
  */
 
-// Type definitions for @lovable/cloud-db
-// In production, import from "@lovable/cloud-db"
+import { getSupabase } from '../ConnectionFactory';
+import type { SupabaseClient } from '@supabase/supabase-js';
+
+// Type definitions for @lovable/cloud-db compatible interface
 interface LovableDB {
   insert<T>(table: string, data: T): Promise<{ id: string; data: T }>;
   update<T>(table: string, id: string, data: Partial<T>): Promise<{ id: string; data: T }>;
@@ -50,8 +52,209 @@ interface LovableDB {
   };
 }
 
-// Mock implementation for development
-// Replace with actual @lovable/cloud-db import in production
+// ============================================================================
+// REAL SUPABASE IMPLEMENTATION
+// ============================================================================
+
+/**
+ * Create a real Supabase-backed database implementation.
+ * This replaces the mock implementation with actual Supabase SDK calls.
+ */
+const createSupabaseDB = (): LovableDB => {
+  // JSON storage table for staging data
+  const JSON_STORAGE_TABLE = 'json_storage';
+
+  return {
+    /**
+     * Insert a new record into a table.
+     * Returns the inserted record with its generated ID.
+     */
+    async insert<T>(table: string, data: T): Promise<{ id: string; data: T }> {
+      const supabase = getSupabase();
+
+      // Add timestamp if not present
+      const dataWithTimestamp = {
+        ...data,
+        created_at: (data as any).created_at || new Date().toISOString(),
+      };
+
+      const { data: result, error } = await supabase
+        .from(table)
+        .insert(dataWithTimestamp)
+        .select()
+        .single();
+
+      if (error) {
+        console.error(`[LOVABLE_DB] INSERT ${table} failed:`, error.message);
+        throw new Error(`Insert failed: ${error.message}`);
+      }
+
+      console.log(`[LOVABLE_DB] INSERT ${table}:`, result.id);
+      return { id: result.id, data: result as T };
+    },
+
+    /**
+     * Update an existing record by ID.
+     * Returns the updated record.
+     */
+    async update<T>(table: string, id: string, data: Partial<T>): Promise<{ id: string; data: T }> {
+      const supabase = getSupabase();
+
+      // Add updated_at timestamp
+      const dataWithTimestamp = {
+        ...data,
+        updated_at: new Date().toISOString(),
+      };
+
+      const { data: result, error } = await supabase
+        .from(table)
+        .update(dataWithTimestamp)
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) {
+        console.error(`[LOVABLE_DB] UPDATE ${table} failed:`, error.message);
+        throw new Error(`Update failed: ${error.message}`);
+      }
+
+      console.log(`[LOVABLE_DB] UPDATE ${table}:`, id);
+      return { id, data: result as T };
+    },
+
+    /**
+     * Get a single record by ID.
+     * Returns null if not found.
+     */
+    async get<T>(table: string, id: string): Promise<T | null> {
+      const supabase = getSupabase();
+
+      const { data: result, error } = await supabase
+        .from(table)
+        .select('*')
+        .eq('id', id)
+        .maybeSingle();
+
+      if (error) {
+        console.error(`[LOVABLE_DB] GET ${table} failed:`, error.message);
+        throw new Error(`Get failed: ${error.message}`);
+      }
+
+      console.log(`[LOVABLE_DB] GET ${table}:`, id, result ? 'found' : 'not found');
+      return result as T | null;
+    },
+
+    /**
+     * Query records with optional filters.
+     * Returns an array of matching records.
+     */
+    async query<T>(table: string, filter?: Record<string, unknown>): Promise<T[]> {
+      const supabase = getSupabase();
+
+      let query = supabase.from(table).select('*');
+
+      // Apply filters if provided
+      if (filter) {
+        for (const [key, value] of Object.entries(filter)) {
+          if (value !== undefined && value !== null) {
+            query = query.eq(key, value);
+          }
+        }
+      }
+
+      const { data: results, error } = await query;
+
+      if (error) {
+        console.error(`[LOVABLE_DB] QUERY ${table} failed:`, error.message);
+        throw new Error(`Query failed: ${error.message}`);
+      }
+
+      console.log(`[LOVABLE_DB] QUERY ${table}:`, results?.length ?? 0, 'records');
+      return (results ?? []) as T[];
+    },
+
+    /**
+     * Delete a record by ID.
+     * Returns true if deleted, false if not found.
+     */
+    async delete(table: string, id: string): Promise<boolean> {
+      const supabase = getSupabase();
+
+      const { error, count } = await supabase
+        .from(table)
+        .delete()
+        .eq('id', id);
+
+      if (error) {
+        console.error(`[LOVABLE_DB] DELETE ${table} failed:`, error.message);
+        throw new Error(`Delete failed: ${error.message}`);
+      }
+
+      const deleted = (count ?? 0) > 0;
+      console.log(`[LOVABLE_DB] DELETE ${table}:`, id, deleted ? 'success' : 'not found');
+      return deleted;
+    },
+
+    /**
+     * JSON key-value storage for staging data.
+     * Uses a dedicated json_storage table with key-value pairs.
+     */
+    json(key: string) {
+      return {
+        async get<T>(): Promise<T | null> {
+          const supabase = getSupabase();
+
+          const { data: result, error } = await supabase
+            .from(JSON_STORAGE_TABLE)
+            .select('value')
+            .eq('key', key)
+            .maybeSingle();
+
+          if (error) {
+            // Table might not exist yet - return null silently
+            if (error.code === '42P01') {
+              console.log(`[LOVABLE_DB] JSON GET: table not found, returning null`);
+              return null;
+            }
+            console.error(`[LOVABLE_DB] JSON GET ${key} failed:`, error.message);
+            return null;
+          }
+
+          console.log(`[LOVABLE_DB] JSON GET:`, key, result ? 'found' : 'not found');
+          return result?.value as T | null;
+        },
+
+        async set<T>(value: T): Promise<void> {
+          const supabase = getSupabase();
+
+          // Upsert the JSON value
+          const { error } = await supabase
+            .from(JSON_STORAGE_TABLE)
+            .upsert(
+              {
+                key,
+                value,
+                updated_at: new Date().toISOString(),
+              },
+              { onConflict: 'key' }
+            );
+
+          if (error) {
+            console.error(`[LOVABLE_DB] JSON SET ${key} failed:`, error.message);
+            throw new Error(`JSON set failed: ${error.message}`);
+          }
+
+          console.log(`[LOVABLE_DB] JSON SET:`, key);
+        },
+      };
+    },
+  };
+};
+
+// ============================================================================
+// FALLBACK MOCK IMPLEMENTATION (for environments without Supabase)
+// ============================================================================
+
 const createMockDB = (): LovableDB => {
   const storage = new Map<string, Map<string, unknown>>();
   const jsonStorage = new Map<string, unknown>();
@@ -62,9 +265,9 @@ const createMockDB = (): LovableDB => {
         storage.set(table, new Map());
       }
       const id = crypto.randomUUID();
-      const record = { ...data, id, created_at: Date.now() };
+      const record = { ...data, id, created_at: new Date().toISOString() };
       storage.get(table)!.set(id, record);
-      console.log(`[LOVABLE_DB] INSERT ${table}:`, id);
+      console.log(`[LOVABLE_DB_MOCK] INSERT ${table}:`, id);
       return { id, data: record as T };
     },
 
@@ -74,16 +277,16 @@ const createMockDB = (): LovableDB => {
       }
       const existing = storage.get(table)!.get(id);
       const existingObj = typeof existing === 'object' && existing !== null ? existing : {};
-      const updated = { ...existingObj, ...data, updated_at: Date.now() };
+      const updated = { ...existingObj, ...data, updated_at: new Date().toISOString() };
       storage.get(table)!.set(id, updated);
-      console.log(`[LOVABLE_DB] UPDATE ${table}:`, id);
+      console.log(`[LOVABLE_DB_MOCK] UPDATE ${table}:`, id);
       return { id, data: updated as T };
     },
 
     async get<T>(table: string, id: string): Promise<T | null> {
       if (!storage.has(table)) return null;
       const record = storage.get(table)!.get(id);
-      console.log(`[LOVABLE_DB] GET ${table}:`, id, record ? 'found' : 'not found');
+      console.log(`[LOVABLE_DB_MOCK] GET ${table}:`, id, record ? 'found' : 'not found');
       return (record as T) || null;
     },
 
@@ -102,7 +305,7 @@ const createMockDB = (): LovableDB => {
     async delete(table: string, id: string): Promise<boolean> {
       if (!storage.has(table)) return false;
       const result = storage.get(table)!.delete(id);
-      console.log(`[LOVABLE_DB] DELETE ${table}:`, id, result ? 'success' : 'not found');
+      console.log(`[LOVABLE_DB_MOCK] DELETE ${table}:`, id, result ? 'success' : 'not found');
       return result;
     },
 
@@ -113,16 +316,39 @@ const createMockDB = (): LovableDB => {
         },
         async set<T>(value: T): Promise<void> {
           jsonStorage.set(key, value);
-          console.log(`[LOVABLE_DB] JSON SET:`, key);
+          console.log(`[LOVABLE_DB_MOCK] JSON SET:`, key);
         },
       };
     },
   };
 };
 
-// In production, replace with:
-// import { db } from "@lovable/cloud-db";
-export const db: LovableDB = createMockDB();
+// ============================================================================
+// DATABASE INSTANCE SELECTION
+// ============================================================================
+
+/**
+ * Determine which database implementation to use.
+ * Uses real Supabase if credentials are available, otherwise falls back to mock.
+ */
+function selectDatabase(): LovableDB {
+  // Check if Supabase credentials are available
+  const hasSupabaseCredentials = !!(
+    (process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL) &&
+    (process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_PUBLISHABLE_KEY)
+  );
+
+  if (hasSupabaseCredentials) {
+    console.log('[LOVABLE_ADAPTER] Using real Supabase database');
+    return createSupabaseDB();
+  }
+
+  console.warn('[LOVABLE_ADAPTER] No Supabase credentials found, using mock database');
+  return createMockDB();
+}
+
+// Export the selected database implementation
+export const db: LovableDB = selectDatabase();
 
 // ============================================================================
 // DATABASE TABLE NAMES

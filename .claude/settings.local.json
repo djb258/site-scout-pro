@@ -21,7 +21,12 @@
       "Bash(gh pr edit:*)",
       "Bash(npx vitest:*)",
       "Bash(cd:*)",
-      "Bash(git ls-tree:*)"
+      "Bash(git ls-tree:*)",
+      "Bash(cat:*)",
+      "Bash(npm install:*)",
+      "Bash(./scripts/check_neon_consumers.sh:*)",
+      "Bash(./scripts/check_pass2_neon_ban.sh:*)",
+      "Bash(./scripts/check_vault_write_pattern.sh:*)"
     ],
     "deny": [],
     "ask": []

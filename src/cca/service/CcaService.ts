@@ -39,6 +39,8 @@ import {
   ConfidenceCeiling,
 } from '../types/cca_types';
 
+import { neonAdapter, CountyCapabilityRecord } from '../../shared/data_layer/adapters/NeonAdapter';
+
 // =============================================================================
 // CCA SERVICE CLASS
 // =============================================================================
@@ -296,18 +298,149 @@ export class CcaService {
    * Store a profile in the database
    */
   private async storeProfile(profile: CountyCapabilityProfile): Promise<void> {
-    // TODO: Implement database storage
-    // This would insert/update ref.ref_county_capability
     console.log(`[CCA] Storing profile for county ${profile.county_id}`);
+
+    try {
+      await neonAdapter.upsertCcaProfile({
+        county_id: profile.county_id,
+        state: profile.state_code,
+        county_name: '', // Will be resolved from county_fips
+        county_fips: profile.county_fips,
+
+        // Pass 0 dispatch
+        pass0_method: this.mapAutomationClassToMethod(profile.automation_class),
+        pass0_coverage: profile.permit_automation_viable ? 'full' : 'insufficient',
+        pass0_vendor: profile.detected_vendor,
+        pass0_has_api: profile.permit_system_type === 'api',
+        pass0_has_portal: profile.permit_system_type === 'portal_scrape',
+        pass0_inspections_linked: profile.inspections_linked,
+
+        // Pass 2 dispatch
+        pass2_method: this.mapAutomationClassToMethod(profile.automation_class),
+        pass2_coverage: profile.zoning_automation_viable ? 'full' : 'insufficient',
+        pass2_zoning_model_detected: this.mapZoningModel(profile.zoning_model),
+        pass2_ordinance_format: profile.document_quality,
+        pass2_has_gis: null,
+        pass2_has_online_ordinance: profile.zoning_automation_viable,
+        pass2_planning_url: profile.planning_url,
+        pass2_ordinance_url: null,
+
+        // TTL
+        confidence: profile.confidence_ceiling,
+        ttl_months: CCA_TTL_MONTHS,
+      });
+
+      console.log(`[CCA] Profile stored for county ${profile.county_id}`);
+    } catch (error) {
+      console.error(`[CCA] Failed to store profile for county ${profile.county_id}:`, error);
+      throw error;
+    }
   }
 
   /**
    * Get a profile from the database
    */
   private async getProfile(county_id: number): Promise<CountyCapabilityProfile | null> {
-    // TODO: Implement database read
-    // This would select from ref.ref_county_capability
-    return null;
+    try {
+      const record = await neonAdapter.getCcaProfile(county_id);
+
+      if (!record) {
+        return null;
+      }
+
+      return this.mapRecordToProfile(record);
+    } catch (error) {
+      console.error(`[CCA] Failed to get profile for county ${county_id}:`, error);
+      return null;
+    }
+  }
+
+  /**
+   * Map database record to CountyCapabilityProfile
+   */
+  private mapRecordToProfile(record: CountyCapabilityRecord): CountyCapabilityProfile {
+    return {
+      county_id: record.county_id,
+      county_fips: record.county_fips,
+      state_code: record.state,
+
+      // Permit system (for Pass 0)
+      permit_system_type: this.inferPermitSystemType(record),
+      inspections_linked: record.pass0_inspections_linked,
+      permit_automation_viable: record.pass0_coverage === 'full' || record.pass0_coverage === 'partial',
+
+      // Zoning/planning (for Pass 2)
+      zoning_model: record.pass2_zoning_model_detected || 'unknown',
+      document_quality: record.pass2_ordinance_format || 'unknown',
+      zoning_automation_viable: record.pass2_coverage === 'full' || record.pass2_coverage === 'partial',
+
+      // Overall
+      automation_class: this.inferAutomationClass(record),
+      automation_viable: record.pass0_coverage === 'full' || record.pass2_coverage === 'full',
+
+      // Vendor & URLs
+      detected_vendor: record.pass0_vendor,
+      planning_url: record.pass2_planning_url,
+      permits_url: null, // Not stored in current schema
+      source_urls: [],
+
+      // Confidence & TTL
+      confidence_ceiling: record.confidence,
+      last_verified_at: record.verified_at,
+      expires_at: record.expires_at,
+      escalation_required: record.confidence === 'low',
+
+      // Metadata
+      notes: null,
+      probe_retry_count: 0,
+    };
+  }
+
+  /**
+   * Infer permit system type from record
+   */
+  private inferPermitSystemType(record: CountyCapabilityRecord): 'api' | 'portal_scrape' | 'pdf_logs' | 'manual_only' | 'unknown' {
+    if (record.pass0_has_api) return 'api';
+    if (record.pass0_has_portal) return 'portal_scrape';
+    if (record.pass0_method === 'manual') return 'manual_only';
+    return 'unknown';
+  }
+
+  /**
+   * Infer automation class from record
+   */
+  private inferAutomationClass(record: CountyCapabilityRecord): AutomationClass {
+    if (record.pass0_method === 'api' || record.pass2_method === 'api') return 'api';
+    if (record.pass0_method === 'portal' || record.pass2_method === 'portal') return 'portal';
+    if (record.pass0_method === 'scrape' || record.pass2_method === 'scrape') return 'portal';
+    if (record.pass2_ordinance_format === 'pdf_searchable' || record.pass2_ordinance_format === 'pdf_scanned') return 'pdf';
+    return 'manual';
+  }
+
+  /**
+   * Map automation class to method
+   */
+  private mapAutomationClassToMethod(automationClass: AutomationClass): 'api' | 'scrape' | 'portal' | 'manual' | null {
+    switch (automationClass) {
+      case 'api': return 'api';
+      case 'portal': return 'portal';
+      case 'pdf': return 'scrape';
+      case 'manual': return 'manual';
+      default: return null;
+    }
+  }
+
+  /**
+   * Map zoning model string to enum
+   */
+  private mapZoningModel(model: string): 'no_zoning' | 'county' | 'municipal' | 'mixed' | null {
+    switch (model) {
+      case 'no_zoning': return 'no_zoning';
+      case 'county': return 'county';
+      case 'municipal': return 'municipal';
+      case 'mixed': return 'mixed';
+      default: return null;
+    }
   }
 
   /**
