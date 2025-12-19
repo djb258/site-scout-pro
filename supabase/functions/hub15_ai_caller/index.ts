@@ -93,11 +93,14 @@ interface ExtractedRate {
   confidence: "low" | "medium";
 }
 
+// DELIVERABLE 2: Enhanced status with DEGRADED support
+type CallerStatus = "success" | "completed" | "degraded" | "failed" | "timeout" | "outside_hours";
+
 interface CallerOutput {
   process_id: string;
   version: string;
   gap_queue_id: string;
-  status: "completed" | "failed" | "timeout" | "outside_hours";
+  status: CallerStatus;
   rates: ExtractedRate[];
   promo_info: string | null;
   admin_fee: number | null;
@@ -108,6 +111,18 @@ interface CallerOutput {
   cost_cents: number;
   error_code?: string;
   error_message?: string;
+  // DELIVERABLE 2: Additional tracking fields
+  request_id: string;
+  ai_provider: string;
+  degraded_reason?: string;
+}
+
+// Response shape validation schema (deterministic)
+interface ValidResponseShape {
+  hasTranscript: boolean;
+  hasRates: boolean;
+  rateCount: number;
+  isValidSchema: boolean;
 }
 
 // ============================================================================
@@ -391,8 +406,25 @@ async function logAttempt(
 // ============================================================================
 // MAIN HANDLER
 // ============================================================================
+// Generate unique request ID for tracing
+function generateRequestId(): string {
+  return `req_${Date.now().toString(36)}_${Math.random().toString(36).substring(2, 8)}`;
+}
+
+// Validate response shape (DELIVERABLE 2: response shape validation)
+function validateResponseShape(transcript: string, rates: ExtractedRate[]): ValidResponseShape {
+  const hasTranscript = transcript.length > 50;
+  const hasRates = rates.length > 0;
+  const rateCount = rates.filter(r => r.monthly_rate !== null).length;
+  const isValidSchema = hasTranscript && (hasRates || rates.length === 0);
+  
+  return { hasTranscript, hasRates, rateCount, isValidSchema };
+}
+
 serve(async (req) => {
   const startTime = Date.now();
+  const requestId = generateRequestId();
+  const aiProvider = "retell.ai";
 
   // Handle CORS
   if (req.method === "OPTIONS") {
@@ -403,12 +435,16 @@ serve(async (req) => {
     // Parse input
     const input: CallerInput = await req.json();
     
+    console.log(`[${PROCESS_ID}] Request ${requestId}: Processing gap_queue_id=${input.gap_queue_id}`);
+    
     // Validate required fields
     if (!input.gap_queue_id || !input.run_id || !input.phone_number || !input.attempt_number) {
       return new Response(
         JSON.stringify({
           process_id: PROCESS_ID,
           version: VERSION,
+          request_id: requestId,
+          ai_provider: aiProvider,
           error_code: "INVALID_INPUT",
           error_message: "Missing required fields: gap_queue_id, run_id, phone_number, attempt_number"
         }),
@@ -419,6 +455,8 @@ serve(async (req) => {
     // Check business hours
     if (!isBusinessHours()) {
       const output: CallerOutput = {
+        request_id: requestId,
+        ai_provider: aiProvider,
         process_id: PROCESS_ID,
         version: VERSION,
         gap_queue_id: input.gap_queue_id,
@@ -444,6 +482,8 @@ serve(async (req) => {
     // Check retry cap
     if (input.attempt_number > MAX_RETRIES) {
       const output: CallerOutput = {
+        request_id: requestId,
+        ai_provider: aiProvider,
         process_id: PROCESS_ID,
         version: VERSION,
         gap_queue_id: input.gap_queue_id,
@@ -520,6 +560,8 @@ serve(async (req) => {
 
     if (!callResult) {
       const output: CallerOutput = {
+        request_id: requestId,
+        ai_provider: aiProvider,
         process_id: PROCESS_ID,
         version: VERSION,
         gap_queue_id: input.gap_queue_id,
@@ -572,30 +614,60 @@ serve(async (req) => {
     // Hash transcript
     const transcriptHash = await hashTranscript(callDetails.transcript);
 
-    // Determine call status
-    let status: CallerOutput["status"];
+    // Determine call status (initial determination before degraded check)
+    let initialStatus: "completed" | "failed" | "timeout";
     if (callDetails.status === "timeout") {
-      status = "timeout";
+      initialStatus = "timeout";
     } else if (callDetails.status === "ended" && callDetails.transcript.length > 50) {
-      status = "completed";
+      initialStatus = "completed";
     } else {
-      status = "failed";
+      initialStatus = "failed";
     }
 
     // Extract rates from transcript (deterministic, regex-based)
-    const { rates, promo, adminFee } = status === "completed"
+    const { rates, promo, adminFee } = initialStatus === "completed"
       ? extractRatesFromTranscript(callDetails.transcript, targetSizes)
       : { rates: [], promo: null, adminFee: null };
 
-    // Calculate overall confidence (rule-based, not inference)
+    // =========================================================================
+    // DELIVERABLE 2: Response shape validation & DEGRADED status detection
+    // =========================================================================
+    const responseShape = validateResponseShape(callDetails.transcript, rates);
     const ratesWithData = rates.filter(r => r.monthly_rate !== null);
+    
+    // Determine if result is DEGRADED (only check if call initially completed)
+    let finalStatus: CallerStatus = initialStatus;
+    let degradedReason: string | undefined;
+    
+    if (initialStatus === "completed") {
+      // Check for degraded conditions
+      if (!responseShape.hasTranscript) {
+        finalStatus = "degraded";
+        degradedReason = "Empty or insufficient transcript";
+      } else if (!responseShape.isValidSchema) {
+        finalStatus = "degraded";
+        degradedReason = "Invalid response schema";
+      } else if (responseShape.rateCount === 0) {
+        finalStatus = "degraded";
+        degradedReason = "No rates extracted from transcript";
+      } else if (responseShape.rateCount < 2) {
+        finalStatus = "degraded";
+        degradedReason = `Only ${responseShape.rateCount} rate(s) extracted (expected 2+)`;
+      } else {
+        finalStatus = "success";
+      }
+    }
+
+    // Calculate overall confidence (rule-based, not inference)
     const confidence: "low" | "medium" = ratesWithData.length >= 2 ? "medium" : "low";
 
     const output: CallerOutput = {
+      request_id: requestId,
+      ai_provider: aiProvider,
       process_id: PROCESS_ID,
       version: VERSION,
       gap_queue_id: input.gap_queue_id,
-      status,
+      status: finalStatus,
       rates,
       promo_info: promo,
       admin_fee: adminFee,
@@ -603,23 +675,33 @@ serve(async (req) => {
       call_duration_seconds: callDetails.duration_seconds,
       confidence,
       duration_ms: Date.now() - startTime,
-      cost_cents: callDetails.cost_cents
+      cost_cents: callDetails.cost_cents,
+      degraded_reason: degradedReason
     };
 
-    if (status === "failed") {
+    if (finalStatus === "failed") {
       output.error_code = "CALL_FAILED";
       output.error_message = `Call status: ${callDetails.status}`;
-    } else if (status === "timeout") {
+    } else if (finalStatus === "timeout") {
       output.error_code = "CALL_TIMEOUT";
       output.error_message = `Call exceeded ${CALL_TIMEOUT_MS / 1000}s timeout`;
+    } else if (finalStatus === "degraded") {
+      output.error_code = "DEGRADED_RESULT";
+      output.error_message = degradedReason;
     }
 
-    // Log attempt
+    // Log attempt with enhanced status
+    const logStatus = finalStatus === "success" || finalStatus === "completed" 
+      ? "completed" 
+      : finalStatus === "degraded" 
+        ? "degraded" 
+        : "failed";
+        
     await logAttempt(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
       gap_queue_id: input.gap_queue_id,
       run_id: input.run_id,
       attempt_number: input.attempt_number,
-      status: status === "completed" ? "completed" : "failed",
+      status: logStatus,
       duration_ms: output.duration_ms,
       cost_cents: output.cost_cents,
       transcript_hash: transcriptHash,
@@ -627,7 +709,18 @@ serve(async (req) => {
       error_message: output.error_message
     });
 
-    console.log(`[${PROCESS_ID}] Call complete: status=${status}, rates=${ratesWithData.length}, confidence=${confidence}`);
+    // DELIVERABLE 2: Structured log entry for every AI call
+    const aiCallLog = {
+      pass: "1.5",
+      status: finalStatus,
+      ai_provider: aiProvider,
+      reason: degradedReason || null,
+      execution_id: requestId,
+      duration_ms: output.duration_ms,
+      rates_extracted: ratesWithData.length,
+      transcript_length: callDetails.transcript.length
+    };
+    console.log(`[${PROCESS_ID}] AI_CALL_LOG:`, JSON.stringify(aiCallLog));
 
     return new Response(JSON.stringify(output), {
       status: 200,
@@ -641,6 +734,8 @@ serve(async (req) => {
       JSON.stringify({
         process_id: PROCESS_ID,
         version: VERSION,
+        request_id: requestId,
+        ai_provider: aiProvider,
         error_code: "INTERNAL_ERROR",
         error_message: error instanceof Error ? error.message : "Unknown error"
       }),

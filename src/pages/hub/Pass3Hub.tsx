@@ -17,6 +17,7 @@ import { SolverDecisionGates } from "@/components/solver/SolverDecisionGates";
 import { PipelineDocPanel } from "@/components/PipelineDocPanel";
 import { ToolGovernanceCard } from "@/components/ToolGovernanceCard";
 import { ProductionReadinessPanel } from "@/components/ProductionReadinessPanel";
+import { PipelineStatusDashboard } from "@/components/PipelineStatusDashboard";
 import { useJurisdictionCard, type SolverJurisdictionCard } from "@/hooks/useJurisdictionCard";
 
 interface ObservedInputs {
@@ -206,6 +207,14 @@ const Pass3Hub = () => {
       </div>
 
       <div className="container mx-auto px-6 py-6">
+        {/* DELIVERABLE 3: Pipeline Status Dashboard */}
+        <div className="mb-6">
+          <PipelineStatusDashboard 
+            zip={observed.zip}
+            countyId={jurisdictionData?.county_id}
+          />
+        </div>
+
         {/* Production Readiness Panel (Collapsible) */}
         <Collapsible className="mb-6">
           <CollapsibleTrigger asChild>
