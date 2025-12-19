@@ -2,18 +2,19 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import postgres from 'https://deno.land/x/postgresjs@v3.4.4/mod.js';
 
 /**
- * CCA_DISPATCH_RECON Edge Function
+ * CCA_DISPATCH_RECON Edge Function (v2.0.0)
  * 
  * DOCTRINE: Lovable orchestrates. Never decides automation methods.
+ * Updated to use ref.v_cca_dispatch view matching Claude Code spec.
  * 
  * Responsibilities:
  * 1. Resolve ZIP + radius → counties
- * 2. Dedupe against Neon (county_id + TTL check)
+ * 2. Dedupe against Neon via ref.v_cca_dispatch (TTL check)
  * 3. Build minimal dispatch payload (identity only)
  * 4. Return payload for Claude Code agent
  * 
  * process_id: cca_dispatch_recon
- * version: v1.0.0
+ * version: v2.0.0
  */
 
 const corsHeaders = {
@@ -29,15 +30,18 @@ interface DispatchInput {
 }
 
 interface CountyDispatch {
-  county_id: string;
+  county_id: number | null;
   county_name: string;
   state: string;
+  county_fips?: string;
   recon_type: 'full' | 'refresh' | 'partial';
   passes_needed: string[];
   stale_since?: string;
   current_methods?: {
     pass0_method: string;
+    pass0_coverage: string;
     pass2_method: string;
+    pass2_coverage: string;
   };
 }
 
@@ -81,7 +85,7 @@ Deno.serve(async (req) => {
     }
 
     const dispatch_id = crypto.randomUUID();
-    console.log(`[CCA_DISPATCH] Starting dispatch ${dispatch_id} for ZIP: ${zip}, radius: ${radius_miles}mi`);
+    console.log(`[CCA_DISPATCH v2] Starting dispatch ${dispatch_id} for ZIP: ${zip}, radius: ${radius_miles}mi`);
 
     // Connect to Neon
     sql = await getNeonConnection();
@@ -90,7 +94,7 @@ Deno.serve(async (req) => {
     // STEP 1: Resolve ZIP → Counties (within radius)
     // =========================================================================
     const zipResult = await sql`
-      SELECT zip, city, county_name, state_id as state, lat, lng
+      SELECT zip, city, county_name, state_id as state, lat, lng, county_fips
       FROM zips_master
       WHERE zip = ${zip}
       LIMIT 1
@@ -105,11 +109,11 @@ Deno.serve(async (req) => {
     }
 
     const originZip = zipResult[0];
-    console.log(`[CCA_DISPATCH] Origin: ${originZip.city}, ${originZip.county_name}, ${originZip.state}`);
+    console.log(`[CCA_DISPATCH v2] Origin: ${originZip.city}, ${originZip.county_name}, ${originZip.state}`);
 
     // Get counties within radius
     const radiusCounties = await sql`
-      SELECT DISTINCT county_name, state_id as state
+      SELECT DISTINCT county_name, state_id as state, county_fips
       FROM zips_master
       WHERE lat IS NOT NULL AND lng IS NOT NULL
         AND ${originZip.lat} IS NOT NULL AND ${originZip.lng} IS NOT NULL
@@ -123,72 +127,70 @@ Deno.serve(async (req) => {
       ORDER BY county_name
     `;
 
-    console.log(`[CCA_DISPATCH] Found ${radiusCounties.length} counties within ${radius_miles}mi radius`);
+    console.log(`[CCA_DISPATCH v2] Found ${radiusCounties.length} counties within ${radius_miles}mi radius`);
 
     // =========================================================================
-    // STEP 2: Dedupe against Neon CCA profiles (TTL check)
+    // STEP 2: Dedupe against ref.v_cca_dispatch (TTL check)
     // =========================================================================
     const countiesToRecon: CountyDispatch[] = [];
     const countiesFresh: string[] = [];
 
     for (const county of radiusCounties) {
-      const county_id = `${county.county_name.toLowerCase().replace(/\s+/g, '_')}_${county.state.toLowerCase()}`;
-
-      // Check existing CCA profile
+      // Check existing CCA profile via dispatch view
       const profileResult = await sql`
         SELECT 
           county_id,
           pass0_method,
+          pass0_coverage,
           pass2_method,
+          pass2_coverage,
           verified_at,
-          ttl_days,
-          (verified_at + (ttl_days || ' days')::interval) as expires_at
-        FROM ref.cca_county_profile
-        WHERE county_id = ${county_id}
+          is_expired,
+          expires_soon
+        FROM ref.v_cca_dispatch
+        WHERE county_name ILIKE ${county.county_name}
+          AND state = ${county.state}
         LIMIT 1
       `.catch(() => []);
 
       const profile = profileResult[0];
-      const now = new Date();
 
-      if (profile && !force_refresh) {
-        const expiresAt = new Date(profile.expires_at);
-        
-        if (expiresAt > now) {
-          // Profile is fresh
-          countiesFresh.push(county_id);
-          console.log(`[CCA_DISPATCH] ${county_id}: fresh until ${expiresAt.toISOString()}`);
-          continue;
-        } else {
-          // Profile is stale
-          countiesToRecon.push({
-            county_id,
-            county_name: county.county_name,
-            state: county.state,
-            recon_type: 'refresh',
-            passes_needed,
-            stale_since: profile.verified_at,
-            current_methods: {
-              pass0_method: profile.pass0_method,
-              pass2_method: profile.pass2_method,
-            },
-          });
-          console.log(`[CCA_DISPATCH] ${county_id}: stale since ${profile.verified_at}`);
-        }
-      } else {
-        // No profile exists or force refresh
+      if (profile && !force_refresh && !profile.is_expired) {
+        // Profile is fresh
+        countiesFresh.push(`${county.county_name}_${county.state}`);
+        console.log(`[CCA_DISPATCH v2] ${county.county_name}, ${county.state}: fresh`);
+        continue;
+      }
+
+      if (profile) {
+        // Profile exists but is stale/expired or force refresh
         countiesToRecon.push({
-          county_id,
+          county_id: profile.county_id,
           county_name: county.county_name,
           state: county.state,
-          recon_type: profile ? 'refresh' : 'full',
+          county_fips: county.county_fips,
+          recon_type: 'refresh',
           passes_needed,
-          current_methods: profile ? {
+          stale_since: profile.verified_at,
+          current_methods: {
             pass0_method: profile.pass0_method,
+            pass0_coverage: profile.pass0_coverage,
             pass2_method: profile.pass2_method,
-          } : undefined,
+            pass2_coverage: profile.pass2_coverage,
+          },
         });
-        console.log(`[CCA_DISPATCH] ${county_id}: ${profile ? 'force refresh' : 'new recon'} needed`);
+        console.log(`[CCA_DISPATCH v2] ${county.county_name}, ${county.state}: stale, needs refresh`);
+      } else {
+        // No profile exists
+        countiesToRecon.push({
+          county_id: null,
+          county_name: county.county_name,
+          state: county.state,
+          county_fips: county.county_fips,
+          recon_type: 'full',
+          passes_needed,
+        });
+        console.log(`[CCA_DISPATCH v2] ${county.county_name}, ${county.state}: new recon needed`);
       }
     }
 
@@ -206,19 +208,20 @@ Deno.serve(async (req) => {
     // Log dispatch event
     await supabase.from('engine_logs').insert({
       engine: 'cca_dispatch_recon',
-      event: 'dispatch',
+      event: 'dispatch_v2',
       payload: {
         dispatch_id,
         origin_zip: zip,
         radius_miles,
         force_refresh,
+        passes_needed,
         counties_to_recon: countiesToRecon.length,
         counties_fresh: countiesFresh.length,
       },
       status: result.status,
     });
 
-    console.log(`[CCA_DISPATCH] Dispatch ${dispatch_id}: ${countiesToRecon.length} to recon, ${countiesFresh.length} fresh`);
+    console.log(`[CCA_DISPATCH v2] Dispatch ${dispatch_id}: ${countiesToRecon.length} to recon, ${countiesFresh.length} fresh`);
 
     await sql.end();
 
@@ -228,7 +231,7 @@ Deno.serve(async (req) => {
     );
 
   } catch (error) {
-    console.error('[CCA_DISPATCH] Error:', error);
+    console.error('[CCA_DISPATCH v2] Error:', error);
     if (sql) await sql.end();
     
     return new Response(
