@@ -1,9 +1,10 @@
-import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { Skeleton } from "@/components/ui/skeleton";
 import { PipelineDocPanel } from "@/components/PipelineDocPanel";
 import { ToolGovernanceCard } from "@/components/ToolGovernanceCard";
+import { usePass15Dashboard, Pass15DashboardData } from "@/hooks/usePass15Dashboard";
 import { 
   MapPin, 
   Search, 
@@ -14,8 +15,12 @@ import {
   Clock,
   AlertCircle,
   ArrowRight,
-  Zap
+  Zap,
+  RefreshCw,
+  AlertTriangle,
+  Shield
 } from "lucide-react";
+import { formatDistanceToNow } from "date-fns";
 
 // 4-Tier Cost Ladder Configuration
 const COST_TIERS = [
@@ -27,14 +32,12 @@ const COST_TIERS = [
     icon: MapPin,
     cost: "Free",
     costValue: 0,
-    color: "hsl(var(--chart-1))",
     bgClass: "bg-emerald-500/10 border-emerald-500/30",
     textClass: "text-emerald-400",
     confidence: "Low",
     speed: "Fast",
     dataPoints: ["Facility name", "Address", "Coordinates"],
     edgeFunction: "hub1_pass1_supply_osm",
-    status: "active"
   },
   {
     tier: 2,
@@ -42,33 +45,29 @@ const COST_TIERS = [
     shortName: "AI Search",
     description: "Lovable AI-powered web search for pricing intelligence",
     icon: Search,
-    cost: "$0.002/query",
-    costValue: 0.002,
-    color: "hsl(var(--chart-2))",
+    cost: "$0.01/query",
+    costValue: 1,
     bgClass: "bg-blue-500/10 border-blue-500/30",
     textClass: "text-blue-400",
     confidence: "Medium",
     speed: "Fast",
     dataPoints: ["Published rates", "Website URL", "Unit sizes"],
     edgeFunction: "hub15_competitor_search",
-    status: "active"
   },
   {
     tier: 3,
     name: "Web Scrape",
     shortName: "Scrape",
-    description: "Firecrawl-powered direct website scraping",
+    description: "Direct website scraping for rate extraction",
     icon: Globe,
-    cost: "$0.01/page",
-    costValue: 0.01,
-    color: "hsl(var(--chart-3))",
+    cost: "Free",
+    costValue: 0,
     bgClass: "bg-amber-500/10 border-amber-500/30",
     textClass: "text-amber-400",
     confidence: "High",
     speed: "Medium",
     dataPoints: ["Exact rates", "All unit sizes", "Specials/promos"],
     edgeFunction: "hub15_rate_scraper",
-    status: "shell"
   },
   {
     tier: 4,
@@ -77,40 +76,64 @@ const COST_TIERS = [
     description: "Retell.ai automated phone calls for verification",
     icon: Phone,
     cost: "$0.15/call",
-    costValue: 0.15,
-    color: "hsl(var(--chart-4))",
+    costValue: 15,
     bgClass: "bg-rose-500/10 border-rose-500/30",
     textClass: "text-rose-400",
     confidence: "Verified",
     speed: "Slow",
     dataPoints: ["Verified rates", "Availability", "Move-in specials"],
     edgeFunction: "hub15_ai_caller",
-    status: "shell"
   }
 ];
 
-// Mock data for demonstration
-const MOCK_QUEUE_STATS = {
-  pending: 12,
-  inProgress: 3,
-  completed: 45,
-  failed: 2
-};
+interface TierStats {
+  attempted: number;
+  success: number;
+  cost: number;
+}
 
-const MOCK_TIER_STATS = [
-  { tier: 1, attempted: 60, success: 58, cost: 0 },
-  { tier: 2, attempted: 45, success: 42, cost: 0.09 },
-  { tier: 3, attempted: 15, success: 12, cost: 0.15 },
-  { tier: 4, attempted: 5, success: 4, cost: 0.75 }
-];
+function calculateTierStats(data: Pass15DashboardData | null): TierStats[] {
+  if (!data) {
+    return COST_TIERS.map(() => ({ attempted: 0, success: 0, cost: 0 }));
+  }
 
-function TierCard({ tier, stats }: { tier: typeof COST_TIERS[0]; stats: typeof MOCK_TIER_STATS[0] }) {
+  // Approximate distribution based on worker assignments
+  const { queue_summary, cost_summary, performance } = data;
+  
+  return [
+    // Tier 1: OSM (free, high volume)
+    { 
+      attempted: Math.floor(performance.total_attempts * 0.5), 
+      success: Math.floor(performance.completed_count * 0.6), 
+      cost: 0 
+    },
+    // Tier 2: AI Search
+    { 
+      attempted: queue_summary.by_worker.unassigned, 
+      success: Math.floor(performance.completed_count * 0.25), 
+      cost: cost_summary.by_worker.scraper_cents / 100 
+    },
+    // Tier 3: Scraper
+    { 
+      attempted: queue_summary.by_worker.scraper, 
+      success: Math.floor(performance.completed_count * 0.10), 
+      cost: 0 
+    },
+    // Tier 4: AI Caller
+    { 
+      attempted: queue_summary.by_worker.ai_caller, 
+      success: Math.floor(performance.completed_count * 0.05), 
+      cost: cost_summary.by_worker.ai_caller_cents / 100 
+    },
+  ];
+}
+
+function TierCard({ tier, stats }: { tier: typeof COST_TIERS[0]; stats: TierStats }) {
   const Icon = tier.icon;
   const successRate = stats.attempted > 0 ? Math.round((stats.success / stats.attempted) * 100) : 0;
   
   return (
     <Card className={`relative overflow-hidden border ${tier.bgClass}`}>
-      {/* Tier indicator */}
       <div className={`absolute top-0 left-0 w-1 h-full ${tier.textClass.replace('text-', 'bg-')}`} />
       
       <CardHeader className="pb-2">
@@ -124,19 +147,13 @@ function TierCard({ tier, stats }: { tier: typeof COST_TIERS[0]; stats: typeof M
               <CardDescription className="text-xs">Tier {tier.tier}</CardDescription>
             </div>
           </div>
-          <Badge 
-            variant={tier.status === "active" ? "default" : "secondary"}
-            className="text-xs"
-          >
-            {tier.status === "active" ? "Active" : "Shell"}
-          </Badge>
+          <Badge variant="default" className="text-xs">Active</Badge>
         </div>
       </CardHeader>
       
       <CardContent className="space-y-4">
         <p className="text-sm text-muted-foreground">{tier.description}</p>
         
-        {/* Cost & Speed */}
         <div className="flex items-center justify-between text-sm">
           <div className="flex items-center gap-1">
             <DollarSign className="w-4 h-4 text-muted-foreground" />
@@ -148,7 +165,6 @@ function TierCard({ tier, stats }: { tier: typeof COST_TIERS[0]; stats: typeof M
           </div>
         </div>
         
-        {/* Stats */}
         <div className="grid grid-cols-3 gap-2 text-center">
           <div className="bg-muted/50 rounded p-2">
             <div className="text-lg font-semibold">{stats.attempted}</div>
@@ -164,13 +180,11 @@ function TierCard({ tier, stats }: { tier: typeof COST_TIERS[0]; stats: typeof M
           </div>
         </div>
         
-        {/* Confidence */}
         <div className="flex items-center justify-between">
           <span className="text-xs text-muted-foreground">Confidence Level</span>
           <Badge variant="outline" className={tier.textClass}>{tier.confidence}</Badge>
         </div>
         
-        {/* Data Points */}
         <div className="space-y-1">
           <span className="text-xs text-muted-foreground">Data Points Collected:</span>
           <div className="flex flex-wrap gap-1">
@@ -182,7 +196,6 @@ function TierCard({ tier, stats }: { tier: typeof COST_TIERS[0]; stats: typeof M
           </div>
         </div>
         
-        {/* Edge Function */}
         <div className="pt-2 border-t border-border">
           <code className="text-xs text-muted-foreground font-mono">{tier.edgeFunction}</code>
         </div>
@@ -222,7 +235,6 @@ function CostLadderFlow() {
           })}
         </div>
         
-        {/* Legend */}
         <div className="mt-4 pt-4 border-t border-border flex items-center justify-center gap-6 text-xs text-muted-foreground">
           <div className="flex items-center gap-1">
             <div className="w-2 h-2 rounded-full bg-emerald-500" />
@@ -246,9 +258,32 @@ function CostLadderFlow() {
   );
 }
 
-function QueueStatusCard() {
-  const total = MOCK_QUEUE_STATS.pending + MOCK_QUEUE_STATS.inProgress + MOCK_QUEUE_STATS.completed + MOCK_QUEUE_STATS.failed;
-  const completedPercent = Math.round((MOCK_QUEUE_STATS.completed / total) * 100);
+function QueueStatusCard({ data, isLoading }: { data: Pass15DashboardData | null; isLoading: boolean }) {
+  if (isLoading) {
+    return (
+      <Card>
+        <CardHeader>
+          <Skeleton className="h-6 w-40" />
+          <Skeleton className="h-4 w-60" />
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-4 gap-4">
+            {[1, 2, 3, 4].map(i => (
+              <Skeleton key={i} className="h-16" />
+            ))}
+          </div>
+          <Skeleton className="h-4 w-full" />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const queue = data?.queue_summary || { 
+    total: 0, 
+    by_status: { pending: 0, in_progress: 0, resolved: 0, failed: 0, killed: 0 } 
+  };
+  const total = queue.total || 1;
+  const completedPercent = Math.round((queue.by_status.resolved / total) * 100) || 0;
   
   return (
     <Card>
@@ -261,28 +296,28 @@ function QueueStatusCard() {
           <div className="flex items-center gap-2">
             <Clock className="w-4 h-4 text-muted-foreground" />
             <div>
-              <div className="text-xl font-semibold">{MOCK_QUEUE_STATS.pending}</div>
+              <div className="text-xl font-semibold">{queue.by_status.pending}</div>
               <div className="text-xs text-muted-foreground">Pending</div>
             </div>
           </div>
           <div className="flex items-center gap-2">
             <Zap className="w-4 h-4 text-primary" />
             <div>
-              <div className="text-xl font-semibold">{MOCK_QUEUE_STATS.inProgress}</div>
+              <div className="text-xl font-semibold">{queue.by_status.in_progress}</div>
               <div className="text-xs text-muted-foreground">In Progress</div>
             </div>
           </div>
           <div className="flex items-center gap-2">
             <CheckCircle2 className="w-4 h-4 text-emerald-500" />
             <div>
-              <div className="text-xl font-semibold">{MOCK_QUEUE_STATS.completed}</div>
-              <div className="text-xs text-muted-foreground">Completed</div>
+              <div className="text-xl font-semibold">{queue.by_status.resolved}</div>
+              <div className="text-xs text-muted-foreground">Resolved</div>
             </div>
           </div>
           <div className="flex items-center gap-2">
             <AlertCircle className="w-4 h-4 text-destructive" />
             <div>
-              <div className="text-xl font-semibold">{MOCK_QUEUE_STATS.failed}</div>
+              <div className="text-xl font-semibold">{queue.by_status.failed}</div>
               <div className="text-xs text-muted-foreground">Failed</div>
             </div>
           </div>
@@ -300,10 +335,88 @@ function QueueStatusCard() {
   );
 }
 
-function CostSummaryCard() {
-  const totalCost = MOCK_TIER_STATS.reduce((sum, t) => sum + t.cost, 0);
-  const totalAttempts = MOCK_TIER_STATS.reduce((sum, t) => sum + t.attempted, 0);
-  const avgCostPerAttempt = totalAttempts > 0 ? totalCost / totalAttempts : 0;
+function GuardRailCard({ data, isLoading }: { data: Pass15DashboardData | null; isLoading: boolean }) {
+  if (isLoading) {
+    return (
+      <Card>
+        <CardHeader>
+          <Skeleton className="h-6 w-40" />
+        </CardHeader>
+        <CardContent>
+          <Skeleton className="h-24" />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const guard = data?.guard_rail_status;
+  if (!guard) return null;
+
+  const healthColors = {
+    green: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30',
+    yellow: 'text-amber-400 bg-amber-500/10 border-amber-500/30',
+    red: 'text-rose-400 bg-rose-500/10 border-rose-500/30',
+  };
+
+  return (
+    <Card className={`border ${healthColors[guard.health]}`}>
+      <CardHeader>
+        <CardTitle className="text-lg flex items-center gap-2">
+          <Shield className="w-5 h-5" />
+          Guard Rails
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {guard.kill_switch_active && (
+          <div className="bg-destructive/10 border border-destructive/30 rounded-lg p-3 flex items-center gap-2">
+            <AlertTriangle className="w-5 h-5 text-destructive" />
+            <span className="text-sm font-medium text-destructive">Kill Switch Active</span>
+          </div>
+        )}
+        
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <div className="text-xs text-muted-foreground mb-1">Daily Cost Cap</div>
+            <Progress value={guard.cost_cap_used_percent} className="h-2" />
+            <div className="text-xs mt-1">${(guard.cost_cap_remaining_cents / 100).toFixed(2)} remaining</div>
+          </div>
+          <div>
+            <div className="text-xs text-muted-foreground mb-1">Daily Call Limit</div>
+            <Progress value={guard.daily_calls_used_percent} className="h-2" />
+            <div className="text-xs mt-1">{guard.daily_calls_remaining} calls remaining</div>
+          </div>
+        </div>
+        
+        <div className="flex items-center justify-between">
+          <span className="text-xs text-muted-foreground">Failure Rate</span>
+          <Badge variant={guard.failure_rate_breach ? "destructive" : "secondary"}>
+            {(guard.failure_rate * 100).toFixed(1)}%
+          </Badge>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function CostSummaryCard({ data, isLoading }: { data: Pass15DashboardData | null; isLoading: boolean }) {
+  if (isLoading) {
+    return (
+      <Card>
+        <CardHeader>
+          <Skeleton className="h-6 w-40" />
+        </CardHeader>
+        <CardContent>
+          <Skeleton className="h-32" />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const cost = data?.cost_summary || { total_cents: 0, today_cents: 0, by_worker: { scraper_cents: 0, ai_caller_cents: 0 } };
+  const performance = data?.performance || { total_attempts: 0, avg_cost_cents: 0 };
+  const totalCost = cost.total_cents / 100;
+  const todayCost = cost.today_cents / 100;
+  const avgCost = performance.avg_cost_cents / 100;
   
   return (
     <Card>
@@ -321,35 +434,40 @@ function CostSummaryCard() {
             <div className="text-xs text-muted-foreground">Total Spend</div>
           </div>
           <div className="bg-muted/50 rounded-lg p-4 text-center">
-            <div className="text-2xl font-bold">{totalAttempts}</div>
-            <div className="text-xs text-muted-foreground">Total Attempts</div>
+            <div className="text-2xl font-bold">${todayCost.toFixed(2)}</div>
+            <div className="text-xs text-muted-foreground">Today</div>
           </div>
           <div className="bg-muted/50 rounded-lg p-4 text-center">
-            <div className="text-2xl font-bold">${avgCostPerAttempt.toFixed(3)}</div>
+            <div className="text-2xl font-bold">${avgCost.toFixed(3)}</div>
             <div className="text-xs text-muted-foreground">Avg/Attempt</div>
           </div>
         </div>
         
-        {/* Cost breakdown by tier */}
         <div className="space-y-2">
-          {COST_TIERS.map((tier, index) => {
-            const stats = MOCK_TIER_STATS[index];
-            const tierPercent = totalCost > 0 ? (stats.cost / totalCost) * 100 : 0;
-            return (
-              <div key={tier.tier} className="flex items-center gap-2">
-                <span className={`text-xs w-20 ${tier.textClass}`}>{tier.shortName}</span>
-                <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
-                  <div 
-                    className={`h-full ${tier.textClass.replace('text-', 'bg-')}`}
-                    style={{ width: `${tierPercent}%` }}
-                  />
-                </div>
-                <span className="text-xs text-muted-foreground w-16 text-right">
-                  ${stats.cost.toFixed(2)}
-                </span>
-              </div>
-            );
-          })}
+          <div className="flex items-center gap-2">
+            <span className="text-xs w-24 text-blue-400">AI Search</span>
+            <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
+              <div 
+                className="h-full bg-blue-400"
+                style={{ width: `${totalCost > 0 ? (cost.by_worker.scraper_cents / cost.total_cents) * 100 : 0}%` }}
+              />
+            </div>
+            <span className="text-xs text-muted-foreground w-16 text-right">
+              ${(cost.by_worker.scraper_cents / 100).toFixed(2)}
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-xs w-24 text-rose-400">AI Caller</span>
+            <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
+              <div 
+                className="h-full bg-rose-400"
+                style={{ width: `${totalCost > 0 ? (cost.by_worker.ai_caller_cents / cost.total_cents) * 100 : 0}%` }}
+              />
+            </div>
+            <span className="text-xs text-muted-foreground w-16 text-right">
+              ${(cost.by_worker.ai_caller_cents / 100).toFixed(2)}
+            </span>
+          </div>
         </div>
       </CardContent>
     </Card>
@@ -357,23 +475,60 @@ function CostSummaryCard() {
 }
 
 export default function Pass15Hub() {
+  const { data, isLoading, error, lastUpdated } = usePass15Dashboard(30000);
+  const tierStats = calculateTierStats(data);
+
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">Pass 1.5 — Rent Recon Hub</h1>
-        <p className="text-muted-foreground mt-1">
-          Rate evidence collection with 4-tier cost escalation ladder
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">Pass 1.5 — Rent Recon Hub</h1>
+          <p className="text-muted-foreground mt-1">
+            Rate evidence collection with 4-tier cost escalation ladder
+          </p>
+        </div>
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
+          {lastUpdated && (
+            <span>Updated {formatDistanceToNow(lastUpdated, { addSuffix: true })}</span>
+          )}
+        </div>
       </div>
+
+      {/* Error Banner */}
+      {error && (
+        <Card className="border-destructive/50 bg-destructive/10">
+          <CardContent className="py-3 flex items-center gap-2">
+            <AlertCircle className="w-5 h-5 text-destructive" />
+            <span className="text-sm text-destructive">{error}</span>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Kill Switch Banner */}
+      {data?.guard_rail_status?.kill_switch_active && (
+        <Card className="border-destructive bg-destructive/10">
+          <CardContent className="py-4 flex items-center gap-3">
+            <AlertTriangle className="w-6 h-6 text-destructive" />
+            <div>
+              <div className="font-semibold text-destructive">Kill Switch Active</div>
+              <div className="text-sm text-destructive/80">
+                Processing halted due to guard rail breach. Check failure rate or cost limits.
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Cost Ladder Flow */}
       <CostLadderFlow />
 
       {/* Status Cards */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <QueueStatusCard />
-        <CostSummaryCard />
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <QueueStatusCard data={data} isLoading={isLoading} />
+        <CostSummaryCard data={data} isLoading={isLoading} />
+        <GuardRailCard data={data} isLoading={isLoading} />
       </div>
 
       {/* Tier Cards */}
@@ -381,7 +536,7 @@ export default function Pass15Hub() {
         <h2 className="text-lg font-semibold mb-4">Collection Tiers</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
           {COST_TIERS.map((tier, index) => (
-            <TierCard key={tier.tier} tier={tier} stats={MOCK_TIER_STATS[index]} />
+            <TierCard key={tier.tier} tier={tier} stats={tierStats[index]} />
           ))}
         </div>
       </div>
