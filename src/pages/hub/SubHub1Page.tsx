@@ -5,6 +5,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
 import { AnchorBadge } from "@/components/AnchorBadge";
 import { SubHubCard } from "@/components/SubHubCard";
+import { RefDataPanel } from "@/components/RefDataPanel";
 import { subHubs } from "@/config/discover-page-config";
 import { supabase } from "@/integrations/supabase/client";
 import { useState, useEffect } from "react";
@@ -272,8 +273,9 @@ export default function SubHub1Page() {
           </div>
 
           {/* Right Column: Sub-Hub Contract */}
-          <div className="col-span-4">
+          <div className="col-span-4 space-y-6">
             <SubHubCard config={config} showMiniDiagram={true} />
+            <RefDataPanel subHubId={config.id} compact />
           </div>
         </div>
       </div>

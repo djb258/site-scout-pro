@@ -1,4 +1,4 @@
-import { Fingerprint, Lock, Warehouse, ChevronDown } from "lucide-react";
+import { Fingerprint, Lock, Warehouse, Database } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -8,6 +8,8 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { subHubs, doctrineLocks, summaryAnchors } from "@/config/discover-page-config";
+import { refSchemaRegistry } from "@/config/ref-schema-registry";
+import { RefDataStats } from "@/components/RefDataPanel";
 
 // Static placeholder values for Sovereign ID context
 const svaContext = {
@@ -123,6 +125,82 @@ export default function DiscoverPage() {
               </div>
             ))}
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Reference Data Schema */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-purple-500/10">
+              <Database className="w-5 h-5 text-purple-400" />
+            </div>
+            <div>
+              <CardTitle className="text-xl">Reference Data Schema</CardTitle>
+              <p className="text-sm text-muted-foreground mt-1">
+                Bidirectional lookups for anchor resolution. All sub-hubs read from these tables.
+              </p>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {/* Stats Grid */}
+          <RefDataStats />
+
+          {/* Reference Tables Accordion */}
+          <Accordion type="multiple" className="w-full">
+            {refSchemaRegistry.map((table) => (
+              <AccordionItem key={table.table} value={table.table}>
+                <AccordionTrigger className="hover:no-underline">
+                  <div className="flex items-center gap-3">
+                    <code className="text-sm font-mono text-primary">{table.table}</code>
+                    <span className="text-xs text-muted-foreground">
+                      {table.rowCount.toLocaleString()} rows
+                    </span>
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent>
+                  <div className="space-y-3 pl-2">
+                    <p className="text-sm text-muted-foreground">{table.description}</p>
+                    
+                    <div className="flex flex-wrap gap-4">
+                      <div className="space-y-1">
+                        <span className="text-xs text-muted-foreground uppercase tracking-wide">Anchors</span>
+                        <div className="flex gap-1">
+                          {table.anchors.map((anchor) => (
+                            <Badge key={anchor} variant="outline" className="font-mono text-xs">
+                              {anchor}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="space-y-1">
+                        <span className="text-xs text-muted-foreground uppercase tracking-wide">Used By</span>
+                        <div className="flex gap-1">
+                          {table.usedBy.map((hubId) => (
+                            <Badge key={hubId} variant="secondary" className="text-xs">
+                              Sub-Hub {hubId}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="space-y-1">
+                      <span className="text-xs text-muted-foreground uppercase tracking-wide">Lookup Directions</span>
+                      <div className="flex flex-col gap-1">
+                        {table.lookupDirections.map((dir, i) => (
+                          <code key={i} className="text-xs bg-muted px-2 py-1 rounded w-fit">
+                            {dir}
+                          </code>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
         </CardContent>
       </Card>
 
