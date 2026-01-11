@@ -31,7 +31,8 @@
       "Bash(dir /b \"C:\\\\Users\\\\CUSTOM PC\\\\Desktop\\\\Cursor Builds\\\\storage container go-nogo\\\\imo_creator\")",
       "Bash(dir \"C:\\\\Users\\\\CUSTOM PC\\\\Desktop\\\\Cursor Builds\" /b)",
       "Bash(findstr:*)",
-      "Bash(bash scripts/apply_doctrine_audit.sh:*)"
+      "Bash(bash scripts/apply_doctrine_audit.sh:*)",
+      "Bash(du:*)"
     ],
     "deny": [],
     "ask": []
