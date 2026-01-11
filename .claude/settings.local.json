@@ -26,11 +26,17 @@
       "Bash(npm install:*)",
       "Bash(./scripts/check_neon_consumers.sh:*)",
       "Bash(./scripts/check_pass2_neon_ban.sh:*)",
-      "Bash(./scripts/check_vault_write_pattern.sh:*)"
+      "Bash(./scripts/check_vault_write_pattern.sh:*)",
+      "Bash(git pull:*)",
+      "Bash(dir /b \"C:\\\\Users\\\\CUSTOM PC\\\\Desktop\\\\Cursor Builds\\\\storage container go-nogo\\\\imo_creator\")",
+      "Bash(dir \"C:\\\\Users\\\\CUSTOM PC\\\\Desktop\\\\Cursor Builds\" /b)",
+      "Bash(findstr:*)",
+      "Bash(bash scripts/apply_doctrine_audit.sh:*)"
     ],
     "deny": [],
     "ask": []
   },
+  "enableAllProjectMcpServers": true,
   "enabledMcpjsonServers": [
     "linear",
     "composio",

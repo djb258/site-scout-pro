@@ -1,0 +1,14 @@
+{
+  "name": "storage-gonogo-ui",
+  "version": "1.0.0",
+  "description": "Storage Site Go/No-Go Engine UI",
+  "entry": "App.tsx",
+  "structure": {
+    "pages": "pages/",
+    "components": "components/",
+    "layouts": "layouts/",
+    "styles": "styles/",
+    "assets": "assets/"
+  },
+  "lovable_control": true
+}

@@ -1,0 +1,43 @@
+doctrine_version: "1.2.0"
+ctb_version: "1.0.0"
+
+# CC-01: Sovereign reference (declared externally)
+sovereign_ref: "SOV-BARTON"
+
+# CC-02: Hub declaration
+hub:
+  id: "HUB-STORAGE-GONOGO"
+  name: "Storage Site Go/No-Go Engine"
+  ctb_placement:
+    trunk: "site-scout-pro"
+    branch: "storage-evaluation"
+    leaf: "go-nogo-engine"
+  prd: "docs/PRD.md"
+  imo:
+    ingress:
+      - "SPOKE-I-CENSUS"
+      - "SPOKE-I-MARKET-DATA"
+    middle:
+      - "pass0-screening"
+      - "pass1-analysis"
+      - "pass2-deepdive"
+      - "vault-management"
+    egress:
+      - "SPOKE-O-VAULT-EXPORT"
+      - "SPOKE-O-REPORT"
+  status: ACTIVE
+
+# CC-03: Contexts and Spokes
+contexts:
+  - id: "CTX-SCREENING"
+    name: "Site Screening Context"
+    adr: "docs/ADR-001-screening-pipeline.md"
+  - id: "CTX-ANALYSIS"
+    name: "Site Analysis Context"
+    adr: "docs/ADR-002-pass-system.md"
+  - id: "CTX-VAULT"
+    name: "Vault Management Context"
+    adr: "docs/ADR-025-vault-guardian-doctrine.md"
+
+# CC-04: Process log (PIDs minted at runtime)
+process_log: []
