@@ -1,0 +1,144 @@
+name: Bug Report
+description: Report a doctrine violation or system defect
+title: "[BUG]: "
+labels: ["bug", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Bug Report
+        Report defects aligned to Canonical Chain architecture.
+
+  - type: dropdown
+    id: cc-layer
+    attributes:
+      label: CC Layer
+      description: At which Canonical Chain layer does this bug occur?
+      options:
+        - CC-01 (Sovereign)
+        - CC-02 (Hub)
+        - CC-03 (Context)
+        - CC-04 (Process)
+    validations:
+      required: true
+
+  - type: dropdown
+    id: imo-layer
+    attributes:
+      label: IMO Layer
+      description: Which IMO layer is affected?
+      options:
+        - I (Ingress)
+        - M (Middle)
+        - O (Egress)
+        - Spoke (Interface)
+        - Not applicable
+    validations:
+      required: true
+
+  - type: input
+    id: ctb-placement
+    attributes:
+      label: CTB Placement
+      description: CTB path of affected component (trunk/branch/leaf)
+      placeholder: "sys/core/auth"
+    validations:
+      required: false
+
+  - type: input
+    id: doctrine-version
+    attributes:
+      label: Doctrine Version
+      description: Which doctrine version is this hub conforming to?
+      placeholder: "1.1.0"
+    validations:
+      required: true
+
+  - type: input
+    id: pid
+    attributes:
+      label: PID (if applicable)
+      description: Process ID if this is a CC-04 execution issue
+      placeholder: "hub-id-timestamp-hex"
+    validations:
+      required: false
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Bug Description
+      description: A clear and concise description of the bug
+      placeholder: What went wrong?
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to Reproduce
+      description: How can we reproduce this bug?
+      placeholder: |
+        1. Execute...
+        2. Observe...
+        3. See error
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      description: What should happen according to doctrine?
+      placeholder: Describe the expected behavior
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual Behavior
+      description: What actually happened?
+      placeholder: Describe what actually happened
+    validations:
+      required: true
+
+  - type: dropdown
+    id: violation-type
+    attributes:
+      label: Violation Type (if applicable)
+      description: Does this bug represent a doctrine violation?
+      options:
+        - Not a violation
+        - CC_VIOLATION
+        - CTB_VIOLATION
+        - HUB_SPOKE_VIOLATION
+        - PID_VIOLATION
+        - AUTH_VIOLATION
+        - STATE_VIOLATION
+        - CONSTANT_VIOLATION
+    validations:
+      required: true
+
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Severity
+      description: How severe is this bug?
+      options:
+        - S0 - Critical (System down)
+        - S1 - High (Major functionality broken)
+        - S2 - Medium (Feature partially broken)
+        - S3 - Low (Minor issue)
+        - S4 - Cosmetic
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Error Logs
+      description: Include any relevant error messages or logs
+      placeholder: Paste error logs here
+      render: shell
+    validations:
+      required: false

@@ -1,0 +1,137 @@
+name: Feature Request
+description: Propose a new feature aligned to Canonical Chain architecture
+title: "[FEATURE]: "
+labels: ["enhancement", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Feature Request
+        Propose features aligned to Canonical Chain architecture.
+
+  - type: dropdown
+    id: cc-layer
+    attributes:
+      label: CC Layer
+      description: At which Canonical Chain layer should this feature operate?
+      options:
+        - CC-01 (Sovereign)
+        - CC-02 (Hub)
+        - CC-03 (Context)
+        - CC-04 (Process)
+    validations:
+      required: true
+
+  - type: dropdown
+    id: imo-layer
+    attributes:
+      label: IMO Layer
+      description: Which IMO layer will this feature affect?
+      options:
+        - I (Ingress)
+        - M (Middle)
+        - O (Egress)
+        - Spoke (Interface)
+        - Multiple layers
+        - Not applicable
+    validations:
+      required: true
+
+  - type: input
+    id: ctb-placement
+    attributes:
+      label: Proposed CTB Placement
+      description: Where should this feature live in CTB? (trunk/branch/leaf)
+      placeholder: "sys/core/feature"
+    validations:
+      required: false
+
+  - type: input
+    id: doctrine-version
+    attributes:
+      label: Doctrine Version
+      description: Which doctrine version does this feature target?
+      placeholder: "1.1.0"
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Feature Description
+      description: Describe the feature you'd like to see
+      placeholder: A clear and concise description of the feature
+    validations:
+      required: true
+
+  - type: textarea
+    id: use-case
+    attributes:
+      label: Use Case
+      description: What problem does this solve?
+      placeholder: Describe the use case or problem this feature addresses
+    validations:
+      required: true
+
+  - type: dropdown
+    id: artifact-type
+    attributes:
+      label: Artifact Type
+      description: What type of artifact will this feature produce?
+      options:
+        - Doctrine update (requires ADR)
+        - Template addition
+        - Template modification
+        - Hub structure change
+        - Spoke interface change
+        - Tool registration
+        - Configuration change
+    validations:
+      required: true
+
+  - type: dropdown
+    id: constant-or-variable
+    attributes:
+      label: Constant or Variable
+      description: Does this feature define structure (constant) or tune behavior (variable)?
+      options:
+        - Constant (requires ADR)
+        - Variable (configuration)
+        - Both
+        - Not applicable
+    validations:
+      required: true
+
+  - type: textarea
+    id: implementation
+    attributes:
+      label: Proposed Approach
+      description: How should this feature be implemented? (Do not define execution logic)
+      placeholder: Describe structural approach, not implementation details
+    validations:
+      required: false
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      description: How important is this feature?
+      options:
+        - P0 - Critical
+        - P1 - High
+        - P2 - Medium
+        - P3 - Low
+        - P4 - Nice to have
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: compliance
+    attributes:
+      label: Compliance Pre-Check
+      description: Confirm this request aligns with doctrine
+      options:
+        - label: This feature does not introduce logic into spokes
+        - label: This feature does not create cross-hub dependencies
+        - label: This feature respects CC layer boundaries
+        - label: If this modifies constants, I understand an ADR is required

@@ -1,0 +1,107 @@
+name: Doctrine Update Task
+description: Track doctrine and template updates
+title: "[DOCTRINE]: v"
+labels: ["doctrine-update", "documentation"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Doctrine Update Task
+        Track updates to Canonical Doctrine and templates.
+
+  - type: input
+    id: doctrine-version
+    attributes:
+      label: Doctrine Version
+      description: Version number for this update
+      placeholder: "1.1.0"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: cc-layer
+    attributes:
+      label: CC Layer Affected
+      description: Which Canonical Chain layer does this update affect?
+      options:
+        - CC-01 (Sovereign)
+        - CC-02 (Hub)
+        - CC-03 (Context)
+        - CC-04 (Process)
+        - Multiple layers
+    validations:
+      required: true
+
+  - type: dropdown
+    id: update-type
+    attributes:
+      label: Update Type
+      description: What type of update is this?
+      options:
+        - Major Release (Breaking changes)
+        - Minor Release (New features)
+        - Patch Release (Bug fixes)
+        - Hotfix (Critical fix)
+    validations:
+      required: true
+
+  - type: textarea
+    id: changes
+    attributes:
+      label: Changes Summary
+      description: What changes are included in this update?
+      placeholder: |
+        - New feature: Role-Based System Manual
+        - Enhancement: Auto-execution system
+        - Fix: Workflow syntax errors
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: components
+    attributes:
+      label: Updated Components
+      description: Which components are being updated?
+      options:
+        - label: templates/doctrine/ (Doctrine documents)
+        - label: templates/prd/ (PRD templates)
+        - label: templates/adr/ (ADR templates)
+        - label: templates/pr/ (PR templates)
+        - label: templates/checklists/ (Compliance checklists)
+        - label: templates/integrations/ (Integration templates)
+        - label: .github/ (GitHub configuration)
+
+  - type: checkboxes
+    id: propagation
+    attributes:
+      label: Propagation Checklist
+      description: Steps to propagate this update
+      options:
+        - label: Doctrine version updated in CANONICAL_ARCHITECTURE_DOCTRINE.md
+        - label: All affected templates updated
+        - label: CC layer boundaries verified
+        - label: No upward writes in CC hierarchy
+        - label: Tests pass
+        - label: Push to master branch
+
+  - type: textarea
+    id: breaking-changes
+    attributes:
+      label: Breaking Changes
+      description: List any breaking changes (if applicable)
+      placeholder: Describe breaking changes and migration steps
+    validations:
+      required: false
+
+  - type: textarea
+    id: testing
+    attributes:
+      label: Testing Notes
+      description: How should this update be tested?
+      placeholder: |
+        1. Run ctb_auto_update.sh
+        2. Verify npm install completes
+        3. Check health status
+        4. Run tests
+    validations:
+      required: false

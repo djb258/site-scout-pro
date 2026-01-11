@@ -1,45 +1,90 @@
 # Pull Request
 
-## Type
+## Conformance
 
-Select the appropriate template:
-- For **Hub changes**: Use `.github/PULL_REQUEST_TEMPLATE/hub_change.md`
-- For **Spoke changes**: Use `.github/PULL_REQUEST_TEMPLATE/spoke_change.md`
+| Field | Value |
+|-------|-------|
+| **Doctrine Version** | |
+| **CC Layer** | |
 
 ---
 
-## Quick Summary
+## Description
+<!-- Brief description of what this PR does -->
 
-_Brief description of what this PR does_
 
-## Related Issues
 
-- Fixes #
-- Related to #
+## CC Layer Scope
+
+| CC Layer | Affected |
+|----------|----------|
+| CC-01 (Sovereign) | [ ] |
+| CC-02 (Hub) | [ ] |
+| CC-03 (Context) | [ ] |
+| CC-04 (Process) | [ ] |
+
+---
+
+## Type of Change
+- [ ] Bug fix
+- [ ] New feature
+- [ ] Enhancement to existing feature
+- [ ] Documentation update
+- [ ] Refactoring
+- [ ] Other (please describe):
 
 ## Changes Made
+<!-- List the key changes in bullet points -->
 
-- [ ] Change 1
-- [ ] Change 2
+-
+-
+-
+
+## Doctrine Compliance Checklist
+
+### CC Layer Compliance
+- [ ] Doctrine version declared
+- [ ] Sovereign reference present (if CC-02 change)
+- [ ] Authorization matrix honored (no upward writes)
+- [ ] No cross-hub logic introduced
+
+### CTB Compliance
+- [ ] CTB placement correct (Trunk / Branch / Leaf)
+- [ ] No hardcoded secrets (all secrets use secrets provider)
+- [ ] No `.env` files committed
+- [ ] Tests pass (if applicable)
+- [ ] Updated relevant documentation
 
 ## Testing
+<!-- How was this tested? -->
 
-- [ ] Unit tests added/updated
-- [ ] Integration tests pass
-- [ ] Manual testing completed
+- [ ] Tested locally
+- [ ] Manual testing performed
+- [ ] Automated tests added/updated (if applicable)
 
-## Documentation
+## Test Results
+```bash
+# Paste test output or enforcement results here
+```
 
-- [ ] PRD updated (if applicable)
-- [ ] ADR created (if new tool/pattern)
-- [ ] Compliance checklist updated
+## Screenshots (if applicable)
+<!-- Add screenshots for UI changes -->
+
+## Additional Context
+<!-- Any other relevant information -->
+
+## Traceability
+
+| Artifact | Reference |
+|----------|-----------|
+| Canonical Doctrine | CANONICAL_ARCHITECTURE_DOCTRINE.md |
+| PRD | |
+| ADR | |
+| Work Item | |
+
+## Related Issues
+<!-- Link to related issues: Fixes #123, Relates to #456 -->
 
 ---
 
-## Pre-Merge Checklist
-
-- [ ] Code reviewed
-- [ ] Tests pass
-- [ ] No TypeScript errors
-- [ ] Master Failure Log integration (if applicable)
-- [ ] Rollback plan documented
+**Reviewer Notes**: Please verify CC layer compliance and CTB placement before merging.
