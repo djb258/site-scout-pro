@@ -4,7 +4,14 @@ import { anchorDefinitions } from "@/config/discover-page-config";
 interface AnchorBadgeProps {
   anchor: string;
   showTooltip?: boolean;
+  size?: "sm" | "md" | "lg";
 }
+
+const sizeStyles: Record<string, string> = {
+  sm: "px-1.5 py-0.5 text-[10px]",
+  md: "px-2 py-0.5 text-xs",
+  lg: "px-2.5 py-1 text-sm",
+};
 
 const anchorStyles: Record<string, string> = {
   "ZIP": "bg-blue-500/20 text-blue-400 border-blue-500/30",
@@ -13,13 +20,14 @@ const anchorStyles: Record<string, string> = {
   "Parcel ID": "bg-cyan-500/20 text-cyan-400 border-cyan-500/30 border-dashed",
 };
 
-export function AnchorBadge({ anchor, showTooltip = true }: AnchorBadgeProps) {
-  const style = anchorStyles[anchor] || "bg-muted text-muted-foreground border-muted";
+export function AnchorBadge({ anchor, showTooltip = true, size = "md" }: AnchorBadgeProps) {
+  const colorStyle = anchorStyles[anchor] || "bg-muted text-muted-foreground border-muted";
+  const sizeStyle = sizeStyles[size];
   const definition = anchorDefinitions[anchor];
 
   const badge = (
     <span
-      className={`inline-flex items-center px-2 py-0.5 text-xs font-mono font-medium rounded border ${style}`}
+      className={`inline-flex items-center font-mono font-medium rounded border ${colorStyle} ${sizeStyle}`}
     >
       {anchor}
     </span>
