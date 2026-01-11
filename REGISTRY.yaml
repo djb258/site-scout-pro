@@ -17,27 +17,124 @@ hub:
     ingress:
       - "SPOKE-I-CENSUS"
       - "SPOKE-I-MARKET-DATA"
+      - "SPOKE-I-PERMIT-DATA"
     middle:
-      - "pass0-screening"
-      - "pass1-analysis"
-      - "pass2-deepdive"
-      - "vault-management"
+      - "SubHub0_Signals"
+      - "SubHub1_Market"
+      - "SubHub2_CountyCard"
+      - "SubHub3_Calculators"
+      - "SubHub4_ParcelDiscovery"
+      - "SubHub5_DealGate"
     egress:
       - "SPOKE-O-VAULT-EXPORT"
       - "SPOKE-O-REPORT"
+      - "SPOKE-O-DEAL-VERDICT"
   status: ACTIVE
 
-# CC-03: Contexts and Spokes
+# Anchor Definitions (LOCKED)
+anchors:
+  ZIP:
+    type: "atomic"
+    role: "Data ingest & search anchor"
+    used_by:
+      - "SubHub0_Signals"
+      - "SubHub1_Market"
+      - "SubHub4_ParcelDiscovery"
+  COUNTY_FIPS:
+    type: "jurisdiction"
+    role: "Jurisdiction & rules anchor"
+    used_by:
+      - "SubHub0_Signals"
+      - "SubHub2_CountyCard"
+  SVA:
+    type: "sovereign"
+    role: "Decision container (intent)"
+    used_by:
+      - "SubHub3_Calculators"
+      - "SubHub5_DealGate"
+  PARCEL_ID:
+    type: "asset"
+    role: "Promoted asset identity (post-discovery)"
+    used_by:
+      - "SubHub4_ParcelDiscovery"
+      - "SubHub5_DealGate"
+
+# CC-03: SubHubs (Nested Contexts)
+subhubs:
+  - id: "SubHub0_Signals"
+    name: "Signals SubHub"
+    anchor: "ZIP + COUNTY_FIPS"
+    scope: "signals, inspections, permits chatter"
+    constraints: ["NO_CALCULATIONS"]
+    path: "src/app/subhubs/SubHub0_Signals"
+
+  - id: "SubHub1_Market"
+    name: "Market SubHub"
+    anchor: "ZIP"
+    scope: "demand, population, competitors, rent recon"
+    constraints: ["NO_ZONING", "NO_RULES"]
+    path: "src/app/subhubs/SubHub1_Market"
+
+  - id: "SubHub2_CountyCard"
+    name: "CountyCard SubHub"
+    anchor: "COUNTY_FIPS"
+    scope: "zoning, ordinances, build constants, cost indices"
+    constraints: ["NO_MATH"]
+    path: "src/app/subhubs/SubHub2_CountyCard"
+
+  - id: "SubHub3_Calculators"
+    name: "Calculators SubHub"
+    anchor: "SVA"
+    scope: "feasibility, ROI, density math"
+    constraints: ["READ_ONLY", "NO_GEO_WRITES"]
+    path: "src/app/subhubs/SubHub3_Calculators"
+
+  - id: "SubHub4_ParcelDiscovery"
+    name: "ParcelDiscovery SubHub"
+    anchor: "ZIP -> PARCEL_ID"
+    scope: "parcel scanning & gating"
+    constraints: ["ZIP_BOUNDED_SEARCH"]
+    path: "src/app/subhubs/SubHub4_ParcelDiscovery"
+
+  - id: "SubHub5_DealGate"
+    name: "DealGate SubHub"
+    anchor: "SVA + PARCEL_ID"
+    scope: "doctrine enforcement, Go/No-Go verdict"
+    constraints: ["BINARY_OUTPUT"]
+    output: "GOOD_DEAL | BAD_DEAL"
+    path: "src/app/subhubs/SubHub5_DealGate"
+
+# CC-03: Contexts (ADR-backed decisions)
 contexts:
-  - id: "CTX-SCREENING"
-    name: "Site Screening Context"
-    adr: "docs/ADR-001-screening-pipeline.md"
-  - id: "CTX-ANALYSIS"
-    name: "Site Analysis Context"
-    adr: "docs/ADR-002-pass-system.md"
-  - id: "CTX-VAULT"
-    name: "Vault Management Context"
-    adr: "docs/ADR-025-vault-guardian-doctrine.md"
+  - id: "CTX-SIGNALS"
+    name: "Signal Detection Context"
+    subhub: "SubHub0_Signals"
+    adr: "docs/adr/ADR-001-signals-pipeline.md"
+
+  - id: "CTX-MARKET"
+    name: "Market Analysis Context"
+    subhub: "SubHub1_Market"
+    adr: "docs/adr/ADR-002-market-analysis.md"
+
+  - id: "CTX-JURISDICTION"
+    name: "Jurisdiction Rules Context"
+    subhub: "SubHub2_CountyCard"
+    adr: "docs/adr/ADR-003-county-card.md"
+
+  - id: "CTX-FEASIBILITY"
+    name: "Feasibility Calculation Context"
+    subhub: "SubHub3_Calculators"
+    adr: "docs/adr/ADR-004-calculators.md"
+
+  - id: "CTX-DISCOVERY"
+    name: "Parcel Discovery Context"
+    subhub: "SubHub4_ParcelDiscovery"
+    adr: "docs/adr/ADR-005-parcel-discovery.md"
+
+  - id: "CTX-VERDICT"
+    name: "Deal Verdict Context"
+    subhub: "SubHub5_DealGate"
+    adr: "docs/adr/ADR-006-deal-gate.md"
 
 # CC-04: Process log (PIDs minted at runtime)
 process_log: []
