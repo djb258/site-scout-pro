@@ -91,7 +91,8 @@ const PASS_CONFIGS: Record<number, PipelineDocConfig> = {
       "Google News RSS",
       "BizJournals feeds",
       "County permit portals",
-      "Neon: zips_master"
+      "Neon: ref.ref_zip_county",
+      "Neon: ref.ref_zip_replica"
     ]
   },
   1: {
@@ -149,7 +150,8 @@ const PASS_CONFIGS: Record<number, PipelineDocConfig> = {
       "hub1_pass1_run_log (audit)"
     ],
     dataSources: [
-      "Neon: zips_master",
+      "Neon: ref.ref_zip_replica",
+      "Neon: ref.ref_zip_county",
       "OpenStreetMap (Overpass API)",
       "Lovable AI (competitor search)",
       "Supabase: competitor_facilities"
@@ -202,7 +204,8 @@ const PASS_CONFIGS: Record<number, PipelineDocConfig> = {
       "County capability assessment"
     ],
     dataSources: [
-      "Neon: zips_master",
+      "Neon: ref.ref_zip_county",
+      "Neon: ref.ref_county_fips",
       "Neon: ref.cca_county_profile",
       "Neon: pass2.jurisdiction_cards",
       "Neon: pass2.jurisdiction_prohibitions",
@@ -266,6 +269,7 @@ const PASS_CONFIGS: Record<number, PipelineDocConfig> = {
     ],
     dataSources: [
       "Neon: pass2.jurisdiction_cards (setbacks)",
+      "Neon: ref.ref_zip_replica",
       "Solver tunables (UI inputs)",
       "Building archetype library"
     ]

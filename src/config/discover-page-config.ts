@@ -13,6 +13,7 @@ export interface SubHubConfig {
   purpose: string;
   color: string;
   bgColor: string;
+  refTables: string[]; // Reference tables this sub-hub depends on
 }
 
 export const anchorDefinitions: Record<string, string> = {
@@ -36,6 +37,7 @@ export const subHubs: SubHubConfig[] = [
     purpose: "Early activity, inspections, news, permit velocity",
     color: "text-blue-400",
     bgColor: "bg-blue-500/10",
+    refTables: ["ref_zip_county", "ref_zip_replica"],
   },
   {
     id: 1,
@@ -50,6 +52,7 @@ export const subHubs: SubHubConfig[] = [
     purpose: "Demand, population, competitors, saturation",
     color: "text-green-400",
     bgColor: "bg-green-500/10",
+    refTables: ["ref_zip_replica"],
   },
   {
     id: 2,
@@ -64,6 +67,7 @@ export const subHubs: SubHubConfig[] = [
     purpose: "Zoning posture, ordinances, build constants, cost indices",
     color: "text-amber-400",
     bgColor: "bg-amber-500/10",
+    refTables: ["ref_county_fips", "ref_county_capability"],
   },
   {
     id: 3,
@@ -78,6 +82,7 @@ export const subHubs: SubHubConfig[] = [
     purpose: "Feasibility, density, ROI, scoring",
     color: "text-purple-400",
     bgColor: "bg-purple-500/10",
+    refTables: ["ref_zip_replica"],
   },
   {
     id: 4,
@@ -92,6 +97,7 @@ export const subHubs: SubHubConfig[] = [
     purpose: "Find viable parcels inside approved ZIPs",
     color: "text-cyan-400",
     bgColor: "bg-cyan-500/10",
+    refTables: ["ref_zip_county", "ref_zip_replica"],
   },
   {
     id: 5,
@@ -106,6 +112,7 @@ export const subHubs: SubHubConfig[] = [
     purpose: "GOOD DEAL / BAD DEAL",
     color: "text-red-400",
     bgColor: "bg-red-500/10",
+    refTables: [],
   },
 ];
 
