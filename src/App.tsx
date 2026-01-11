@@ -5,6 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AppLayout } from "@/components/AppLayout";
+import DiscoverPage from "@/pages/DiscoverPage";
 import Pass0Hub from "@/pages/hub/Pass0Hub";
 import Pass1Hub from "@/pages/hub/Pass1Hub";
 import Pass15Hub from "@/pages/hub/Pass15Hub";
@@ -26,7 +27,8 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route element={<AppLayout />}>
-            <Route path="/" element={<Pass0Hub />} />
+            <Route path="/" element={<DiscoverPage />} />
+            <Route path="/discover" element={<DiscoverPage />} />
             <Route path="/pass0" element={<Pass0Hub />} />
             <Route path="/pass1" element={<Pass1Hub />} />
             <Route path="/pass15" element={<Pass15Hub />} />
