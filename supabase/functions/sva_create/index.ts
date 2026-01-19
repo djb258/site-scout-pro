@@ -73,7 +73,10 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    const { asset_type, anchor_zip, radius_miles } = await req.json();
+    const { asset_type, anchor_zip, radius_miles, sqft_per_person = 6 } = await req.json();
+    
+    // Validate sqft_per_person
+    const sqftMultiplier = typeof sqft_per_person === 'number' && sqft_per_person > 0 ? sqft_per_person : 6;
 
     // Validate asset_type
     if (!asset_type || !VALID_ASSET_TYPES.includes(asset_type)) {
@@ -230,7 +233,8 @@ serve(async (req) => {
           sva_id,
           zip: z.zip,
           distance_miles: z.distance_miles,
-          population: z.population
+          population: z.population,
+          demand_sqft: z.population ? z.population * sqftMultiplier : null
         }));
 
         const batchSize = 500;
@@ -361,6 +365,7 @@ serve(async (req) => {
       anchor_lng: anchorLng,
       radius_miles,
       zip_count_in_scope: zipsInScope.length,
+      sqft_per_person: sqftMultiplier,
       status: "CREATED"
     };
 

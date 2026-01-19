@@ -12,6 +12,7 @@ export interface ZipInScope {
   zip: string;
   distance_miles: number;
   population: number | null;
+  demand_sqft: number | null;
 }
 
 interface SVAZipListProps {
@@ -30,8 +31,9 @@ export function SVAZipList({ zips, anchorZip }: SVAZipListProps) {
   const hasMore = displayCount < zips.length;
   const remaining = zips.length - displayCount;
   
-  // Calculate total population across ALL zips (not just displayed)
+  // Calculate totals across ALL zips (not just displayed)
   const totalPopulation = zips.reduce((sum, z) => sum + (z.population ?? 0), 0);
+  const totalDemandSqft = zips.reduce((sum, z) => sum + (z.demand_sqft ?? 0), 0);
 
   const handleLoadMore = () => {
     setDisplayCount((prev) => Math.min(prev + LOAD_MORE_COUNT, zips.length));
@@ -72,10 +74,11 @@ export function SVAZipList({ zips, anchorZip }: SVAZipListProps) {
       <CollapsibleContent>
         <div className="border rounded-md mt-2 overflow-hidden">
           {/* Header */}
-          <div className="grid grid-cols-3 gap-4 px-4 py-2 bg-muted/50 border-b text-xs font-medium text-muted-foreground">
+          <div className="grid grid-cols-4 gap-4 px-4 py-2 bg-muted/50 border-b text-xs font-medium text-muted-foreground">
             <span>ZIP Code</span>
             <span className="text-right">Distance</span>
             <span className="text-right">Population</span>
+            <span className="text-right">Demand SQFT</span>
           </div>
 
           {/* ZIP List */}
@@ -85,7 +88,7 @@ export function SVAZipList({ zips, anchorZip }: SVAZipListProps) {
               return (
                 <div
                   key={z.zip}
-                  className={`grid grid-cols-3 gap-4 px-4 py-2 border-b last:border-b-0 text-sm ${
+                  className={`grid grid-cols-4 gap-4 px-4 py-2 border-b last:border-b-0 text-sm ${
                     isAnchor ? "bg-primary/5" : "hover:bg-muted/30"
                   }`}
                 >
@@ -103,6 +106,9 @@ export function SVAZipList({ zips, anchorZip }: SVAZipListProps) {
                   <span className={`text-right ${isAnchor ? "font-semibold" : "text-muted-foreground"}`}>
                     {z.population != null ? z.population.toLocaleString() : "—"}
                   </span>
+                  <span className={`text-right ${isAnchor ? "font-semibold" : "text-muted-foreground"}`}>
+                    {z.demand_sqft != null ? z.demand_sqft.toLocaleString() : "—"}
+                  </span>
                 </div>
               );
             })}
@@ -115,7 +121,7 @@ export function SVAZipList({ zips, anchorZip }: SVAZipListProps) {
                 Showing {displayedZips.length.toLocaleString()} of {zips.length.toLocaleString()}
               </span>
               <span className="text-xs font-medium">
-                Total Pop: {totalPopulation.toLocaleString()}
+                Total Pop: {totalPopulation.toLocaleString()} • Total Demand: {totalDemandSqft.toLocaleString()} sqft
               </span>
             </div>
             {hasMore && (

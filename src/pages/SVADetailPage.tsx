@@ -23,6 +23,7 @@ export interface ZipInScope {
   zip: string;
   distance_miles: number;
   population: number | null;
+  demand_sqft: number | null;
 }
 
 export interface CountyInScope {
