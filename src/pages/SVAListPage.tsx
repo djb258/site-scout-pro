@@ -13,8 +13,20 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { PlusCircle, Fingerprint, MapPin, Ruler, ChevronRight } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { PlusCircle, Fingerprint, MapPin, Ruler, ChevronRight, Trash2 } from "lucide-react";
 import { format } from "date-fns";
+import { toast } from "sonner";
 
 interface SovereignId {
   id: string;
@@ -41,26 +53,49 @@ const assetTypeLabels: Record<string, string> = {
 export default function SVAListPage() {
   const [svas, setSvas] = useState<SovereignId[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  const fetchSvas = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("sovereign_ids")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+      setSvas(data || []);
+    } catch (err) {
+      console.error("Error fetching SVAs:", err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
-    async function fetchSvas() {
-      try {
-        const { data, error } = await supabase
-          .from("sovereign_ids")
-          .select("*")
-          .order("created_at", { ascending: false });
-
-        if (error) throw error;
-        setSvas(data || []);
-      } catch (err) {
-        console.error("Error fetching SVAs:", err);
-      } finally {
-        setIsLoading(false);
-      }
-    }
-
     fetchSvas();
   }, []);
+
+  const handleDelete = async (svaId: string, e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent row click navigation
+    
+    setDeletingId(svaId);
+    try {
+      const { data, error: fnError } = await supabase.functions.invoke("sva_delete", {
+        body: { sva_id: svaId },
+      });
+
+      if (fnError) throw new Error(fnError.message);
+      if (data?.error) throw new Error(data.error);
+
+      toast.success("Sovereign ID deleted");
+      setSvas((prev) => prev.filter((s) => s.sva_id !== svaId));
+    } catch (err) {
+      console.error("Error deleting SVA:", err);
+      toast.error(err instanceof Error ? err.message : "Failed to delete");
+    } finally {
+      setDeletingId(null);
+    }
+  };
 
   return (
     <div className="max-w-6xl mx-auto space-y-6 pb-12">
@@ -126,7 +161,7 @@ export default function SVAListPage() {
                   <TableHead>ZIPs</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Created</TableHead>
-                  <TableHead className="w-10"></TableHead>
+                  <TableHead className="w-20"></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -178,7 +213,39 @@ export default function SVAListPage() {
                       {format(new Date(sva.created_at), "MMM d, yyyy")}
                     </TableCell>
                     <TableCell>
-                      <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                      <div className="flex items-center gap-1">
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive"
+                              onClick={(e) => e.stopPropagation()}
+                              disabled={deletingId === sva.sva_id}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent onClick={(e) => e.stopPropagation()}>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Delete Sovereign ID?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                This will permanently delete <code className="font-mono text-foreground">{sva.sva_id}</code> and all associated data.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction 
+                                onClick={(e) => handleDelete(sva.sva_id, e)} 
+                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                              >
+                                Delete
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                        <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}

@@ -1,11 +1,23 @@
 import { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { ArrowLeft, AlertTriangle, Plus } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { ArrowLeft, AlertTriangle, Plus, Trash2 } from "lucide-react";
 import { SVASummaryCard, SovereignIdData, SubHubStatus } from "@/components/sva/SVASummaryCard";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 export interface ZipInScope {
   zip: string;
@@ -23,12 +35,36 @@ export interface CountyInScope {
 
 export default function SVADetailPage() {
   const { svaId } = useParams<{ svaId: string }>();
+  const navigate = useNavigate();
   const [sva, setSva] = useState<SovereignIdData | null>(null);
   const [subHubStatus, setSubHubStatus] = useState<SubHubStatus[]>([]);
   const [zipsInScope, setZipsInScope] = useState<ZipInScope[]>([]);
   const [countiesInScope, setCountiesInScope] = useState<CountyInScope[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const handleDelete = async () => {
+    if (!svaId) return;
+    
+    setIsDeleting(true);
+    try {
+      const { data, error: fnError } = await supabase.functions.invoke("sva_delete", {
+        body: { sva_id: svaId },
+      });
+
+      if (fnError) throw new Error(fnError.message);
+      if (data?.error) throw new Error(data.error);
+
+      toast.success("Sovereign ID deleted successfully");
+      navigate("/sva");
+    } catch (err) {
+      console.error("Error deleting SVA:", err);
+      toast.error(err instanceof Error ? err.message : "Failed to delete");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   useEffect(() => {
     async function fetchSva() {
@@ -90,12 +126,36 @@ export default function SVADetailPage() {
                 <p className="text-sm text-muted-foreground font-mono">{svaId}</p>
               </div>
             </div>
-            <Button variant="outline" size="sm" asChild>
-              <Link to="/sva/create">
-                <Plus className="h-4 w-4 mr-2" />
-                New SVA
-              </Link>
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button variant="outline" size="sm" asChild>
+                <Link to="/sva/create">
+                  <Plus className="h-4 w-4 mr-2" />
+                  New SVA
+                </Link>
+              </Button>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="destructive" size="sm" disabled={isDeleting}>
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Delete
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Delete Sovereign ID?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This will permanently delete <code className="font-mono text-foreground">{svaId}</code> and all associated ZIPs and counties. This action cannot be undone.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                      Delete
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </div>
           </div>
         </div>
       </div>
