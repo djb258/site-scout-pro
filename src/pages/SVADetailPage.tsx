@@ -22,6 +22,7 @@ import { toast } from "sonner";
 export interface ZipInScope {
   zip: string;
   distance_miles: number;
+  population: number | null;
 }
 
 export interface CountyInScope {

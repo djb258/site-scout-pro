@@ -94,9 +94,9 @@ serve(async (req) => {
 
     let zipsInScope = null;
     if (includeZips) {
-      zipsInScope = await fetchAllRowsOrdered<{ zip: string; distance_miles: number }>({
+      zipsInScope = await fetchAllRowsOrdered<{ zip: string; distance_miles: number; population: number | null }>({
         table: "sovereign_id_zips",
-        select: "zip, distance_miles",
+        select: "zip, distance_miles, population",
         orderBy: "distance_miles",
         ascending: true,
         eq: { column: "sva_id", value: sva_id },
