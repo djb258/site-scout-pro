@@ -42,12 +42,48 @@ serve(async (req) => {
       );
     }
 
+    // Helpers to fetch >1000 rows (default max per query)
+    const FETCH_BATCH_SIZE = 1000;
+
+    async function fetchAllRowsOrdered<T>(opts: {
+      table: string;
+      select: string;
+      orderBy: string;
+      ascending?: boolean;
+      eq: { column: string; value: string };
+    }): Promise<T[]> {
+      const out: T[] = [];
+      let offset = 0;
+
+      // deno-lint-ignore no-constant-condition
+      while (true) {
+        const { data, error } = await supabase
+          .from(opts.table)
+          .select(opts.select)
+          .eq(opts.eq.column, opts.eq.value)
+          .order(opts.orderBy, { ascending: opts.ascending ?? true })
+          .range(offset, offset + FETCH_BATCH_SIZE - 1);
+
+        if (error) {
+          throw new Error(`Failed to fetch ${opts.table}: ${error.message}`);
+        }
+
+        const batch = (data ?? []) as T[];
+        out.push(...batch);
+
+        if (batch.length < FETCH_BATCH_SIZE) break;
+        offset += FETCH_BATCH_SIZE;
+      }
+
+      return out;
+    }
+
     // Fetch SVA record
     const { data: svaData, error: svaError } = await supabase
       .from("sovereign_ids")
       .select("*")
       .eq("sva_id", sva_id)
-      .single();
+      .maybeSingle();
 
     if (svaError || !svaData) {
       return new Response(
@@ -58,24 +94,31 @@ serve(async (req) => {
 
     let zipsInScope = null;
     if (includeZips) {
-      const { data: zips } = await supabase
-        .from("sovereign_id_zips")
-        .select("zip, distance_miles")
-        .eq("sva_id", sva_id)
-        .order("distance_miles", { ascending: true });
-      
-      zipsInScope = zips;
+      zipsInScope = await fetchAllRowsOrdered<{ zip: string; distance_miles: number }>({
+        table: "sovereign_id_zips",
+        select: "zip, distance_miles",
+        orderBy: "distance_miles",
+        ascending: true,
+        eq: { column: "sva_id", value: sva_id },
+      });
     }
 
     let countiesInScope = null;
     if (includeCounties) {
-      const { data: counties } = await supabase
-        .from("sovereign_id_counties")
-        .select("county_name, county_fips, state_id, min_distance_miles, zip_count, total_population")
-        .eq("sva_id", sva_id)
-        .order("min_distance_miles", { ascending: true });
-      
-      countiesInScope = counties;
+      countiesInScope = await fetchAllRowsOrdered<{
+        county_name: string;
+        county_fips: string;
+        state_id: string;
+        min_distance_miles: number;
+        zip_count: number;
+        total_population: number | null;
+      }>({
+        table: "sovereign_id_counties",
+        select: "county_name, county_fips, state_id, min_distance_miles, zip_count, total_population",
+        orderBy: "min_distance_miles",
+        ascending: true,
+        eq: { column: "sva_id", value: sva_id },
+      });
     }
 
     // Sub-hub status (all locked initially for new SVAs)
