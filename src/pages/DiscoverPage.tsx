@@ -1,67 +1,70 @@
-import { Fingerprint, Lock, Warehouse, Database } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Fingerprint, Lock, Warehouse, Database, PlusCircle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { subHubs, doctrineLocks, summaryAnchors } from "@/config/discover-page-config";
+import { subHubs, doctrineLocks, summaryAnchors, assetTypes, radiusOptions } from "@/config/discover-page-config";
 import { refSchemaRegistry } from "@/config/ref-schema-registry";
 import { RefDataStats } from "@/components/RefDataPanel";
-
-// Static placeholder values for Sovereign ID context
-const svaContext = {
-  svaId: "SVA-2026-001",
-  assetType: "Self-Storage",
-  seedZip: "25401",
-  radius: "15 mi",
-  rulesetVersion: "v2.1",
-};
 
 export default function DiscoverPage() {
   return (
     <div className="max-w-5xl mx-auto space-y-8 pb-12">
-      {/* Header Section - Sovereign ID Context */}
+      {/* Header Section - Create Sovereign ID CTA */}
       <Card className="border-primary/20 bg-card">
         <CardHeader className="pb-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-primary/10">
-              <Fingerprint className="w-6 h-6 text-primary" />
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-primary/10">
+                <Fingerprint className="w-6 h-6 text-primary" />
+              </div>
+              <CardTitle className="text-2xl font-mono">Create Your Market Mandate</CardTitle>
             </div>
-            <CardTitle className="text-2xl font-mono">Sovereign ID Context</CardTitle>
+            <Button asChild size="lg" className="gap-2">
+              <Link to="/sva/create">
+                <PlusCircle className="w-5 h-5" />
+                Create Sovereign ID
+              </Link>
+            </Button>
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-            <div className="space-y-1">
-              <span className="text-xs text-muted-foreground uppercase tracking-wide">SVA ID</span>
-              <p className="font-mono text-sm font-semibold text-primary">{svaContext.svaId}</p>
-            </div>
-            <div className="space-y-1">
-              <span className="text-xs text-muted-foreground uppercase tracking-wide">Asset Type</span>
-              <div className="flex items-center gap-1.5">
-                <Warehouse className="w-4 h-4 text-muted-foreground" />
-                <p className="text-sm font-medium">{svaContext.assetType}</p>
+          <p className="text-sm text-muted-foreground italic border-l-2 border-primary/30 pl-3">
+            "A Sovereign ID is minted from intent before data collection. All sub-hubs hydrate against this decision container."
+          </p>
+          
+          <div className="grid md:grid-cols-3 gap-4 pt-2">
+            <div className="space-y-2">
+              <span className="text-xs text-muted-foreground uppercase tracking-wide">Asset Types</span>
+              <div className="flex flex-wrap gap-1">
+                {assetTypes.map((type) => (
+                  <Badge key={type.value} variant="secondary" className="text-xs">
+                    {type.label}
+                  </Badge>
+                ))}
               </div>
             </div>
-            <div className="space-y-1">
-              <span className="text-xs text-muted-foreground uppercase tracking-wide">Seed ZIP</span>
-              <p className="font-mono text-sm">{svaContext.seedZip}</p>
+            <div className="space-y-2">
+              <span className="text-xs text-muted-foreground uppercase tracking-wide">Anchor ZIP</span>
+              <p className="text-sm text-muted-foreground">5-digit US ZIP → resolves City, State, County, FIPS</p>
             </div>
-            <div className="space-y-1">
-              <span className="text-xs text-muted-foreground uppercase tracking-wide">Radius</span>
-              <p className="text-sm">{svaContext.radius}</p>
-            </div>
-            <div className="space-y-1">
-              <span className="text-xs text-muted-foreground uppercase tracking-wide">Ruleset</span>
-              <Badge variant="outline" className="font-mono text-xs">{svaContext.rulesetVersion}</Badge>
+            <div className="space-y-2">
+              <span className="text-xs text-muted-foreground uppercase tracking-wide">Search Radius</span>
+              <div className="flex flex-wrap gap-1">
+                {radiusOptions.map((opt) => (
+                  <Badge key={opt.value} variant="outline" className="text-xs font-mono">
+                    {opt.label}
+                  </Badge>
+                ))}
+              </div>
             </div>
           </div>
-          <p className="text-sm text-muted-foreground italic border-l-2 border-primary/30 pl-3">
-            "A Sovereign ID is minted from intent before data collection. All sub-hubs hydrate or evaluate against this decision container."
-          </p>
         </CardContent>
       </Card>
 
