@@ -17,15 +17,19 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Get sva_id from query params or body
+    // Get sva_id and include_zips from query params or body
     let sva_id: string | null = null;
+    let includeZips = false;
+
+    const url = new URL(req.url);
 
     if (req.method === "GET") {
-      const url = new URL(req.url);
       sva_id = url.searchParams.get("sva_id");
+      includeZips = url.searchParams.get("include_zips") === "true";
     } else if (req.method === "POST") {
       const body = await req.json();
       sva_id = body.sva_id;
+      includeZips = body.include_zips === true;
     }
 
     if (!sva_id) {
@@ -48,10 +52,6 @@ serve(async (req) => {
         { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
-
-    // Fetch ZIPs in scope (optional, can be large)
-    const url = new URL(req.url);
-    const includeZips = url.searchParams.get("include_zips") === "true";
 
     let zipsInScope = null;
     if (includeZips) {
