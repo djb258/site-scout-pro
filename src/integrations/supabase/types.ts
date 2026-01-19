@@ -1530,6 +1530,7 @@ export type Database = {
           created_at: string
           distance_miles: number
           id: string
+          population: number | null
           sva_id: string
           zip: string
         }
@@ -1537,6 +1538,7 @@ export type Database = {
           created_at?: string
           distance_miles: number
           id?: string
+          population?: number | null
           sva_id: string
           zip: string
         }
@@ -1544,6 +1546,7 @@ export type Database = {
           created_at?: string
           distance_miles?: number
           id?: string
+          population?: number | null
           sva_id?: string
           zip?: string
         }

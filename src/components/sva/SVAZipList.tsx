@@ -11,6 +11,7 @@ import { ChevronDown, ChevronUp, MapPin } from "lucide-react";
 export interface ZipInScope {
   zip: string;
   distance_miles: number;
+  population: number | null;
 }
 
 interface SVAZipListProps {
@@ -28,6 +29,9 @@ export function SVAZipList({ zips, anchorZip }: SVAZipListProps) {
   const displayedZips = zips.slice(0, displayCount);
   const hasMore = displayCount < zips.length;
   const remaining = zips.length - displayCount;
+  
+  // Calculate total population across ALL zips (not just displayed)
+  const totalPopulation = zips.reduce((sum, z) => sum + (z.population ?? 0), 0);
 
   const handleLoadMore = () => {
     setDisplayCount((prev) => Math.min(prev + LOAD_MORE_COUNT, zips.length));
@@ -68,9 +72,10 @@ export function SVAZipList({ zips, anchorZip }: SVAZipListProps) {
       <CollapsibleContent>
         <div className="border rounded-md mt-2 overflow-hidden">
           {/* Header */}
-          <div className="grid grid-cols-2 gap-4 px-4 py-2 bg-muted/50 border-b text-xs font-medium text-muted-foreground">
+          <div className="grid grid-cols-3 gap-4 px-4 py-2 bg-muted/50 border-b text-xs font-medium text-muted-foreground">
             <span>ZIP Code</span>
             <span className="text-right">Distance</span>
+            <span className="text-right">Population</span>
           </div>
 
           {/* ZIP List */}
@@ -80,7 +85,7 @@ export function SVAZipList({ zips, anchorZip }: SVAZipListProps) {
               return (
                 <div
                   key={z.zip}
-                  className={`grid grid-cols-2 gap-4 px-4 py-2 border-b last:border-b-0 text-sm ${
+                  className={`grid grid-cols-3 gap-4 px-4 py-2 border-b last:border-b-0 text-sm ${
                     isAnchor ? "bg-primary/5" : "hover:bg-muted/30"
                   }`}
                 >
@@ -95,6 +100,9 @@ export function SVAZipList({ zips, anchorZip }: SVAZipListProps) {
                   <span className={`text-right ${isAnchor ? "font-semibold" : "text-muted-foreground"}`}>
                     {z.distance_miles.toFixed(2)} mi
                   </span>
+                  <span className={`text-right ${isAnchor ? "font-semibold" : "text-muted-foreground"}`}>
+                    {z.population != null ? z.population.toLocaleString() : "—"}
+                  </span>
                 </div>
               );
             })}
@@ -102,9 +110,14 @@ export function SVAZipList({ zips, anchorZip }: SVAZipListProps) {
 
           {/* Load More / Summary Footer */}
           <div className="px-4 py-3 bg-muted/30 border-t flex items-center justify-between">
-            <span className="text-xs text-muted-foreground">
-              Showing {displayedZips.length.toLocaleString()} of {zips.length.toLocaleString()}
-            </span>
+            <div className="flex flex-col gap-0.5">
+              <span className="text-xs text-muted-foreground">
+                Showing {displayedZips.length.toLocaleString()} of {zips.length.toLocaleString()}
+              </span>
+              <span className="text-xs font-medium">
+                Total Pop: {totalPopulation.toLocaleString()}
+              </span>
+            </div>
             {hasMore && (
               <Button
                 variant="outline"

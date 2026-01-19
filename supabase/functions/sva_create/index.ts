@@ -229,7 +229,8 @@ serve(async (req) => {
         const zipRecords = zipsInScope.map(z => ({
           sva_id,
           zip: z.zip,
-          distance_miles: z.distance_miles
+          distance_miles: z.distance_miles,
+          population: z.population
         }));
 
         const batchSize = 500;
