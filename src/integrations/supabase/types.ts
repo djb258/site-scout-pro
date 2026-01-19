@@ -1489,6 +1489,89 @@ export type Database = {
           },
         ]
       }
+      sovereign_id_zips: {
+        Row: {
+          created_at: string
+          distance_miles: number
+          id: string
+          sva_id: string
+          zip: string
+        }
+        Insert: {
+          created_at?: string
+          distance_miles: number
+          id?: string
+          sva_id: string
+          zip: string
+        }
+        Update: {
+          created_at?: string
+          distance_miles?: number
+          id?: string
+          sva_id?: string
+          zip?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sovereign_id_zips_sva_id_fkey"
+            columns: ["sva_id"]
+            isOneToOne: false
+            referencedRelation: "sovereign_ids"
+            referencedColumns: ["sva_id"]
+          },
+        ]
+      }
+      sovereign_ids: {
+        Row: {
+          anchor_city: string
+          anchor_county: string
+          anchor_fips: string
+          anchor_lat: number
+          anchor_lng: number
+          anchor_state: string
+          anchor_zip: string
+          asset_type: string
+          created_at: string
+          id: string
+          radius_miles: number
+          status: string
+          sva_id: string
+          zip_count_in_scope: number
+        }
+        Insert: {
+          anchor_city: string
+          anchor_county: string
+          anchor_fips: string
+          anchor_lat: number
+          anchor_lng: number
+          anchor_state: string
+          anchor_zip: string
+          asset_type: string
+          created_at?: string
+          id?: string
+          radius_miles: number
+          status?: string
+          sva_id: string
+          zip_count_in_scope: number
+        }
+        Update: {
+          anchor_city?: string
+          anchor_county?: string
+          anchor_fips?: string
+          anchor_lat?: number
+          anchor_lng?: number
+          anchor_state?: string
+          anchor_zip?: string
+          asset_type?: string
+          created_at?: string
+          id?: string
+          radius_miles?: number
+          status?: string
+          sva_id?: string
+          zip_count_in_scope?: number
+        }
+        Relationships: []
+      }
       staging_payload: {
         Row: {
           created_at: string
