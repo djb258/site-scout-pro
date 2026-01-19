@@ -134,9 +134,18 @@ export const mentalModel = [
 
 export const assetTypes = [
   { value: "self-storage", label: "Self-Storage" },
-  { value: "rv", label: "RV" },
-  { value: "truck", label: "Truck" },
-  { value: "boat", label: "Boat" },
+  { value: "rv-storage", label: "RV Storage" },
+  { value: "boat-storage", label: "Boat Storage" },
+  { value: "truck-tractor", label: "Truck / Tractor Parking" },
+  { value: "tow-impound", label: "Tow & Impound / Insurance Yard" },
+];
+
+export const radiusOptions = [
+  { value: 25, label: "25 miles" },
+  { value: 50, label: "50 miles" },
+  { value: 75, label: "75 miles" },
+  { value: 100, label: "100 miles" },
+  { value: 120, label: "120 miles" },
 ];
 
 export const summaryAnchors = [

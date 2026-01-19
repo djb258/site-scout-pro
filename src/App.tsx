@@ -12,6 +12,8 @@ import Pass15Hub from "@/pages/hub/Pass15Hub";
 import Pass2Hub from "@/pages/hub/Pass2Hub";
 import Pass3Hub from "@/pages/hub/Pass3Hub";
 import CCAReconHub from "@/pages/hub/CCAReconHub";
+import SVABuilderPage from "@/pages/SVABuilderPage";
+import SVADetailPage from "@/pages/SVADetailPage";
 import NotFound from "@/pages/NotFound";
 
 // Lazy load map to avoid react-leaflet React instance conflicts
@@ -29,6 +31,8 @@ const App = () => (
           <Route element={<AppLayout />}>
             <Route path="/" element={<DiscoverPage />} />
             <Route path="/discover" element={<DiscoverPage />} />
+            <Route path="/sva/create" element={<SVABuilderPage />} />
+            <Route path="/sva/:svaId" element={<SVADetailPage />} />
             <Route path="/pass0" element={<Pass0Hub />} />
             <Route path="/pass1" element={<Pass1Hub />} />
             <Route path="/pass15" element={<Pass15Hub />} />
