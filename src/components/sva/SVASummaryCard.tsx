@@ -18,6 +18,7 @@ import {
   Scale
 } from "lucide-react";
 import { SVAZipList, ZipInScope } from "./SVAZipList";
+import { SVACountyList, CountyInScope } from "./SVACountyList";
 
 export interface SovereignIdData {
   sva_id: string;
@@ -45,6 +46,7 @@ interface SVASummaryCardProps {
   sva: SovereignIdData;
   subHubStatus?: SubHubStatus[];
   zipsInScope?: ZipInScope[];
+  countiesInScope?: CountyInScope[];
 }
 
 const ASSET_TYPE_LABELS: Record<string, string> = {
@@ -91,7 +93,7 @@ function getStatusBadge(status: SubHubStatus["status"]) {
   }
 }
 
-export function SVASummaryCard({ sva, subHubStatus = DEFAULT_SUB_HUB_STATUS, zipsInScope = [] }: SVASummaryCardProps) {
+export function SVASummaryCard({ sva, subHubStatus = DEFAULT_SUB_HUB_STATUS, zipsInScope = [], countiesInScope = [] }: SVASummaryCardProps) {
   return (
     <Card className="w-full max-w-2xl mx-auto">
       <CardHeader className="text-center pb-4">
@@ -206,6 +208,14 @@ export function SVASummaryCard({ sva, subHubStatus = DEFAULT_SUB_HUB_STATUS, zip
           <>
             <Separator />
             <SVAZipList zips={zipsInScope} anchorZip={sva.anchor_zip} />
+          </>
+        )}
+
+        {/* County List */}
+        {countiesInScope.length > 0 && (
+          <>
+            <Separator />
+            <SVACountyList counties={countiesInScope} anchorFips={sva.anchor_fips} />
           </>
         )}
 

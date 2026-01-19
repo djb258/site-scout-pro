@@ -17,19 +17,22 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Get sva_id and include_zips from query params or body
+    // Get sva_id and include flags from query params or body
     let sva_id: string | null = null;
     let includeZips = false;
+    let includeCounties = false;
 
     const url = new URL(req.url);
 
     if (req.method === "GET") {
       sva_id = url.searchParams.get("sva_id");
       includeZips = url.searchParams.get("include_zips") === "true";
+      includeCounties = url.searchParams.get("include_counties") === "true";
     } else if (req.method === "POST") {
       const body = await req.json();
       sva_id = body.sva_id;
       includeZips = body.include_zips === true;
+      includeCounties = body.include_counties === true;
     }
 
     if (!sva_id) {
@@ -64,6 +67,17 @@ serve(async (req) => {
       zipsInScope = zips;
     }
 
+    let countiesInScope = null;
+    if (includeCounties) {
+      const { data: counties } = await supabase
+        .from("sovereign_id_counties")
+        .select("county_name, county_fips, state_id, min_distance_miles, zip_count, total_population")
+        .eq("sva_id", sva_id)
+        .order("min_distance_miles", { ascending: true });
+      
+      countiesInScope = counties;
+    }
+
     // Sub-hub status (all locked initially for new SVAs)
     const subHubStatus = [
       { id: 0, name: "Radar / Signals", status: "LOCKED" },
@@ -78,6 +92,7 @@ serve(async (req) => {
       JSON.stringify({
         ...svaData,
         zips_in_scope: zipsInScope,
+        counties_in_scope: countiesInScope,
         sub_hub_status: subHubStatus
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
