@@ -14,7 +14,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { ArrowLeft, AlertTriangle, Plus, Trash2 } from "lucide-react";
+import { ArrowLeft, AlertTriangle, Plus, Trash2, RefreshCw, Loader2 } from "lucide-react";
 import { SVASummaryCard, SovereignIdData, SubHubStatus } from "@/components/sva/SVASummaryCard";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -42,6 +42,7 @@ export default function SVADetailPage() {
   const [countiesInScope, setCountiesInScope] = useState<CountyInScope[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isRebuilding, setIsRebuilding] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const handleDelete = async () => {
@@ -66,47 +67,83 @@ export default function SVADetailPage() {
     }
   };
 
-  useEffect(() => {
-    async function fetchSva() {
-      if (!svaId) {
-        setError("No Sovereign ID provided");
-        setIsLoading(false);
-        return;
-      }
+  const handleRebuildScope = async () => {
+    if (!sva) return;
+    
+    setIsRebuilding(true);
+    try {
+      const { data, error: fnError } = await supabase.functions.invoke("sva_create", {
+        body: {
+          asset_type: sva.asset_type,
+          anchor_zip: sva.anchor_zip,
+          radius_miles: sva.radius_miles,
+        },
+      });
 
-      try {
-        const { data, error: fnError } = await supabase.functions.invoke("sva_get", {
-          body: { sva_id: svaId, include_zips: true, include_counties: true },
+      if (fnError) throw new Error(fnError.message);
+      if (data?.error) throw new Error(data.error);
+
+      if (data?.rehydrated) {
+        toast.success("Scope rebuilt!", {
+          description: `${data.zip_count_in_scope} ZIPs now in scope`,
         });
-
-        if (fnError) {
-          throw new Error(fnError.message || "Failed to fetch Sovereign ID");
-        }
-
-        if (data?.error) {
-          throw new Error(data.error);
-        }
-
-        setSva(data);
-        if (data.sub_hub_status) {
-          setSubHubStatus(data.sub_hub_status);
-        }
-        if (data.zips_in_scope) {
-          setZipsInScope(data.zips_in_scope);
-        }
-        if (data.counties_in_scope) {
-          setCountiesInScope(data.counties_in_scope);
-        }
-      } catch (err) {
-        console.error("Error fetching SVA:", err);
-        setError(err instanceof Error ? err.message : "Failed to load Sovereign ID");
-      } finally {
-        setIsLoading(false);
+      } else {
+        toast.info("Scope already populated");
       }
+
+      // Re-fetch SVA data
+      await fetchSva();
+    } catch (err) {
+      console.error("Error rebuilding scope:", err);
+      toast.error(err instanceof Error ? err.message : "Failed to rebuild scope");
+    } finally {
+      setIsRebuilding(false);
+    }
+  };
+
+  const fetchSva = async () => {
+    if (!svaId) {
+      setError("No Sovereign ID provided");
+      setIsLoading(false);
+      return;
     }
 
+    try {
+      const { data, error: fnError } = await supabase.functions.invoke("sva_get", {
+        body: { sva_id: svaId, include_zips: true, include_counties: true },
+      });
+
+      if (fnError) {
+        throw new Error(fnError.message || "Failed to fetch Sovereign ID");
+      }
+
+      if (data?.error) {
+        throw new Error(data.error);
+      }
+
+      setSva(data);
+      if (data.sub_hub_status) {
+        setSubHubStatus(data.sub_hub_status);
+      }
+      if (data.zips_in_scope) {
+        setZipsInScope(data.zips_in_scope);
+      }
+      if (data.counties_in_scope) {
+        setCountiesInScope(data.counties_in_scope);
+      }
+    } catch (err) {
+      console.error("Error fetching SVA:", err);
+      setError(err instanceof Error ? err.message : "Failed to load Sovereign ID");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchSva();
   }, [svaId]);
+
+  const scopeIsEmpty = zipsInScope.length === 0 && countiesInScope.length === 0;
 
   return (
     <div className="min-h-screen bg-background">
@@ -174,6 +211,37 @@ export default function SVADetailPage() {
           <Alert variant="destructive" className="max-w-2xl mx-auto">
             <AlertTriangle className="h-4 w-4" />
             <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
+
+        {/* Empty scope warning with rebuild button */}
+        {sva && !isLoading && scopeIsEmpty && (
+          <Alert className="max-w-2xl mx-auto mb-6 border-amber-500/50 bg-amber-500/10">
+            <AlertTriangle className="h-4 w-4 text-amber-500" />
+            <AlertDescription className="flex items-center justify-between">
+              <span className="text-amber-700 dark:text-amber-300">
+                Scope lists are empty. ZIPs and counties need to be rebuilt.
+              </span>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={handleRebuildScope}
+                disabled={isRebuilding}
+                className="ml-4"
+              >
+                {isRebuilding ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Rebuilding...
+                  </>
+                ) : (
+                  <>
+                    <RefreshCw className="h-4 w-4 mr-2" />
+                    Rebuild Scope
+                  </>
+                )}
+              </Button>
+            </AlertDescription>
           </Alert>
         )}
 

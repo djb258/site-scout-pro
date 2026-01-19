@@ -70,9 +70,15 @@ export function SVABuilderForm() {
       }
 
       if (data?.already_existed) {
-        toast.info("Sovereign ID already exists", {
-          description: "Navigating to existing SVA...",
-        });
+        if (data?.rehydrated) {
+          toast.success("Sovereign ID scope rebuilt!", {
+            description: `${data.sva_id} now has ${data.zip_count_in_scope} ZIPs in scope`,
+          });
+        } else {
+          toast.info("Sovereign ID already exists", {
+            description: "Navigating to existing SVA...",
+          });
+        }
       } else {
         toast.success("Sovereign ID created!", {
           description: `${data.sva_id} with ${data.zip_count_in_scope} ZIPs in scope`,
