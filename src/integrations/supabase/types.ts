@@ -1528,6 +1528,7 @@ export type Database = {
       sovereign_id_zips: {
         Row: {
           created_at: string
+          demand_sqft: number | null
           distance_miles: number
           id: string
           population: number | null
@@ -1536,6 +1537,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          demand_sqft?: number | null
           distance_miles: number
           id?: string
           population?: number | null
@@ -1544,6 +1546,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          demand_sqft?: number | null
           distance_miles?: number
           id?: string
           population?: number | null
@@ -1573,6 +1576,7 @@ export type Database = {
           created_at: string
           id: string
           radius_miles: number
+          sqft_per_person: number
           status: string
           sva_id: string
           zip_count_in_scope: number
@@ -1589,6 +1593,7 @@ export type Database = {
           created_at?: string
           id?: string
           radius_miles: number
+          sqft_per_person?: number
           status?: string
           sva_id: string
           zip_count_in_scope: number
@@ -1605,6 +1610,7 @@ export type Database = {
           created_at?: string
           id?: string
           radius_miles?: number
+          sqft_per_person?: number
           status?: string
           sva_id?: string
           zip_count_in_scope?: number

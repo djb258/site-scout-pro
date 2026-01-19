@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Target, MapPin, Ruler, AlertTriangle, CheckCircle2 } from "lucide-react";
+import { Loader2, Target, MapPin, Ruler, AlertTriangle, CheckCircle2, Calculator } from "lucide-react";
 import { useZipResolution } from "@/hooks/useZipResolution";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -33,6 +33,7 @@ export function SVABuilderForm() {
   const [assetType, setAssetType] = useState<string>("");
   const [anchorZip, setAnchorZip] = useState<string>("");
   const [radiusMiles, setRadiusMiles] = useState<number | null>(null);
+  const [sqftPerPerson, setSqftPerPerson] = useState<number>(6);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
@@ -58,6 +59,7 @@ export function SVABuilderForm() {
           asset_type: assetType,
           anchor_zip: anchorZip,
           radius_miles: radiusMiles,
+          sqft_per_person: sqftPerPerson,
         },
       });
 
@@ -227,6 +229,27 @@ export function SVABuilderForm() {
           </Select>
           <p className="text-xs text-muted-foreground">
             Radius defines the data universe (ZIPs in scope).
+          </p>
+        </div>
+
+        {/* SQFT Per Person */}
+        <div className="space-y-2">
+          <Label htmlFor="sqft-per-person" className="flex items-center gap-1">
+            <Calculator className="h-4 w-4" />
+            Demand Multiplier (sqft/person)
+          </Label>
+          <Input
+            id="sqft-per-person"
+            type="number"
+            min={1}
+            max={20}
+            step={0.5}
+            value={sqftPerPerson}
+            onChange={(e) => setSqftPerPerson(parseFloat(e.target.value) || 6)}
+            placeholder="6"
+          />
+          <p className="text-xs text-muted-foreground">
+            Storage demand per capita (default: 6 sqft). Used to calculate demand_sqft per ZIP.
           </p>
         </div>
 
