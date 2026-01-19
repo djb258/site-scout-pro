@@ -11,6 +11,8 @@ import Pass1Hub from "@/pages/hub/Pass1Hub";
 import Pass15Hub from "@/pages/hub/Pass15Hub";
 import Pass2Hub from "@/pages/hub/Pass2Hub";
 import Pass3Hub from "@/pages/hub/Pass3Hub";
+import Pass4Hub from "@/pages/hub/Pass4Hub";
+import Pass5Hub from "@/pages/hub/Pass5Hub";
 import CCAReconHub from "@/pages/hub/CCAReconHub";
 import SVABuilderPage from "@/pages/SVABuilderPage";
 import SVADetailPage from "@/pages/SVADetailPage";
@@ -40,6 +42,8 @@ const App = () => (
             <Route path="/pass15" element={<Pass15Hub />} />
             <Route path="/pass2" element={<Pass2Hub />} />
             <Route path="/pass3" element={<Pass3Hub />} />
+            <Route path="/pass4" element={<Pass4Hub />} />
+            <Route path="/pass5" element={<Pass5Hub />} />
             <Route path="/cca" element={<CCAReconHub />} />
             <Route path="/map" element={<Suspense fallback={<div className="h-screen w-full flex items-center justify-center">Loading map...</div>}><HiveMap /></Suspense>} />
           </Route>
