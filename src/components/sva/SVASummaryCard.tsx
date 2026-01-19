@@ -17,6 +17,7 @@ import {
   Map,
   Scale
 } from "lucide-react";
+import { SVAZipList, ZipInScope } from "./SVAZipList";
 
 export interface SovereignIdData {
   sva_id: string;
@@ -43,6 +44,7 @@ export interface SubHubStatus {
 interface SVASummaryCardProps {
   sva: SovereignIdData;
   subHubStatus?: SubHubStatus[];
+  zipsInScope?: ZipInScope[];
 }
 
 const ASSET_TYPE_LABELS: Record<string, string> = {
@@ -89,7 +91,7 @@ function getStatusBadge(status: SubHubStatus["status"]) {
   }
 }
 
-export function SVASummaryCard({ sva, subHubStatus = DEFAULT_SUB_HUB_STATUS }: SVASummaryCardProps) {
+export function SVASummaryCard({ sva, subHubStatus = DEFAULT_SUB_HUB_STATUS, zipsInScope = [] }: SVASummaryCardProps) {
   return (
     <Card className="w-full max-w-2xl mx-auto">
       <CardHeader className="text-center pb-4">
@@ -198,6 +200,14 @@ export function SVASummaryCard({ sva, subHubStatus = DEFAULT_SUB_HUB_STATUS }: S
             })}
           </div>
         </div>
+
+        {/* ZIP List */}
+        {zipsInScope.length > 0 && (
+          <>
+            <Separator />
+            <SVAZipList zips={zipsInScope} anchorZip={sva.anchor_zip} />
+          </>
+        )}
 
         {/* Status Badge */}
         <div className="flex justify-center pt-2">

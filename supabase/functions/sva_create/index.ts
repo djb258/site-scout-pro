@@ -120,16 +120,35 @@ serve(async (req) => {
       );
     }
 
-    // Get all ZIPs with coordinates for radius calculation
-    const { data: allZips, error: allZipsError } = await supabase
-      .from("us_zip_codes")
-      .select("zip, lat, lng")
-      .not("lat", "is", null)
-      .not("lng", "is", null);
+    // Get ALL ZIPs with coordinates using pagination (Supabase default limit is 1000)
+    let allZips: { zip: string; lat: number; lng: number }[] = [];
+    let offset = 0;
+    const batchSize = 10000;
 
-    if (allZipsError) {
-      throw new Error(`Failed to fetch ZIP codes: ${allZipsError.message}`);
+    console.log("Fetching all ZIPs for radius calculation...");
+
+    while (true) {
+      const { data: batch, error: batchError } = await supabase
+        .from("us_zip_codes")
+        .select("zip, lat, lng")
+        .not("lat", "is", null)
+        .not("lng", "is", null)
+        .range(offset, offset + batchSize - 1);
+
+      if (batchError) {
+        throw new Error(`Failed to fetch ZIP codes: ${batchError.message}`);
+      }
+      
+      if (!batch || batch.length === 0) break;
+      
+      allZips = allZips.concat(batch);
+      console.log(`Fetched ${allZips.length} ZIPs so far...`);
+      
+      if (batch.length < batchSize) break; // Last batch
+      offset += batchSize;
     }
+
+    console.log(`Total ZIPs fetched: ${allZips.length}`);
 
     // Calculate ZIPs within radius
     const anchorLat = Number(zipData.lat);

@@ -7,10 +7,16 @@ import { ArrowLeft, AlertTriangle, Plus } from "lucide-react";
 import { SVASummaryCard, SovereignIdData, SubHubStatus } from "@/components/sva/SVASummaryCard";
 import { supabase } from "@/integrations/supabase/client";
 
+export interface ZipInScope {
+  zip: string;
+  distance_miles: number;
+}
+
 export default function SVADetailPage() {
   const { svaId } = useParams<{ svaId: string }>();
   const [sva, setSva] = useState<SovereignIdData | null>(null);
   const [subHubStatus, setSubHubStatus] = useState<SubHubStatus[]>([]);
+  const [zipsInScope, setZipsInScope] = useState<ZipInScope[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -24,7 +30,7 @@ export default function SVADetailPage() {
 
       try {
         const { data, error: fnError } = await supabase.functions.invoke("sva_get", {
-          body: { sva_id: svaId },
+          body: { sva_id: svaId, include_zips: true },
         });
 
         if (fnError) {
@@ -38,6 +44,9 @@ export default function SVADetailPage() {
         setSva(data);
         if (data.sub_hub_status) {
           setSubHubStatus(data.sub_hub_status);
+        }
+        if (data.zips_in_scope) {
+          setZipsInScope(data.zips_in_scope);
         }
       } catch (err) {
         console.error("Error fetching SVA:", err);
@@ -96,7 +105,7 @@ export default function SVADetailPage() {
         )}
 
         {sva && !isLoading && (
-          <SVASummaryCard sva={sva} subHubStatus={subHubStatus} />
+          <SVASummaryCard sva={sva} subHubStatus={subHubStatus} zipsInScope={zipsInScope} />
         )}
       </div>
     </div>
