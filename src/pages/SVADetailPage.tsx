@@ -12,11 +12,21 @@ export interface ZipInScope {
   distance_miles: number;
 }
 
+export interface CountyInScope {
+  county_name: string;
+  county_fips: string;
+  state_id: string;
+  min_distance_miles: number;
+  zip_count: number;
+  total_population: number | null;
+}
+
 export default function SVADetailPage() {
   const { svaId } = useParams<{ svaId: string }>();
   const [sva, setSva] = useState<SovereignIdData | null>(null);
   const [subHubStatus, setSubHubStatus] = useState<SubHubStatus[]>([]);
   const [zipsInScope, setZipsInScope] = useState<ZipInScope[]>([]);
+  const [countiesInScope, setCountiesInScope] = useState<CountyInScope[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -30,7 +40,7 @@ export default function SVADetailPage() {
 
       try {
         const { data, error: fnError } = await supabase.functions.invoke("sva_get", {
-          body: { sva_id: svaId, include_zips: true },
+          body: { sva_id: svaId, include_zips: true, include_counties: true },
         });
 
         if (fnError) {
@@ -47,6 +57,9 @@ export default function SVADetailPage() {
         }
         if (data.zips_in_scope) {
           setZipsInScope(data.zips_in_scope);
+        }
+        if (data.counties_in_scope) {
+          setCountiesInScope(data.counties_in_scope);
         }
       } catch (err) {
         console.error("Error fetching SVA:", err);
@@ -105,7 +118,12 @@ export default function SVADetailPage() {
         )}
 
         {sva && !isLoading && (
-          <SVASummaryCard sva={sva} subHubStatus={subHubStatus} zipsInScope={zipsInScope} />
+          <SVASummaryCard 
+            sva={sva} 
+            subHubStatus={subHubStatus} 
+            zipsInScope={zipsInScope} 
+            countiesInScope={countiesInScope}
+          />
         )}
       </div>
     </div>

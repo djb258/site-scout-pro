@@ -1489,6 +1489,42 @@ export type Database = {
           },
         ]
       }
+      sovereign_id_counties: {
+        Row: {
+          county_fips: string
+          county_name: string
+          created_at: string
+          id: string
+          min_distance_miles: number
+          state_id: string
+          sva_id: string
+          total_population: number | null
+          zip_count: number
+        }
+        Insert: {
+          county_fips: string
+          county_name: string
+          created_at?: string
+          id?: string
+          min_distance_miles: number
+          state_id: string
+          sva_id: string
+          total_population?: number | null
+          zip_count?: number
+        }
+        Update: {
+          county_fips?: string
+          county_name?: string
+          created_at?: string
+          id?: string
+          min_distance_miles?: number
+          state_id?: string
+          sva_id?: string
+          total_population?: number | null
+          zip_count?: number
+        }
+        Relationships: []
+      }
       sovereign_id_zips: {
         Row: {
           created_at: string
