@@ -333,6 +333,7 @@ export default function JurisdictionScopePage() {
                 <div className="max-h-[500px] overflow-y-auto">
                   {counties.map((county) => {
                     const isAnchor = selectedSva?.anchor_fips === county.county_fips;
+                    const canEdit = county.card_status !== 'PRESENT';
                     return (
                       <div
                         key={county.county_fips}
@@ -341,7 +342,16 @@ export default function JurisdictionScopePage() {
                         }`}
                       >
                         <span className={`col-span-2 flex items-center gap-2 ${isAnchor ? "font-semibold" : ""}`}>
-                          {county.county_name}, {county.state_id}
+                          {canEdit ? (
+                            <Link 
+                              to={`/supply/jurisdictions/${county.county_fips}`}
+                              className="text-primary hover:underline"
+                            >
+                              {county.county_name}, {county.state_id}
+                            </Link>
+                          ) : (
+                            <span>{county.county_name}, {county.state_id}</span>
+                          )}
                           {isAnchor && (
                             <Badge variant="outline" className="text-xs">
                               anchor
