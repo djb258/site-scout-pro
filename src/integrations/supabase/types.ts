@@ -275,6 +275,163 @@ export type Database = {
         }
         Relationships: []
       }
+      facility_master: {
+        Row: {
+          address: string
+          facility_id: string
+          facility_name: string | null
+          first_seen_at: string | null
+          phone: string | null
+          status: string | null
+          website_url: string | null
+          zip_code: string
+        }
+        Insert: {
+          address: string
+          facility_id: string
+          facility_name?: string | null
+          first_seen_at?: string | null
+          phone?: string | null
+          status?: string | null
+          website_url?: string | null
+          zip_code: string
+        }
+        Update: {
+          address?: string
+          facility_id?: string
+          facility_name?: string | null
+          first_seen_at?: string | null
+          phone?: string | null
+          status?: string | null
+          website_url?: string | null
+          zip_code?: string
+        }
+        Relationships: []
+      }
+      facility_raw: {
+        Row: {
+          address_raw: string
+          created_at: string | null
+          discovery_context: Json | null
+          facility_name_raw: string
+          phone_raw: string | null
+          raw_id: string
+          source: string | null
+          website_url_raw: string | null
+          zip_code: string
+        }
+        Insert: {
+          address_raw: string
+          created_at?: string | null
+          discovery_context?: Json | null
+          facility_name_raw: string
+          phone_raw?: string | null
+          raw_id?: string
+          source?: string | null
+          website_url_raw?: string | null
+          zip_code: string
+        }
+        Update: {
+          address_raw?: string
+          created_at?: string | null
+          discovery_context?: Json | null
+          facility_name_raw?: string
+          phone_raw?: string | null
+          raw_id?: string
+          source?: string | null
+          website_url_raw?: string | null
+          zip_code?: string
+        }
+        Relationships: []
+      }
+      facility_totals: {
+        Row: {
+          calculation_method: string | null
+          confidence_score: number | null
+          facility_id: string
+          last_updated_at: string | null
+          total_rentable_sqft: number | null
+          total_unit_count: number | null
+        }
+        Insert: {
+          calculation_method?: string | null
+          confidence_score?: number | null
+          facility_id: string
+          last_updated_at?: string | null
+          total_rentable_sqft?: number | null
+          total_unit_count?: number | null
+        }
+        Update: {
+          calculation_method?: string | null
+          confidence_score?: number | null
+          facility_id?: string
+          last_updated_at?: string | null
+          total_rentable_sqft?: number | null
+          total_unit_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "facility_totals_facility_id_fkey"
+            columns: ["facility_id"]
+            isOneToOne: true
+            referencedRelation: "facility_master"
+            referencedColumns: ["facility_id"]
+          },
+        ]
+      }
+      facility_unit_pricing: {
+        Row: {
+          availability_count: number | null
+          confidence_score: number | null
+          created_at: string | null
+          effective_date: string | null
+          facility_id: string | null
+          monthly_price: number | null
+          source: string | null
+          unit_length_ft: number | null
+          unit_price_id: string
+          unit_sqft: number | null
+          unit_type: string | null
+          unit_width_ft: number | null
+        }
+        Insert: {
+          availability_count?: number | null
+          confidence_score?: number | null
+          created_at?: string | null
+          effective_date?: string | null
+          facility_id?: string | null
+          monthly_price?: number | null
+          source?: string | null
+          unit_length_ft?: number | null
+          unit_price_id?: string
+          unit_sqft?: number | null
+          unit_type?: string | null
+          unit_width_ft?: number | null
+        }
+        Update: {
+          availability_count?: number | null
+          confidence_score?: number | null
+          created_at?: string | null
+          effective_date?: string | null
+          facility_id?: string | null
+          monthly_price?: number | null
+          source?: string | null
+          unit_length_ft?: number | null
+          unit_price_id?: string
+          unit_sqft?: number | null
+          unit_type?: string | null
+          unit_width_ft?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "facility_unit_pricing_facility_id_fkey"
+            columns: ["facility_id"]
+            isOneToOne: false
+            referencedRelation: "facility_master"
+            referencedColumns: ["facility_id"]
+          },
+        ]
+      }
       generic_ingest_log: {
         Row: {
           created_at: string
