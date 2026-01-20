@@ -14,7 +14,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { ArrowLeft, AlertTriangle, Plus, Trash2, RefreshCw, Loader2 } from "lucide-react";
+import { ArrowLeft, AlertTriangle, Plus, Trash2, RefreshCw, Loader2, Radar } from "lucide-react";
 import { SVASummaryCard, SovereignIdData, SubHubStatus } from "@/components/sva/SVASummaryCard";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -166,6 +166,12 @@ export default function SVADetailPage() {
               </div>
             </div>
             <div className="flex items-center gap-2">
+              <Button variant="outline" size="sm" asChild>
+                <Link to={`/pass0/radar/${svaId}`}>
+                  <Radar className="h-4 w-4 mr-2" />
+                  View Radar
+                </Link>
+              </Button>
               <Button variant="outline" size="sm" asChild>
                 <Link to="/sva/create">
                   <Plus className="h-4 w-4 mr-2" />
