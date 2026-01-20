@@ -7,6 +7,7 @@
 
 - **Hub:** Sub-Hub 0
 - **Anchor:** ZIP Code
+- **Anchor Invariant:** All rows must trace to exactly one ZIP code within an SVA scope.
 - **Authority:** WRITE for owned tables, READ-ONLY for referenced tables
 - **Purpose:** Detect early "smoke" signals that indicate market opportunity
 

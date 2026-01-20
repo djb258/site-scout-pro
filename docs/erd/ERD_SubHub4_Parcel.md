@@ -7,6 +7,7 @@
 
 - **Hub:** Sub-Hub 4
 - **Anchor:** Parcel ID (site_intake_id)
+- **Anchor Invariant:** All rows must trace to exactly one Parcel ID (site_intake_id).
 - **Authority:** WRITE for owned tables, READ-ONLY for referenced tables
 - **Purpose:** Site intake, screening, and scoring of specific parcels
 

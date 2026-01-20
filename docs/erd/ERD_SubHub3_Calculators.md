@@ -7,6 +7,7 @@
 
 - **Hub:** Sub-Hub 3
 - **Anchor:** SVA (Sovereign ID)
+- **Anchor Invariant:** All rows must trace to exactly one SVA (Sovereign ID).
 - **Authority:** WRITE for owned tables, READ-ONLY for referenced tables
 - **Purpose:** Financial modeling, feasibility calculations, verdict generation
 

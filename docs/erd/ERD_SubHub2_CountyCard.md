@@ -7,6 +7,7 @@
 
 - **Hub:** Sub-Hub 2
 - **Anchor:** County FIPS
+- **Anchor Invariant:** All rows must trace to exactly one County FIPS.
 - **Authority:** WRITE for owned tables, READ-ONLY for referenced tables
 - **Purpose:** Collect and validate jurisdiction rules (zoning, permitting, setbacks)
 

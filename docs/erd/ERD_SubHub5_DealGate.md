@@ -7,6 +7,7 @@
 
 - **Hub:** Sub-Hub 5
 - **Anchor:** SVA (Sovereign ID)
+- **Anchor Invariant:** All rows must trace to exactly one SVA (Sovereign ID).
 - **Authority:** WRITE for owned tables, READ-ONLY for all prior sub-hub outputs
 - **Purpose:** Final promotion gate, deal decision logging, vault writes
 
