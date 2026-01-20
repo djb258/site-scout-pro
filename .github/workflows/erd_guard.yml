@@ -1,0 +1,11 @@
+name: ERD Guard
+on: [push, pull_request]
+jobs:
+  erd_guard:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - run: node ops/erd/erd_guard.mjs
