@@ -248,6 +248,129 @@ export type Database = {
         }
         Relationships: []
       }
+      county_card_master: {
+        Row: {
+          confidence_score: number | null
+          county_fips: string
+          county_name: string | null
+          created_at: string | null
+          last_validated_at: string | null
+          max_height_ft: number | null
+          max_lot_coverage_pct: number | null
+          min_setback_front_ft: number | null
+          min_setback_rear_ft: number | null
+          min_setback_side_ft: number | null
+          permitting_authority: string | null
+          special_use_required: boolean | null
+          state_code: string | null
+          status: string | null
+          updated_at: string | null
+          variance_process: string | null
+          zoning_authority: string | null
+        }
+        Insert: {
+          confidence_score?: number | null
+          county_fips: string
+          county_name?: string | null
+          created_at?: string | null
+          last_validated_at?: string | null
+          max_height_ft?: number | null
+          max_lot_coverage_pct?: number | null
+          min_setback_front_ft?: number | null
+          min_setback_rear_ft?: number | null
+          min_setback_side_ft?: number | null
+          permitting_authority?: string | null
+          special_use_required?: boolean | null
+          state_code?: string | null
+          status?: string | null
+          updated_at?: string | null
+          variance_process?: string | null
+          zoning_authority?: string | null
+        }
+        Update: {
+          confidence_score?: number | null
+          county_fips?: string
+          county_name?: string | null
+          created_at?: string | null
+          last_validated_at?: string | null
+          max_height_ft?: number | null
+          max_lot_coverage_pct?: number | null
+          min_setback_front_ft?: number | null
+          min_setback_rear_ft?: number | null
+          min_setback_side_ft?: number | null
+          permitting_authority?: string | null
+          special_use_required?: boolean | null
+          state_code?: string | null
+          status?: string | null
+          updated_at?: string | null
+          variance_process?: string | null
+          zoning_authority?: string | null
+        }
+        Relationships: []
+      }
+      county_card_raw: {
+        Row: {
+          collected_at: string | null
+          collected_by: string | null
+          county_fips: string
+          raw_id: string
+          raw_payload: Json
+          source_type: string | null
+          source_url: string | null
+        }
+        Insert: {
+          collected_at?: string | null
+          collected_by?: string | null
+          county_fips: string
+          raw_id?: string
+          raw_payload: Json
+          source_type?: string | null
+          source_url?: string | null
+        }
+        Update: {
+          collected_at?: string | null
+          collected_by?: string | null
+          county_fips?: string
+          raw_id?: string
+          raw_payload?: Json
+          source_type?: string | null
+          source_url?: string | null
+        }
+        Relationships: []
+      }
+      county_card_sources: {
+        Row: {
+          county_fips: string
+          linked_at: string | null
+          raw_id: string
+        }
+        Insert: {
+          county_fips: string
+          linked_at?: string | null
+          raw_id: string
+        }
+        Update: {
+          county_fips?: string
+          linked_at?: string | null
+          raw_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "county_card_sources_county_fips_fkey"
+            columns: ["county_fips"]
+            isOneToOne: false
+            referencedRelation: "county_card_master"
+            referencedColumns: ["county_fips"]
+          },
+          {
+            foreignKeyName: "county_card_sources_raw_id_fkey"
+            columns: ["raw_id"]
+            isOneToOne: false
+            referencedRelation: "county_card_raw"
+            referencedColumns: ["raw_id"]
+          },
+        ]
+      }
       engine_logs: {
         Row: {
           created_at: string

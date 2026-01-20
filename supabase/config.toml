@@ -211,3 +211,20 @@ verify_jwt = false
 
 [functions.supply_list_counties_with_card_status]
 verify_jwt = false
+
+# ================================================================
+# Pass 3 — County Card Construction (Jurisdiction Authority Build)
+# AUTHORITY PRECEDENCE: county_card_master supersedes jurisdiction_card_drafts
+# ================================================================
+
+[functions.county_card_add_raw]
+verify_jwt = false
+
+[functions.county_card_upsert_master]
+verify_jwt = false
+
+[functions.county_card_validate]
+verify_jwt = false
+
+[functions.county_card_get]
+verify_jwt = false
