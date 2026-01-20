@@ -14,7 +14,8 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Save, CheckCircle, AlertTriangle } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Save, CheckCircle, AlertTriangle, Lock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -169,7 +170,7 @@ export function JurisdictionRulesForm({
         <CardTitle className="text-lg font-medium">Jurisdiction Rules</CardTitle>
         <div className="flex items-center gap-2">
           {isValidated ? (
-            <Badge variant="default" className="bg-green-600">
+            <Badge variant="default" className="bg-primary">
               <CheckCircle className="h-3 w-3 mr-1" />
               Validated
             </Badge>
@@ -179,6 +180,17 @@ export function JurisdictionRulesForm({
         </div>
       </CardHeader>
       <CardContent className="space-y-6">
+        {/* Read-Only Banner for Validated Cards */}
+        {isValidated && (
+          <Alert className="border-warning/50 bg-warning/10">
+            <Lock className="h-4 w-4 text-warning" />
+            <AlertTitle>Read Only</AlertTitle>
+            <AlertDescription>
+              This card is validated and locked. To make changes, the status must be reset to 'draft' in the database.
+            </AlertDescription>
+          </Alert>
+        )}
+
         {/* Authority Section */}
         <div className="space-y-4">
           <h4 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">
@@ -191,6 +203,7 @@ export function JurisdictionRulesForm({
                 placeholder="e.g., Bedford County Zoning Board"
                 value={formData.zoning_authority}
                 onChange={(e) => setFormData((f) => ({ ...f, zoning_authority: e.target.value }))}
+                disabled={isValidated}
               />
             </div>
             <div className="space-y-2">
@@ -199,6 +212,7 @@ export function JurisdictionRulesForm({
                 placeholder="e.g., County Planning Department"
                 value={formData.permitting_authority}
                 onChange={(e) => setFormData((f) => ({ ...f, permitting_authority: e.target.value }))}
+                disabled={isValidated}
               />
             </div>
           </div>
@@ -219,6 +233,7 @@ export function JurisdictionRulesForm({
                 placeholder="e.g., 25"
                 value={formData.min_setback_front_ft}
                 onChange={(e) => setFormData((f) => ({ ...f, min_setback_front_ft: e.target.value }))}
+                disabled={isValidated}
               />
             </div>
             <div className="space-y-2">
@@ -228,6 +243,7 @@ export function JurisdictionRulesForm({
                 placeholder="e.g., 10"
                 value={formData.min_setback_side_ft}
                 onChange={(e) => setFormData((f) => ({ ...f, min_setback_side_ft: e.target.value }))}
+                disabled={isValidated}
               />
             </div>
             <div className="space-y-2">
@@ -237,6 +253,7 @@ export function JurisdictionRulesForm({
                 placeholder="e.g., 15"
                 value={formData.min_setback_rear_ft}
                 onChange={(e) => setFormData((f) => ({ ...f, min_setback_rear_ft: e.target.value }))}
+                disabled={isValidated}
               />
             </div>
           </div>
@@ -257,6 +274,7 @@ export function JurisdictionRulesForm({
                 placeholder="e.g., 35"
                 value={formData.max_height_ft}
                 onChange={(e) => setFormData((f) => ({ ...f, max_height_ft: e.target.value }))}
+                disabled={isValidated}
               />
             </div>
             <div className="space-y-2">
@@ -266,6 +284,7 @@ export function JurisdictionRulesForm({
                 placeholder="e.g., 60"
                 value={formData.max_lot_coverage_pct}
                 onChange={(e) => setFormData((f) => ({ ...f, max_lot_coverage_pct: e.target.value }))}
+                disabled={isValidated}
               />
             </div>
           </div>
@@ -284,6 +303,7 @@ export function JurisdictionRulesForm({
               <Select
                 value={formData.special_use_required}
                 onValueChange={(value) => setFormData((f) => ({ ...f, special_use_required: value }))}
+                disabled={isValidated}
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -303,6 +323,7 @@ export function JurisdictionRulesForm({
               rows={3}
               value={formData.variance_process}
               onChange={(e) => setFormData((f) => ({ ...f, variance_process: e.target.value }))}
+              disabled={isValidated}
             />
           </div>
         </div>
@@ -323,6 +344,7 @@ export function JurisdictionRulesForm({
             max={100}
             min={0}
             step={5}
+            disabled={isValidated}
           />
           <p className="text-xs text-muted-foreground">
             Confidence represents certainty about the jurisdiction rules as a whole, not individual sources.
@@ -336,7 +358,7 @@ export function JurisdictionRulesForm({
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             {linkedSourceIds.length === 0 ? (
               <>
-                <AlertTriangle className="h-4 w-4 text-amber-500" />
+                <AlertTriangle className="h-4 w-4 text-warning" />
                 <span>Add sources to enable validation</span>
               </>
             ) : (
@@ -344,7 +366,7 @@ export function JurisdictionRulesForm({
             )}
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" onClick={handleSaveDraft} disabled={isSaving}>
+            <Button variant="outline" onClick={handleSaveDraft} disabled={isSaving || isValidated}>
               <Save className="h-4 w-4 mr-1" />
               {isSaving ? "Saving..." : "Save as Draft"}
             </Button>

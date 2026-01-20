@@ -43,6 +43,23 @@ serve(async (req) => {
       );
     }
 
+    // READ-ONLY ENFORCEMENT: Reject updates to validated cards
+    const { data: existingCard } = await supabase
+      .from("county_card_master")
+      .select("status")
+      .eq("county_fips", county_fips)
+      .single();
+
+    if (existingCard?.status === 'validated') {
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: "Cannot modify validated card. Change status to 'draft' first." 
+        }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     // Build the upsert payload
     const masterPayload: Record<string, unknown> = {
       county_fips,
