@@ -1,0 +1,57 @@
+erDiagram
+    %% Sub-Hub 5: Deal Gate
+    %% Anchor: SVA (Sovereign ID)
+    %% Authority: WRITE (minimal — future tables)
+    %% Current Role: Terminal consumer of all prior outputs
+
+    %% Future WRITE Tables (not yet implemented)
+    %% deal_decisions { ... }
+    %% vault_push_queue { ... }
+
+    %% READ-ONLY References (all prior sub-hub outputs)
+    sovereign_ids {
+        uuid sva_id PK
+        string asset_type
+        string anchor_zip
+        int radius_miles
+        string status
+        timestamp created_at
+    }
+
+    pass0_signals {
+        uuid signal_id PK
+        string zip_code
+        string sovereign_id
+        string signal_type
+        string signal_strength_hint
+    }
+
+    pass1_results {
+        uuid id PK
+        string zip_run_id
+        jsonb competitors
+        jsonb analysis_summary
+    }
+
+    pass2_results {
+        uuid id PK
+        string zip_run_id
+        jsonb feasibility
+        jsonb verdict
+    }
+
+    site_results_staging {
+        uuid id PK
+        string site_intake_id
+        int final_score
+        string decision
+    }
+
+    county_card_master {
+        string county_fips PK
+        string county_name
+        boolean special_use_required
+    }
+
+    %% Sub-Hub 5 reads ALL prior outputs (no writes yet)
+    %% Relationships show data flow direction

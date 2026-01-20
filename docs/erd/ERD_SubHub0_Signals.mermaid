@@ -1,0 +1,97 @@
+erDiagram
+    %% Sub-Hub 0: Signals/Smoke Radar
+    %% Anchor: ZIP Code
+    %% Authority: WRITE
+
+    pass0_signals {
+        uuid signal_id PK
+        string zip_code FK
+        string sovereign_id FK
+        string signal_type
+        string signal_strength_hint
+        string signal_category_version
+        string source_name
+        string source_url
+        string raw_excerpt
+        timestamp observed_at
+        timestamp expires_at
+        timestamp created_at
+    }
+
+    pass0_narrative_pins {
+        uuid id PK
+        string run_id FK
+        string source_id
+        string raw_title
+        string raw_url
+        string zip_id FK
+        float lat
+        float lon
+        float distance_miles
+        string resolution_tier
+        jsonb resolution_explain
+        string confidence
+        string ttl
+        timestamp created_at
+    }
+
+    pass0_run_log {
+        uuid id PK
+        string run_id
+        string step
+        string status
+        timestamp started_at
+        timestamp ended_at
+        int item_count
+        int failure_count
+        string error_message
+        boolean kill_switch
+        jsonb metadata
+        timestamp created_at
+    }
+
+    pass0_url_queue {
+        uuid id PK
+        string url
+        string title
+        string geo_hint
+        string source_override
+        string status
+        string submitted_by
+        string processed_run_id
+        string error_message
+        timestamp processed_at
+        timestamp created_at
+    }
+
+    hub0_event_log {
+        uuid id PK
+        string process_id
+        string action
+        string status
+        string error
+        jsonb metadata
+        timestamp created_at
+    }
+
+    %% READ-ONLY References (from Shared/Ref)
+    ref_zip_replica {
+        string zip PK
+        float lat
+        float lng
+        string source_version
+        timestamp synced_at
+    }
+
+    sovereign_ids {
+        uuid sva_id PK
+        string asset_type
+        string anchor_zip
+        int radius_miles
+    }
+
+    %% Relationships
+    pass0_signals ||--o{ ref_zip_replica : "zip_code → zip (READ)"
+    pass0_signals ||--o{ sovereign_ids : "sovereign_id → sva_id (READ)"
+    pass0_narrative_pins ||--o{ pass0_run_log : "run_id"
+    pass0_narrative_pins ||--o{ ref_zip_replica : "zip_id → zip (READ)"
