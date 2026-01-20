@@ -204,3 +204,10 @@ verify_jwt = false
 
 [functions.supply_list_zips_with_state]
 verify_jwt = false
+
+# ================================================================
+# Pass 2 — Jurisdiction Scope (Read-Only County Card Status)
+# ================================================================
+
+[functions.supply_list_counties_with_card_status]
+verify_jwt = false

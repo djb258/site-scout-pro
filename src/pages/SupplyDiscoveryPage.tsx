@@ -10,8 +10,10 @@ import {
 } from "@/components/ui/select";
 import { ZipSelector, type SvaZipWithState } from "@/components/supply/ZipSelector";
 import { supabase } from "@/integrations/supabase/client";
-import { Store, Target, MapPin, Info } from "lucide-react";
+import { Store, Target, MapPin, Info, Building2 } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 
 interface SovereignId {
   id: string;
@@ -102,14 +104,22 @@ export default function SupplyDiscoveryPage() {
   return (
     <div className="container mx-auto py-8 space-y-6">
       {/* Header */}
-      <div className="flex items-center gap-3">
-        <Store className="w-8 h-8 text-primary" />
-        <div>
-          <h1 className="text-2xl font-bold">Pass 1: Market Supply Discovery</h1>
-          <p className="text-muted-foreground">
-            ZIP-Anchored, SVA-Contextual facility discovery
-          </p>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <Store className="w-8 h-8 text-primary" />
+          <div>
+            <h1 className="text-2xl font-bold">Pass 1: Market Supply Discovery</h1>
+            <p className="text-muted-foreground">
+              ZIP-Anchored, SVA-Contextual facility discovery
+            </p>
+          </div>
         </div>
+        <Link to="/supply/jurisdictions">
+          <Button variant="outline" size="sm" className="gap-2">
+            <Building2 className="w-4 h-4" />
+            Jurisdiction Scope →
+          </Button>
+        </Link>
       </div>
 
       {/* Doctrine Alert - Scope Only */}

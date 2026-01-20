@@ -19,6 +19,7 @@ import SVADetailPage from "@/pages/SVADetailPage";
 import SVAListPage from "@/pages/SVAListPage";
 import SupplyDiscoveryPage from "@/pages/SupplyDiscoveryPage";
 import ZipSupplyDetailPage from "@/pages/ZipSupplyDetailPage";
+import JurisdictionScopePage from "@/pages/JurisdictionScopePage";
 import NotFound from "@/pages/NotFound";
 
 // Lazy load map to avoid react-leaflet React instance conflicts
@@ -49,6 +50,7 @@ const App = () => (
             <Route path="/cca" element={<CCAReconHub />} />
             <Route path="/supply" element={<SupplyDiscoveryPage />} />
             <Route path="/supply/zip/:zipCode" element={<ZipSupplyDetailPage />} />
+            <Route path="/supply/jurisdictions" element={<JurisdictionScopePage />} />
             <Route path="/map" element={<Suspense fallback={<div className="h-screen w-full flex items-center justify-center">Loading map...</div>}><HiveMap /></Suspense>} />
           </Route>
           <Route path="*" element={<NotFound />} />
