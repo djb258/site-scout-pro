@@ -188,3 +188,16 @@ verify_jwt = false
 
 [functions.get_readiness_status]
 verify_jwt = false
+
+# ================================================================
+# Pass 1 — Supply Discovery (ZIP-Anchored, SVA-Contextual)
+# ================================================================
+
+[functions.supply_add_facility]
+verify_jwt = false
+
+[functions.supply_list_facilities]
+verify_jwt = false
+
+[functions.supply_get_zip_detail]
+verify_jwt = false

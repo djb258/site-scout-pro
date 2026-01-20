@@ -1,10 +1,11 @@
 import { Link, useLocation } from "react-router-dom";
-import { Database, Radio, Layers, Compass, Hammer, Map, DollarSign, Building2, BookOpen, PlusCircle, MapPin, Scale } from "lucide-react";
+import { Database, Radio, Layers, Compass, Hammer, Map, DollarSign, Building2, BookOpen, PlusCircle, MapPin, Scale, Store } from "lucide-react";
 import { cn } from "@/utils";
 
 const navLinks = [
   { to: "/discover", label: "Discover", icon: BookOpen },
   { to: "/sva", label: "Sovereign IDs", icon: PlusCircle },
+  { to: "/supply", label: "Supply", icon: Store },
   { to: "/pass0", label: "Pass 0", icon: Radio },
   { to: "/pass1", label: "Pass 1", icon: Layers },
   { to: "/pass15", label: "Pass 1.5", icon: DollarSign },

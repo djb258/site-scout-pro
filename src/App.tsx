@@ -17,6 +17,8 @@ import CCAReconHub from "@/pages/hub/CCAReconHub";
 import SVABuilderPage from "@/pages/SVABuilderPage";
 import SVADetailPage from "@/pages/SVADetailPage";
 import SVAListPage from "@/pages/SVAListPage";
+import SupplyDiscoveryPage from "@/pages/SupplyDiscoveryPage";
+import ZipSupplyDetailPage from "@/pages/ZipSupplyDetailPage";
 import NotFound from "@/pages/NotFound";
 
 // Lazy load map to avoid react-leaflet React instance conflicts
@@ -45,6 +47,8 @@ const App = () => (
             <Route path="/pass4" element={<Pass4Hub />} />
             <Route path="/pass5" element={<Pass5Hub />} />
             <Route path="/cca" element={<CCAReconHub />} />
+            <Route path="/supply" element={<SupplyDiscoveryPage />} />
+            <Route path="/supply/zip/:zipCode" element={<ZipSupplyDetailPage />} />
             <Route path="/map" element={<Suspense fallback={<div className="h-screen w-full flex items-center justify-center">Loading map...</div>}><HiveMap /></Suspense>} />
           </Route>
           <Route path="*" element={<NotFound />} />
