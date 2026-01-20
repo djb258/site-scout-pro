@@ -1,0 +1,108 @@
+erDiagram
+    %% Shared / Reference Tables
+    %% Authority: READ-ONLY for all sub-hubs
+    %% WRITE: System processes only
+
+    sovereign_ids {
+        uuid sva_id PK
+        string asset_type
+        string anchor_zip
+        int radius_miles
+        string name
+        string status
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    sovereign_id_zips {
+        uuid id PK
+        uuid sva_id FK
+        string zip_code
+        float distance_miles
+        float lat
+        float lng
+        string state_code
+        timestamp created_at
+    }
+
+    sovereign_id_counties {
+        uuid id PK
+        uuid sva_id FK
+        string county_fips
+        string county_name
+        string state_id
+        int zip_count
+        float min_distance_miles
+        int total_population
+        timestamp created_at
+    }
+
+    ref_zip_replica {
+        string zip PK
+        float lat
+        float lng
+        string source_version
+        timestamp synced_at
+    }
+
+    us_zip_codes {
+        string zip PK
+        float lat
+        float lng
+        string city
+        string state
+        string county
+    }
+
+    master_failure_log {
+        uuid id PK
+        string process_id
+        string run_id
+        int pass_number
+        string step
+        string error_code
+        string error_message
+        string severity
+        jsonb context
+        boolean resolved
+        timestamp resolved_at
+        string resolution_notes
+        timestamp created_at
+    }
+
+    engine_logs {
+        uuid id PK
+        string engine
+        string event
+        string status
+        jsonb payload
+        timestamp created_at
+    }
+
+    generic_ingest_log {
+        uuid id PK
+        jsonb payload
+        timestamp created_at
+    }
+
+    ai_cost_tracker {
+        uuid id PK
+        string run_id
+        string service
+        string operation
+        int cost_cents
+        jsonb metadata
+        timestamp created_at
+    }
+
+    zip_runs {
+        uuid id PK
+        string zip
+        string status
+        timestamp created_at
+    }
+
+    %% Relationships
+    sovereign_id_zips ||--|| sovereign_ids : "sva_id"
+    sovereign_id_counties ||--|| sovereign_ids : "sva_id"
+    ref_zip_replica ||--o{ us_zip_codes : "synced from Neon"

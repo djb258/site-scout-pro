@@ -1,0 +1,92 @@
+erDiagram
+    %% Sub-Hub 3: Calculators / Underwriting
+    %% Anchor: SVA (Sovereign ID)
+    %% Authority: WRITE
+
+    calculators_state {
+        uuid id PK
+        float acres_available
+        float land_cost_per_acre
+        float market_rent_10x10
+        float market_rent_10x20
+        float metal_cost_sqft
+        float concrete_cost_yd
+        float concrete_finish_cost
+        float cap_rate_target
+        timestamp updated_at
+    }
+
+    pass2_results {
+        uuid id PK
+        string zip_run_id FK
+        jsonb zoning
+        jsonb rent_benchmarks
+        jsonb permit_intel
+        jsonb housing_pipeline
+        jsonb industrial_deep
+        jsonb feasibility
+        jsonb reverse_feasibility
+        jsonb fusion_model
+        jsonb verdict
+        timestamp created_at
+    }
+
+    pass2_runs {
+        uuid id PK
+        string pass1_id FK
+        string status
+        jsonb zoning_intel
+        jsonb rent_benchmarks
+        jsonb permit_intel
+        jsonb housing_pipeline
+        jsonb industrial_deep_dive
+        jsonb feasibility
+        jsonb reverse_feasibility
+        jsonb fusion_model
+        jsonb verdict
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    rent_band_staging {
+        uuid id PK
+        string site_intake_id FK
+        string frontend_user_id
+        jsonb json_payload
+        float low_rent
+        float medium_rent
+        float high_rent
+        string status
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    %% READ-ONLY References
+    sovereign_ids {
+        uuid sva_id PK
+        string asset_type
+        string anchor_zip
+        int radius_miles
+    }
+
+    pass1_runs {
+        uuid id PK
+        string zip
+        string status
+    }
+
+    pass1_results {
+        uuid id PK
+        string zip_run_id FK
+        jsonb competitors
+    }
+
+    county_card_master {
+        string county_fips PK
+        string county_name
+        boolean special_use_required
+    }
+
+    %% Relationships
+    pass2_runs ||--o| pass1_runs : "pass1_id (READ)"
+    rent_band_staging }o--o| site_intake_staging : "site_intake_id (READ)"

@@ -1,0 +1,99 @@
+erDiagram
+    %% Sub-Hub 2: County Card / Jurisdiction Rules
+    %% Anchor: County FIPS
+    %% Authority: WRITE
+
+    county_card_master {
+        string county_fips PK
+        string county_name
+        string state_code
+        string zoning_authority
+        string permitting_authority
+        boolean special_use_required
+        float min_setback_front_ft
+        float min_setback_rear_ft
+        float min_setback_side_ft
+        float max_height_ft
+        float max_lot_coverage_pct
+        string variance_process
+        float confidence_score
+        string status
+        timestamp last_validated_at
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    county_card_raw {
+        uuid raw_id PK
+        string county_fips FK
+        jsonb raw_payload
+        string source_type
+        string source_url
+        string collected_by
+        timestamp collected_at
+    }
+
+    county_card_sources {
+        uuid raw_id PK FK
+        string county_fips PK FK
+        timestamp linked_at
+    }
+
+    jurisdiction_card_drafts {
+        uuid id PK
+        string execution_id
+        int county_id
+        string state_code
+        string county_name
+        string asset_class
+        jsonb card_payload
+        jsonb field_states
+        jsonb provenance_log
+        jsonb red_flags
+        string fatal_prohibition
+        boolean envelope_complete
+        boolean card_complete
+        string status
+        string failure_reason
+        int source_count
+        int duration_ms
+        string neon_version_hash
+        timestamp collected_at
+        timestamp promoted_at
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    jurisdiction_collection_log {
+        uuid id PK
+        string execution_id
+        int county_id
+        string state_code
+        string status
+        int source_count
+        int known_count
+        int unknown_count
+        int blocked_count
+        jsonb red_flags
+        string failure_reason
+        int duration_ms
+        timestamp started_at
+        timestamp ended_at
+        timestamp created_at
+    }
+
+    %% READ-ONLY References
+    sovereign_id_counties {
+        uuid id PK
+        uuid sva_id FK
+        string county_fips
+        string county_name
+        string state_id
+        int zip_count
+        float min_distance_miles
+        int total_population
+    }
+
+    %% Relationships
+    county_card_sources ||--|| county_card_master : "county_fips"
+    county_card_sources ||--|| county_card_raw : "raw_id"

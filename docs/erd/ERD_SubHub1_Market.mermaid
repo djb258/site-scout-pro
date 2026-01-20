@@ -1,0 +1,253 @@
+erDiagram
+    %% Sub-Hub 1: Market Reality
+    %% Anchor: ZIP Code
+    %% Authority: WRITE
+
+    pass1_census_snapshot {
+        uuid id PK
+        string run_id
+        string zip_code FK
+        int population
+        int housing_units
+        float vacancy_rate
+        int vintage_year
+        timestamp created_at
+    }
+
+    pass1_demand_agg {
+        uuid id PK
+        string run_id
+        string origin_zip
+        string distance_band
+        int population_total
+        int zip_count
+        int baseline_demand_sqft
+        float demand_per_acre_sqft
+        timestamp created_at
+    }
+
+    pass1_radius_zip {
+        uuid id PK
+        string run_id
+        string origin_zip
+        string zip FK
+        float distance_miles
+        float lat
+        float lng
+        timestamp created_at
+    }
+
+    pass1_supply_snapshot {
+        uuid id PK
+        string run_id
+        string zip
+        string facility_name
+        int estimated_sqft
+        string source
+        string confidence
+        timestamp created_at
+    }
+
+    pass1_supply_agg {
+        uuid id PK
+        string run_id
+        string distance_band
+        int facility_count
+        int supply_sqft_total
+        int gap_sqft
+        string confidence
+        timestamp created_at
+    }
+
+    pass1_results {
+        uuid id PK
+        string zip_run_id FK
+        jsonb competitors
+        jsonb anchors
+        jsonb housing_signals
+        jsonb industrial_signals
+        jsonb rv_lake_signals
+        jsonb radius_counties
+        jsonb zip_metadata
+        jsonb analysis_summary
+        boolean deprecated
+        timestamp created_at
+    }
+
+    pass1_runs {
+        uuid id PK
+        string zip
+        string status
+        jsonb toggles
+        jsonb gemini_facilities
+        jsonb gemini_housing
+        jsonb gemini_anchors
+        jsonb gemini_recreation
+        jsonb gemini_industry_news
+        jsonb radius_counties
+        boolean deprecated
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    hub1_pass1_run_log {
+        uuid id PK
+        string run_id
+        string process_id
+        string step
+        string status
+        string schema_version
+        jsonb scoring_weights
+        string competition_confidence
+        jsonb metadata
+        timestamp ttl_expires_at
+        timestamp created_at
+    }
+
+    hub1_pass1_error_log {
+        uuid id PK
+        string run_id
+        string process_id
+        string step
+        string error_code
+        string error_message
+        boolean fatal
+        boolean recoverable
+        jsonb metadata
+        timestamp ttl_expires_at
+        timestamp created_at
+    }
+
+    pass1_skip_log {
+        uuid id PK
+        string run_id
+        string process_id
+        string zip
+        string skip_reason
+        string expected_version
+        string actual_version
+        timestamp created_at
+    }
+
+    facility_master {
+        string facility_id PK
+        string zip_code
+        string address
+        string facility_name
+        string phone
+        string website_url
+        string status
+        timestamp first_seen_at
+    }
+
+    facility_raw {
+        uuid raw_id PK
+        string zip_code
+        string facility_name_raw
+        string address_raw
+        string phone_raw
+        string website_url_raw
+        string source
+        jsonb discovery_context
+        timestamp created_at
+    }
+
+    facility_totals {
+        string facility_id PK FK
+        int total_unit_count
+        int total_rentable_sqft
+        float confidence_score
+        string calculation_method
+        timestamp last_updated_at
+    }
+
+    facility_unit_pricing {
+        uuid unit_price_id PK
+        string facility_id FK
+        string unit_type
+        int unit_width_ft
+        int unit_length_ft
+        int unit_sqft
+        float monthly_price
+        int availability_count
+        string source
+        float confidence_score
+        date effective_date
+        timestamp created_at
+    }
+
+    competitor_facilities {
+        uuid id PK
+        string zip_code
+        string county
+        string state
+        string facility_name
+        string address
+        string city
+        string phone
+        float lat
+        float lng
+        int unit_count
+        int total_sqft
+        float rent_low
+        float rent_medium
+        float rent_high
+        boolean climate_controlled
+        boolean has_rv_boat
+        string source
+        float data_completeness
+        boolean needs_call_verification
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    pass_1_5_gap_queue {
+        uuid id PK
+        string run_id
+        string pass1_run_id
+        string competitor_id
+        string competitor_name
+        string competitor_address
+        string phone_number
+        string gap_type
+        string status
+        string priority
+        string assigned_worker
+        int attempt_count
+        int max_attempts
+        array target_unit_sizes
+        timestamp ttl_expires_at
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    pass_1_5_attempt_log {
+        uuid id PK
+        string run_id
+        string gap_queue_id FK
+        string worker_type
+        int attempt_number
+        string status
+        string source_url
+        int duration_ms
+        int cost_cents
+        string error_code
+        string error_message
+        string transcript_hash
+        jsonb metadata
+        timestamp created_at
+    }
+
+    %% READ-ONLY References
+    ref_zip_replica {
+        string zip PK
+        float lat
+        float lng
+    }
+
+    %% Relationships
+    pass1_radius_zip ||--o{ ref_zip_replica : "zip (READ)"
+    pass1_census_snapshot ||--o{ ref_zip_replica : "zip_code (READ)"
+    facility_totals ||--|| facility_master : "facility_id"
+    facility_unit_pricing }o--|| facility_master : "facility_id"
+    pass_1_5_attempt_log }o--|| pass_1_5_gap_queue : "gap_queue_id"

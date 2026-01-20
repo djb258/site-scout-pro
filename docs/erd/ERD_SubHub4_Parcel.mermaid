@@ -1,0 +1,83 @@
+erDiagram
+    %% Sub-Hub 4: Parcel Discovery
+    %% Anchor: Parcel ID (site_intake_id)
+    %% Authority: WRITE
+
+    site_intake_staging {
+        uuid id PK
+        string frontend_user_id
+        jsonb json_payload
+        string zip_code
+        string county
+        string state
+        float acreage
+        float slope_percent
+        boolean floodplain
+        string parcel_shape
+        string access_quality
+        string nearby_road_type
+        string status
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    site_demand_staging {
+        uuid id PK
+        string site_intake_id FK
+        string frontend_user_id
+        jsonb json_payload
+        int population
+        int households
+        int traffic_count
+        int competition_count
+        string uhaul_migration_score
+        string status
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    site_results_staging {
+        uuid id PK
+        string site_intake_id FK
+        string frontend_user_id
+        jsonb json_payload
+        int saturation_score
+        int parcel_viability_score
+        int county_difficulty
+        int financial_viability
+        int final_score
+        string decision
+        string status
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    %% READ-ONLY References
+    sovereign_id_zips {
+        uuid id PK
+        uuid sva_id FK
+        string zip_code
+    }
+
+    county_card_master {
+        string county_fips PK
+        string county_name
+        boolean special_use_required
+        float max_height_ft
+    }
+
+    pass1_results {
+        uuid id PK
+        jsonb competitors
+        jsonb analysis_summary
+    }
+
+    pass2_results {
+        uuid id PK
+        jsonb feasibility
+        jsonb verdict
+    }
+
+    %% Relationships
+    site_demand_staging ||--|| site_intake_staging : "site_intake_id"
+    site_results_staging ||--|| site_intake_staging : "site_intake_id"
