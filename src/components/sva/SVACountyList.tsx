@@ -6,7 +6,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import { ChevronDown, ChevronUp, Building2 } from "lucide-react";
+import { ChevronDown, ChevronUp, Building2, CheckCircle2, AlertTriangle, Circle } from "lucide-react";
 
 export interface CountyInScope {
   county_name: string;
@@ -15,6 +15,14 @@ export interface CountyInScope {
   min_distance_miles: number;
   zip_count: number;
   total_population: number | null;
+  // Optional card status fields (populated when fetched from supply_list_counties_with_card_status)
+  card_status?: 'PRESENT' | 'PARTIAL' | 'MISSING';
+  match_type?: 'fips' | 'name_fallback' | 'none';
+  card_details?: {
+    envelope_complete: boolean;
+    status: string;
+    collected_at: string;
+  } | null;
 }
 
 interface SVACountyListProps {
@@ -24,6 +32,50 @@ interface SVACountyListProps {
 
 const INITIAL_DISPLAY_COUNT = 25;
 const LOAD_MORE_COUNT = 25;
+
+function getStatusBadge(status: CountyInScope['card_status']) {
+  switch (status) {
+    case 'PRESENT':
+      return (
+        <Badge className="text-xs bg-green-500/10 text-green-600 border-green-500/30 hover:bg-green-500/20">
+          <CheckCircle2 className="w-3 h-3 mr-1" />
+          PRESENT
+        </Badge>
+      );
+    case 'PARTIAL':
+      return (
+        <Badge className="text-xs bg-yellow-500/10 text-yellow-600 border-yellow-500/30 hover:bg-yellow-500/20">
+          <AlertTriangle className="w-3 h-3 mr-1" />
+          PARTIAL
+        </Badge>
+      );
+    case 'MISSING':
+      return (
+        <Badge variant="outline" className="text-xs text-muted-foreground">
+          <Circle className="w-3 h-3 mr-1" />
+          MISSING
+        </Badge>
+      );
+    default:
+      // Fallback for when card_status is not yet fetched
+      return (
+        <Badge variant="outline" className="text-xs border-blue-500/50 text-blue-600">
+          PENDING
+        </Badge>
+      );
+  }
+}
+
+function getMatchTypeIndicator(matchType: CountyInScope['match_type']) {
+  if (matchType === 'name_fallback') {
+    return (
+      <span className="text-yellow-500 ml-1" title="Matched via county name (FIPS not available)">
+        ⚠️
+      </span>
+    );
+  }
+  return null;
+}
 
 export function SVACountyList({ counties, anchorFips }: SVACountyListProps) {
   const [isOpen, setIsOpen] = useState(false);
@@ -35,6 +87,17 @@ export function SVACountyList({ counties, anchorFips }: SVACountyListProps) {
 
   // Calculate total population
   const totalPopulation = counties.reduce((sum, c) => sum + (c.total_population || 0), 0);
+
+  // Calculate status summary if available
+  const statusSummary = counties.reduce(
+    (acc, c) => {
+      if (c.card_status === 'PRESENT') acc.present++;
+      else if (c.card_status === 'PARTIAL') acc.partial++;
+      else if (c.card_status === 'MISSING') acc.missing++;
+      return acc;
+    },
+    { present: 0, partial: 0, missing: 0 }
+  );
 
   const handleLoadMore = () => {
     setDisplayCount((prev) => Math.min(prev + LOAD_MORE_COUNT, counties.length));
@@ -66,6 +129,20 @@ export function SVACountyList({ counties, anchorFips }: SVACountyListProps) {
             <Badge variant="outline" className="text-xs">
               Pop: {totalPopulation.toLocaleString()}
             </Badge>
+            {/* Show mini status summary if status data is available */}
+            {statusSummary.present > 0 || statusSummary.partial > 0 || statusSummary.missing > 0 ? (
+              <div className="flex items-center gap-1 text-xs">
+                {statusSummary.present > 0 && (
+                  <span className="text-green-600">{statusSummary.present}✓</span>
+                )}
+                {statusSummary.partial > 0 && (
+                  <span className="text-yellow-600">{statusSummary.partial}◐</span>
+                )}
+                {statusSummary.missing > 0 && (
+                  <span className="text-muted-foreground">{statusSummary.missing}○</span>
+                )}
+              </div>
+            ) : null}
           </div>
           {isOpen ? (
             <ChevronUp className="h-4 w-4 text-muted-foreground" />
@@ -78,8 +155,8 @@ export function SVACountyList({ counties, anchorFips }: SVACountyListProps) {
       <CollapsibleContent>
         <div className="border rounded-md mt-2 overflow-hidden">
           {/* Header */}
-          <div className="grid grid-cols-5 gap-2 px-4 py-2 bg-muted/50 border-b text-xs font-medium text-muted-foreground">
-            <span>County</span>
+          <div className="grid grid-cols-6 gap-2 px-4 py-2 bg-muted/50 border-b text-xs font-medium text-muted-foreground">
+            <span className="col-span-2">County</span>
             <span className="text-right">Distance</span>
             <span className="text-right">ZIPs</span>
             <span className="text-right">Population</span>
@@ -93,11 +170,11 @@ export function SVACountyList({ counties, anchorFips }: SVACountyListProps) {
               return (
                 <div
                   key={c.county_fips}
-                  className={`grid grid-cols-5 gap-2 px-4 py-2 border-b last:border-b-0 text-sm ${
+                  className={`grid grid-cols-6 gap-2 px-4 py-2 border-b last:border-b-0 text-sm ${
                     isAnchor ? "bg-primary/5" : "hover:bg-muted/30"
                   }`}
                 >
-                  <span className={isAnchor ? "font-semibold" : ""}>
+                  <span className={`col-span-2 ${isAnchor ? "font-semibold" : ""}`}>
                     {c.county_name}, {c.state_id}
                     {isAnchor && (
                       <Badge variant="outline" className="ml-2 text-xs">
@@ -114,10 +191,9 @@ export function SVACountyList({ counties, anchorFips }: SVACountyListProps) {
                   <span className="text-right text-muted-foreground">
                     {(c.total_population || 0).toLocaleString()}
                   </span>
-                  <span className="text-center">
-                    <Badge variant="outline" className="text-xs border-blue-500/50 text-blue-600">
-                      PENDING
-                    </Badge>
+                  <span className="text-center flex items-center justify-center">
+                    {getStatusBadge(c.card_status)}
+                    {getMatchTypeIndicator(c.match_type)}
                   </span>
                 </div>
               );
