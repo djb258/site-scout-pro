@@ -22,6 +22,7 @@ import SupplyDiscoveryPage from "@/pages/SupplyDiscoveryPage";
 import ZipSupplyDetailPage from "@/pages/ZipSupplyDetailPage";
 import JurisdictionScopePage from "@/pages/JurisdictionScopePage";
 import CountyCardBuilderPage from "@/pages/CountyCardBuilderPage";
+import ERDViewerPage from "@/pages/ERDViewerPage";
 import NotFound from "@/pages/NotFound";
 
 // Lazy load map to avoid react-leaflet React instance conflicts
@@ -55,6 +56,7 @@ const App = () => (
             <Route path="/supply/zip/:zipCode" element={<ZipSupplyDetailPage />} />
             <Route path="/supply/jurisdictions" element={<JurisdictionScopePage />} />
             <Route path="/supply/jurisdictions/:countyFips" element={<CountyCardBuilderPage />} />
+            <Route path="/erd-viewer" element={<ERDViewerPage />} />
             <Route path="/map" element={<Suspense fallback={<div className="h-screen w-full flex items-center justify-center">Loading map...</div>}><HiveMap /></Suspense>} />
           </Route>
           <Route path="*" element={<NotFound />} />
