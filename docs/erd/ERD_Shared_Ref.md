@@ -7,6 +7,7 @@
 
 - **Hub:** Shared (no single owner)
 - **Anchor:** Multiple (ZIP, SVA, County FIPS)
+- **Anchor Invariant:** Reference tables serve as lookup anchors — no single row ownership.
 - **Authority:** READ-ONLY for all sub-hubs, WRITE via system processes only
 - **Purpose:** Reference data, identity containers, cross-hub logging
 

@@ -7,6 +7,7 @@
 
 - **Hub:** Sub-Hub 1
 - **Anchor:** ZIP Code
+- **Anchor Invariant:** All rows must trace to exactly one ZIP code.
 - **Authority:** WRITE for owned tables, READ-ONLY for referenced tables
 - **Purpose:** Establish market reality — demand, supply, competition within radius
 
@@ -20,7 +21,7 @@
 | `pass1_demand_agg` | `id` (UUID) | Aggregated demand by distance band |
 | `pass1_radius_zip` | `id` (UUID) | ZIPs within radius of origin |
 | `pass1_results` | `id` (UUID) | Complete Pass 1 analysis results |
-| `pass1_runs` | `id` (UUID) | Pass 1 run metadata (legacy) |
+| `pass1_runs` | `id` (UUID) | **DEPRECATED** — Legacy run metadata (read-only, pending removal) |
 | `pass1_skip_log` | `id` (UUID) | Skipped ZIP logging |
 | `pass1_supply_agg` | `id` (UUID) | Aggregated supply by distance band |
 | `pass1_supply_snapshot` | `id` (UUID) | Facility supply snapshot per run |
@@ -71,3 +72,13 @@ See: [ERD_SubHub1_Market.mermaid](./ERD_SubHub1_Market.mermaid)
 - Sub-Hub 2 may READ competitor_facilities for county context
 - Sub-Hub 3 may READ pass1_results for calculator inputs
 - No other sub-hub may WRITE to these tables
+
+---
+
+## Deprecated Tables
+
+| Table | Status | Reason | Replacement |
+|-------|--------|--------|-------------|
+| `pass1_runs` | DEPRECATED (read-only) | Legacy run tracking | `hub1_pass1_run_log` |
+
+These tables remain for historical compatibility but should not be written to. Future migrations will remove them.
