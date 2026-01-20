@@ -8,7 +8,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ZipSelector, type SvaZip } from "@/components/supply/ZipSelector";
+import { ZipSelector, type SvaZipWithState } from "@/components/supply/ZipSelector";
 import { supabase } from "@/integrations/supabase/client";
 import { Store, Target, MapPin, Info } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -29,7 +29,7 @@ interface SovereignId {
 export default function SupplyDiscoveryPage() {
   const [svaList, setSvaList] = useState<SovereignId[]>([]);
   const [selectedSvaId, setSelectedSvaId] = useState<string | null>(null);
-  const [zipList, setZipList] = useState<SvaZip[]>([]);
+  const [zipList, setZipList] = useState<SvaZipWithState[]>([]);
   const [isLoadingSvas, setIsLoadingSvas] = useState(true);
   const [isLoadingZips, setIsLoadingZips] = useState(false);
 
@@ -56,33 +56,48 @@ export default function SupplyDiscoveryPage() {
     fetchSvas();
   }, []);
 
-  // Fetch ZIPs when SVA selection changes
+  // Fetch ZIPs with state when SVA selection changes
   useEffect(() => {
-    async function fetchZips() {
+    async function fetchZipsWithState() {
       if (!selectedSvaId) {
         setZipList([]);
         return;
       }
 
       setIsLoadingZips(true);
-      const { data, error } = await supabase
-        .from("sovereign_id_zips")
-        .select("*")
-        .eq("sva_id", selectedSvaId)
-        .order("distance_miles", { ascending: true });
+      try {
+        const { data, error } = await supabase.functions.invoke("supply_list_zips_with_state", {
+          body: { sva_id: selectedSvaId }
+        });
 
-      if (error) {
-        console.error("Failed to fetch ZIPs:", error);
+        if (error) {
+          console.error("Failed to fetch ZIPs:", error);
+          setZipList([]);
+        } else if (data?.success) {
+          setZipList(data.zips || []);
+        } else {
+          console.error("Failed to fetch ZIPs:", data?.message);
+          setZipList([]);
+        }
+      } catch (err) {
+        console.error("Failed to fetch ZIPs:", err);
         setZipList([]);
-      } else {
-        setZipList(data || []);
       }
       setIsLoadingZips(false);
     }
-    fetchZips();
+    fetchZipsWithState();
   }, [selectedSvaId]);
 
   const selectedSva = svaList.find((s) => s.sva_id === selectedSvaId);
+
+  // Count ZIPs by state
+  const stateStats = zipList.reduce(
+    (acc, z) => {
+      acc[z.state]++;
+      return acc;
+    },
+    { KNOWN: 0, STALE: 0, UNKNOWN: 0 } as Record<string, number>
+  );
 
   return (
     <div className="container mx-auto py-8 space-y-6">
@@ -97,13 +112,16 @@ export default function SupplyDiscoveryPage() {
         </div>
       </div>
 
-      {/* Doctrine Alert */}
-      <Alert>
-        <Info className="h-4 w-4" />
-        <AlertTitle>Doctrine</AlertTitle>
-        <AlertDescription>
-          Facilities are owned by <strong>ZIP</strong>, not SVA. Multiple SVAs may reference the same facility via ZIP overlap.
-          This pass is for <strong>manual discovery only</strong>—no scraping, no automation.
+      {/* Doctrine Alert - Scope Only */}
+      <Alert className="border-blue-500/50 bg-blue-500/5">
+        <Info className="h-4 w-4 text-blue-500" />
+        <AlertTitle className="text-blue-700 dark:text-blue-300">
+          Scope Only — No Automatic Analysis
+        </AlertTitle>
+        <AlertDescription className="text-blue-600 dark:text-blue-400">
+          This view defines <strong>where to look</strong>.
+          Existing facility data is <strong>reused automatically</strong>.
+          Discovery actions are <strong>manual and explicit</strong>.
         </AlertDescription>
       </Alert>
 
@@ -175,6 +193,27 @@ export default function SupplyDiscoveryPage() {
                   <Badge variant={selectedSva.status === "CREATED" ? "secondary" : "default"}>
                     {selectedSva.status}
                   </Badge>
+                </div>
+              </div>
+            )}
+
+            {/* ZIP State Summary */}
+            {selectedSva && zipList.length > 0 && (
+              <div className="pt-4 border-t space-y-2">
+                <h4 className="text-sm font-medium text-muted-foreground">Data State Summary</h4>
+                <div className="grid grid-cols-3 gap-2 text-center">
+                  <div className="p-2 rounded bg-green-500/10 border border-green-500/20">
+                    <p className="text-lg font-bold text-green-600">{stateStats.KNOWN}</p>
+                    <p className="text-xs text-muted-foreground">Known</p>
+                  </div>
+                  <div className="p-2 rounded bg-yellow-500/10 border border-yellow-500/20">
+                    <p className="text-lg font-bold text-yellow-600">{stateStats.STALE}</p>
+                    <p className="text-xs text-muted-foreground">Stale</p>
+                  </div>
+                  <div className="p-2 rounded bg-muted border">
+                    <p className="text-lg font-bold">{stateStats.UNKNOWN}</p>
+                    <p className="text-xs text-muted-foreground">Unknown</p>
+                  </div>
                 </div>
               </div>
             )}

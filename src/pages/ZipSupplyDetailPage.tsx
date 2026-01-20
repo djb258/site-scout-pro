@@ -6,8 +6,9 @@ import { Button } from "@/components/ui/button";
 import { FacilityTable, type Facility } from "@/components/supply/FacilityTable";
 import { AddFacilityModal } from "@/components/supply/AddFacilityModal";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowLeft, MapPin, Users, Warehouse, Plus, FileText, AlertCircle } from "lucide-react";
+import { ArrowLeft, MapPin, Users, Warehouse, Plus, FileText, AlertCircle, CheckCircle2, AlertTriangle } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { classifyZipState, calculateDataAgeDays, type ZipDataState } from "@/utils/zipStateClassifier";
 
 interface ZipDetail {
   zip_code: string;
@@ -86,6 +87,12 @@ export default function ZipSupplyDetailPage() {
 
   const isAuthorized = zipDetail?.metadata?.is_authorized ?? false;
 
+  // Derive ZIP state from facility data
+  const facilityCount = zipDetail?.facility_count || 0;
+  const oldestSeenAt = zipDetail?.facilities?.[zipDetail.facilities.length - 1]?.first_seen_at || null;
+  const zipState: ZipDataState = classifyZipState(facilityCount, oldestSeenAt);
+  const dataAgeDays = calculateDataAgeDays(oldestSeenAt);
+
   return (
     <div className="container mx-auto py-8 space-y-6">
       {/* Header */}
@@ -121,6 +128,40 @@ export default function ZipSupplyDetailPage() {
           <AlertDescription>
             This ZIP code is not in any Sovereign ID scope. You cannot add facilities until this ZIP
             is included in an SVA's radius.
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {/* Read-First State Banner */}
+      {isAuthorized && zipState === 'UNKNOWN' && (
+        <Alert className="border-gray-500/50 bg-muted/30">
+          <AlertCircle className="h-4 w-4 text-muted-foreground" />
+          <AlertTitle>No Facility Data Recorded</AlertTitle>
+          <AlertDescription>
+            This ZIP has no discovered facilities yet. Use "Add Facility" to record findings.
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {isAuthorized && zipState === 'KNOWN' && (
+        <Alert className="border-green-500/50 bg-green-500/5">
+          <CheckCircle2 className="h-4 w-4 text-green-500" />
+          <AlertTitle className="text-green-700 dark:text-green-300">Existing Data Available</AlertTitle>
+          <AlertDescription className="text-green-600 dark:text-green-400">
+            {facilityCount} {facilityCount === 1 ? 'facility' : 'facilities'} on record
+            {dataAgeDays !== null && ` (last seen ${dataAgeDays} days ago)`}.
+            Data loaded from existing knowledge base — no re-discovery needed.
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {isAuthorized && zipState === 'STALE' && (
+        <Alert className="border-yellow-500/50 bg-yellow-500/5">
+          <AlertTriangle className="h-4 w-4 text-yellow-500" />
+          <AlertTitle className="text-yellow-700 dark:text-yellow-300">Data May Be Outdated</AlertTitle>
+          <AlertDescription className="text-yellow-600 dark:text-yellow-400">
+            Facility data is over 30 days old{dataAgeDays !== null && ` (${dataAgeDays} days)`}. 
+            Consider verifying or updating records.
           </AlertDescription>
         </Alert>
       )}

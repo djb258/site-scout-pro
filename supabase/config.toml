@@ -201,3 +201,6 @@ verify_jwt = false
 
 [functions.supply_get_zip_detail]
 verify_jwt = false
+
+[functions.supply_list_zips_with_state]
+verify_jwt = false

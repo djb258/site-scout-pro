@@ -78,11 +78,12 @@ export function SVACountyList({ counties, anchorFips }: SVACountyListProps) {
       <CollapsibleContent>
         <div className="border rounded-md mt-2 overflow-hidden">
           {/* Header */}
-          <div className="grid grid-cols-4 gap-2 px-4 py-2 bg-muted/50 border-b text-xs font-medium text-muted-foreground">
+          <div className="grid grid-cols-5 gap-2 px-4 py-2 bg-muted/50 border-b text-xs font-medium text-muted-foreground">
             <span>County</span>
             <span className="text-right">Distance</span>
             <span className="text-right">ZIPs</span>
             <span className="text-right">Population</span>
+            <span className="text-center">Card Status</span>
           </div>
 
           {/* County List */}
@@ -92,7 +93,7 @@ export function SVACountyList({ counties, anchorFips }: SVACountyListProps) {
               return (
                 <div
                   key={c.county_fips}
-                  className={`grid grid-cols-4 gap-2 px-4 py-2 border-b last:border-b-0 text-sm ${
+                  className={`grid grid-cols-5 gap-2 px-4 py-2 border-b last:border-b-0 text-sm ${
                     isAnchor ? "bg-primary/5" : "hover:bg-muted/30"
                   }`}
                 >
@@ -112,6 +113,11 @@ export function SVACountyList({ counties, anchorFips }: SVACountyListProps) {
                   </span>
                   <span className="text-right text-muted-foreground">
                     {(c.total_population || 0).toLocaleString()}
+                  </span>
+                  <span className="text-center">
+                    <Badge variant="outline" className="text-xs border-blue-500/50 text-blue-600">
+                      PENDING
+                    </Badge>
                   </span>
                 </div>
               );
