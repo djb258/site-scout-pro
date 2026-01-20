@@ -1079,6 +1079,51 @@ export type Database = {
         }
         Relationships: []
       }
+      pass0_signals: {
+        Row: {
+          created_at: string | null
+          expires_at: string | null
+          observed_at: string | null
+          raw_excerpt: string | null
+          signal_category_version: string
+          signal_id: string
+          signal_strength_hint: string | null
+          signal_type: string
+          source_name: string
+          source_url: string | null
+          sovereign_id: string
+          zip_code: string
+        }
+        Insert: {
+          created_at?: string | null
+          expires_at?: string | null
+          observed_at?: string | null
+          raw_excerpt?: string | null
+          signal_category_version?: string
+          signal_id?: string
+          signal_strength_hint?: string | null
+          signal_type: string
+          source_name: string
+          source_url?: string | null
+          sovereign_id: string
+          zip_code: string
+        }
+        Update: {
+          created_at?: string | null
+          expires_at?: string | null
+          observed_at?: string | null
+          raw_excerpt?: string | null
+          signal_category_version?: string
+          signal_id?: string
+          signal_strength_hint?: string | null
+          signal_type?: string
+          source_name?: string
+          source_url?: string | null
+          sovereign_id?: string
+          zip_code?: string
+        }
+        Relationships: []
+      }
       pass0_url_queue: {
         Row: {
           created_at: string | null

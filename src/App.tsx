@@ -17,6 +17,7 @@ import CCAReconHub from "@/pages/hub/CCAReconHub";
 import SVABuilderPage from "@/pages/SVABuilderPage";
 import SVADetailPage from "@/pages/SVADetailPage";
 import SVAListPage from "@/pages/SVAListPage";
+import Pass0RadarPage from "@/pages/Pass0RadarPage";
 import SupplyDiscoveryPage from "@/pages/SupplyDiscoveryPage";
 import ZipSupplyDetailPage from "@/pages/ZipSupplyDetailPage";
 import JurisdictionScopePage from "@/pages/JurisdictionScopePage";
@@ -41,6 +42,7 @@ const App = () => (
             <Route path="/sva" element={<SVAListPage />} />
             <Route path="/sva/create" element={<SVABuilderPage />} />
             <Route path="/sva/:svaId" element={<SVADetailPage />} />
+            <Route path="/pass0/radar/:svaId" element={<Pass0RadarPage />} />
             <Route path="/pass0" element={<Pass0Hub />} />
             <Route path="/pass1" element={<Pass1Hub />} />
             <Route path="/pass15" element={<Pass15Hub />} />
