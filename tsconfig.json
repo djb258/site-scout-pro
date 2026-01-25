@@ -4,7 +4,12 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@sys/*": ["./src/sys/*"],
+      "@data/*": ["./src/data/*"],
+      "@app/*": ["./src/app/*"],
+      "@ai/*": ["./src/ai/*"],
+      "@ui/*": ["./src/ui/*"]
     },
     "noImplicitAny": false,
     "noUnusedParameters": false,

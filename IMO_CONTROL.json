@@ -1,0 +1,112 @@
+{
+  "$schema": "https://imo-creator.dev/schemas/imo-control.json",
+  "version": "1.0.0",
+  "conformance": {
+    "doctrine_version": "1.4.0",
+    "ctb_version": "1.1.0",
+    "template_source": "imo-creator"
+  },
+  "sovereign": {
+    "id": "barton-family-office",
+    "boundary": "Barton Family Office investment systems",
+    "cc_layer": "CC-01"
+  },
+  "hub": {
+    "id": "barton-storage",
+    "name": "Barton Storage System",
+    "purpose": "Self-storage investment analysis and deal screening pipeline",
+    "cc_layer": "CC-02",
+    "ctb_placement": {
+      "trunk": "barton-family-office",
+      "branch": "investments",
+      "leaf": "storage"
+    }
+  },
+  "ctb_branches": {
+    "sys": {
+      "path": "src/sys",
+      "purpose": "System infrastructure: env loaders, bootstraps, config readers"
+    },
+    "data": {
+      "path": "src/data",
+      "purpose": "Data layer: schemas, queries, migrations, repositories"
+    },
+    "app": {
+      "path": "src/app",
+      "purpose": "Application logic: modules, services, workflows, business logic"
+    },
+    "ai": {
+      "path": "src/ai",
+      "purpose": "AI components: agents, routers, prompts, LLM integrations"
+    },
+    "ui": {
+      "path": "src/ui",
+      "purpose": "User interface: pages, components, layouts, styles"
+    }
+  },
+  "forbidden_folders": [
+    "utils",
+    "helpers",
+    "common",
+    "shared",
+    "lib",
+    "misc"
+  ],
+  "imo": {
+    "ingress": {
+      "description": "UI forms, API endpoints, webhook receivers",
+      "spokes": [
+        "ui-dashboard",
+        "api-intake"
+      ]
+    },
+    "middle": {
+      "description": "Pass pipeline (0-5), scoring engine, decision logic",
+      "owns_logic": true,
+      "owns_state": true,
+      "owns_tools": true
+    },
+    "egress": {
+      "description": "Reports, exports, notifications, Obsidian vault sync",
+      "spokes": [
+        "obsidian-export",
+        "report-generator"
+      ]
+    }
+  },
+  "guards": {
+    "rate_limits": {
+      "api_calls_per_minute": 60,
+      "ai_calls_per_minute": 10
+    },
+    "timeouts": {
+      "default_ms": 30000,
+      "ai_call_ms": 120000
+    }
+  },
+  "kill_switch": {
+    "endpoint": "/api/kill-switch",
+    "activation_criteria": [
+      "Cost exceeds $100/day",
+      "Error rate exceeds 10%",
+      "Manual trigger by sovereign"
+    ],
+    "emergency_contact": "barton-family-office"
+  },
+  "traceability": {
+    "constitution": "BARTON_STORAGE_SYSTEM_CONSTITUTION.md",
+    "prd_directory": "docs/prd",
+    "adr_directory": "docs/adr"
+  },
+  "validation": {
+    "on_commit": [
+      "ctb_structure_check",
+      "forbidden_folder_check",
+      "import_path_check"
+    ],
+    "on_pr": [
+      "doctrine_conformance_check",
+      "compliance_checklist_check"
+    ]
+  }
+}

@@ -13,6 +13,11 @@ export default defineConfig(({ mode }) => ({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
+      "@sys": path.resolve(__dirname, "./src/sys"),
+      "@data": path.resolve(__dirname, "./src/data"),
+      "@app": path.resolve(__dirname, "./src/app"),
+      "@ai": path.resolve(__dirname, "./src/ai"),
+      "@ui": path.resolve(__dirname, "./src/ui"),
     },
   },
 }));

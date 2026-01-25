@@ -1,0 +1,7 @@
+# Doppler Configuration
+# Hub: Barton Storage System
+# Reference: templates/integrations/DOPPLER.md
+
+setup:
+  project: barton-storage
+  config: dev

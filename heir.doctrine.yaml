@@ -1,0 +1,118 @@
+# HEIR Doctrine Configuration
+# Hub: Barton Storage System
+# Reference: CANONICAL_ARCHITECTURE_DOCTRINE.md v1.4.0
+
+# --- Conformance ---
+conformance:
+  doctrine_version: "1.4.0"
+  ctb_version: "1.1.0"
+  schema_version: "HEIR/2.0"
+
+# --- Sovereign Declaration (CC-01) ---
+sovereign:
+  identity: "barton-family-office"
+  boundary: "Barton Family Office investment systems and deal pipelines"
+
+# --- Hub Identity (CC-02) ---
+hub:
+  name: "Barton Storage System"
+  id: "barton-storage"
+  purpose: "Self-storage investment analysis, screening, and deal pipeline"
+  ctb_placement:
+    trunk: "barton-family-office"
+    branch: "investments"
+    leaf: "storage"
+
+# --- Process Identity (CC-04) ---
+process:
+  id_pattern: "barton-storage-${TIMESTAMP}-${RANDOM_HEX}"
+  session_pattern: "barton-storage-session-${SESSION_ID}"
+
+# --- IMO Structure ---
+imo:
+  ingress:
+    description: "UI dashboard, API intake endpoints, webhook receivers for market data"
+    spokes:
+      - name: "ui-dashboard"
+        type: "I"
+        description: "React UI for pass pipeline interaction"
+      - name: "api-intake"
+        type: "I"
+        description: "Supabase Edge Functions for data ingestion"
+  middle:
+    description: "Pass 0-5 pipeline, scoring engine, jurisdiction resolver, market analysis"
+    owns_logic: true
+    owns_state: true
+    modules:
+      - "pass0-signals"
+      - "pass1-market"
+      - "pass15-rent-recon"
+      - "pass2-county-card"
+      - "pass3-calculators"
+      - "pass4-parcel"
+      - "pass5-deal-gate"
+  egress:
+    description: "Reports, Obsidian vault sync, deal packages, notifications"
+    spokes:
+      - name: "obsidian-export"
+        type: "O"
+        description: "Markdown export to Obsidian vault"
+      - name: "report-generator"
+        type: "O"
+        description: "Deal package and analysis report generation"
+
+# --- Services (Abstract) ---
+services:
+  - name: "supabase"
+    port: "443"
+    type: "database"
+  - name: "neon"
+    port: "5432"
+    type: "database"
+  - name: "retell"
+    port: "443"
+    type: "ai-voice"
+
+# --- Environment (Abstract) ---
+environment:
+  secrets_provider: "doppler"
+  variables:
+    - key: "SUPABASE_URL"
+      source: "${DOPPLER:SUPABASE_URL}"
+    - key: "SUPABASE_ANON_KEY"
+      source: "${DOPPLER:SUPABASE_ANON_KEY}"
+    - key: "NEON_DATABASE_URL"
+      source: "${DOPPLER:NEON_DATABASE_URL}"
+    - key: "RETELL_API_KEY"
+      source: "${DOPPLER:RETELL_API_KEY}"
+
+# --- Contracts ---
+contracts:
+  acceptance:
+    - "All passes (0-5) execute without doctrine violation"
+    - "CTB structure enforced (sys, data, app, ai, ui)"
+    - "No forbidden folders exist"
+    - "All tools registered in tool ledger with ADR"
+    - "Kill switch operational"
+    - "Observability implemented (logging, metrics)"
+
+# --- Build Actions ---
+build:
+  ci_checks:
+    - "npm run lint"
+    - "npm run typecheck"
+    - "npm run test"
+  validation:
+    - "node ops/erd/erd_guard.mjs"
+    - "node ops/erd/migration_erd_sync.mjs"
+
+# --- Traceability ---
+traceability:
+  prd: "docs/prd/PRD_BARTON_STORAGE.md"
+  adrs:
+    - "docs/adr/ADR-001-supabase-selection.md"
+    - "docs/adr/ADR-002-pass-pipeline-design.md"
+    - "docs/adr/ADR-018-hub1-pass1-orchestrator-v1-1.md"
+    - "docs/adr/ADR-019-supply-gap-ui-panel.md"
+    - "docs/adr/ADR-020-hub15-remediation-worker.md"
+    - "docs/adr/ADR-021-hub15-pass15-complete.md"
