@@ -1,91 +1,159 @@
 # PRD — Hub
 
-## 1. Overview
+## Conformance
 
-- **System Name:**
-- **Hub Name:**
-- **Owner:**
-- **Version:**
-
----
-
-## 2. Purpose
-
-_What does this hub do? What boundary does it own?_
+| Field | Value |
+|-------|-------|
+| **Doctrine Version** | |
+| **CTB Version** | |
+| **CC Layer** | CC-02 |
 
 ---
 
-## 3. Spokes
+## 1. Sovereign Reference (CC-01)
 
-| Spoke Name | Capability | Inherits Tools |
-|------------|------------|----------------|
-| | | |
-
----
-
-## 4. Connectors
-
-| Connector | Type | Direction | Contract |
-|-----------|------|-----------|----------|
-| | API / CSV / Event | Inbound / Outbound | |
+| Field | Value |
+|-------|-------|
+| **Sovereign ID** | |
+| **Sovereign Boundary** | |
 
 ---
 
-## 5. Tools
+## 2. Hub Identity (CC-02)
 
-| Tool | Doctrine ID | Owner | ADR |
-|------|-------------|-------|-----|
-| | | This Hub | |
-
----
-
-## 6. Guard Rails
-
-| Guard Rail | Type | Threshold |
-|------------|------|-----------|
-| | Rate Limit / Timeout / Validation | |
+| Field | Value |
+|-------|-------|
+| **Hub Name** | |
+| **Hub ID** | _(unique, immutable identifier)_ |
+| **Owner** | |
+| **Version** | |
 
 ---
 
-## 7. Kill Switch
+## 3. Purpose
 
-- **Endpoint:**
-- **Activation Criteria:**
-- **Emergency Contact:**
+_What does this hub do? What boundary does it own? A hub is the application — it owns logic, state, CTB structure, and full IMO._
 
 ---
 
-## 8. Promotion Gates
+## 4. CTB Placement
 
-| Gate | Requirement |
-|------|-------------|
-| G1 | |
-| G2 | |
-| G3 | |
-| G4 | |
-| G5 | |
+| Field | Value | CC Layer |
+|-------|-------|----------|
+| **Trunk** | | CC-02 |
+| **Branch** | | CC-02 |
+| **Leaf** | | CC-02 |
 
 ---
 
-## 9. Failure Modes
+## 5. IMO Structure (CC-02)
 
-| Failure | Severity | Remediation |
-|---------|----------|-------------|
-| | | |
+_This hub owns all three IMO layers internally. Spokes are external CC-03 interfaces only._
 
----
-
-## 10. Human Override Rules
-
-_When can a human bypass automation? Who approves?_
+| Layer | Role | Description | CC Layer |
+|-------|------|-------------|----------|
+| **I — Ingress** | Dumb input only | Receives data; no logic, no state | CC-02 |
+| **M — Middle** | Logic, decisions, state | All processing occurs here inside the hub | CC-02 |
+| **O — Egress** | Output only | Emits results; no logic, no state | CC-02 |
 
 ---
 
-## 11. Observability
+## 6. Spokes (CC-03 Interfaces)
 
-- **Logs:**
-- **Metrics:**
-- **Alerts:**
+_Spokes are interfaces ONLY. They carry no logic, tools, or state. Each spoke is typed as Ingress (I) or Egress (O)._
+
+| Spoke Name | Type | Direction | Contract | CC Layer |
+|------------|------|-----------|----------|----------|
+| | I | Inbound | | CC-03 |
+| | O | Outbound | | CC-03 |
+
+---
+
+## 7. Constants vs Variables
+
+_Declare which elements are constants (ADR-gated) vs variables (configuration)._
+
+| Element | Type | Mutability | CC Layer |
+|---------|------|------------|----------|
+| Hub ID | Constant | Immutable | CC-02 |
+| Hub Name | Constant | ADR-gated | CC-02 |
+| | | | |
+
+---
+
+## 8. Tools
+
+_All tools are scoped strictly INSIDE this hub's M layer. Spokes do not own tools._
+
+| Tool | Solution Type | CC Layer | IMO Layer | ADR Reference |
+|------|---------------|----------|-----------|---------------|
+| | Deterministic / LLM-tail | CC-02 | M | |
+
+---
+
+## 9. Guard Rails
+
+| Guard Rail | Type | Threshold | CC Layer |
+|------------|------|-----------|----------|
+| | Rate Limit / Timeout / Validation | | CC-03/CC-04 |
+
+---
+
+## 10. Kill Switch
+
+| Field | Value |
+|-------|-------|
+| **Activation Criteria** | |
+| **Trigger Authority** | CC-02 (Hub) / CC-01 (Sovereign) |
+| **Emergency Contact** | |
+
+---
+
+## 11. Promotion Gates
+
+| Gate | Artifact | CC Layer | Requirement |
+|------|----------|----------|-------------|
+| G1 | PRD | CC-02 | Hub definition approved |
+| G2 | ADR | CC-03 | Architecture decision recorded |
+| G3 | Work Item | CC-04 | Execution item created |
+| G4 | PR | CC-04 | Code reviewed and merged |
+| G5 | Checklist | CC-04 | Compliance verification complete |
+
+---
+
+## 12. Failure Modes
+
+| Failure | Severity | CC Layer | Remediation |
+|---------|----------|----------|-------------|
+| | | | |
+
+---
+
+## 13. PID Scope (CC-04)
+
+_Process ID is minted at CC-04 for each execution instance._
+
+| Field | Value |
+|-------|-------|
+| **PID Pattern** | `<hub-id>-${TIMESTAMP}-${RANDOM_HEX}` |
+| **Retry Policy** | New PID per retry |
+| **Audit Trail** | Required |
+
+---
+
+## 14. Human Override Rules
+
+_When can a human bypass automation? Who approves? (Trigger authority must be CC-02 or CC-01)_
+
+---
+
+## 15. Observability
+
+| Type | Description | CC Layer |
+|------|-------------|----------|
+| **Logs** | | CC-04 |
+| **Metrics** | | CC-04 |
+| **Alerts** | | CC-03/CC-04 |
 
 ---
 
@@ -93,5 +161,15 @@ _When can a human bypass automation? Who approves?_
 
 | Role | Name | Date |
 |------|------|------|
-| Owner | | |
+| Sovereign (CC-01) | | |
+| Hub Owner (CC-02) | | |
 | Reviewer | | |
+
+---
+
+## Traceability
+
+| Artifact | Reference |
+|----------|-----------|
+| Canonical Doctrine | CANONICAL_ARCHITECTURE_DOCTRINE.md |
+| Hub/Spoke Doctrine | HUB_SPOKE_ARCHITECTURE.md |
