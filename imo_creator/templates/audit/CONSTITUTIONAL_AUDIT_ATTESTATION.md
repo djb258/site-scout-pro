@@ -2,7 +2,7 @@
 
 **Status**: TEMPLATE
 **Authority**: CONSTITUTIONAL
-**Version**: 1.1.0
+**Version**: 1.0.0
 
 ---
 
@@ -13,42 +13,6 @@ It references existing checklists — it does not duplicate them.
 
 **Every constitutional audit MUST produce this attestation.**
 **Audits without an attestation are NON-AUTHORITATIVE.**
-
----
-
-## Zero-Tolerance Enforcement
-
-> **CRITICAL: These rules are NON-NEGOTIABLE. No exceptions.**
-
-### Status Indicators
-
-| Symbol | Meaning | Can Ship? |
-|--------|---------|-----------|
-| `[x] PASS` | Verified compliant | YES |
-| `🚨 FAIL` | Failed verification | **NO — MUST FIX** |
-| `[ ] N/A` | Not applicable | Document why |
-
-### Enforcement Rules
-
-1. **NO FALSE PASSES**: You CANNOT mark `[x] PASS` unless the item has been verified AND is actually compliant. Marking a failing item as passed is a **DOCTRINE VIOLATION**.
-
-2. **FAILURES BLOCK SHIP**: Any item marked `🚨 FAIL` means the hub is **NON-COMPLIANT** and **CANNOT SHIP** until resolved.
-
-3. **PARTIAL = FAIL**: If 3/4 items pass, the status is `🚨 FAIL`, not "partial pass." There is no partial compliance.
-
-4. **DOCUMENT ALL FAILURES**: Every `🚨 FAIL` MUST have an entry in the Violations table with severity and remediation action.
-
-5. **RE-AUDIT AFTER FIX**: After fixing a failure, re-verify before changing status to PASS.
-
-### Severity Escalation
-
-| Severity | Meaning | Ship Without? |
-|----------|---------|---------------|
-| **CRITICAL** | Blocks all progress | 🚨 **NEVER** |
-| **HIGH** | Must fix before prod | Only with ADR exception |
-| **MEDIUM** | Should fix soon | Yes, but document |
-
-> **If you cannot honestly mark an item as PASS, mark it as 🚨 FAIL and fix it.**
 
 ---
 
@@ -191,6 +155,69 @@ _Reference: `templates/doctrine/PROCESS_DOCTRINE.md`_
 
 ---
 
+## COMPLIANCE GATE (MANDATORY)
+
+```
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                           COMPLIANCE GATE RULE                                ║
+╠══════════════════════════════════════════════════════════════════════════════╣
+║                                                                               ║
+║  You CANNOT mark an audit as COMPLIANT if:                                    ║
+║                                                                               ║
+║    1. ANY CRITICAL violations exist                                           ║
+║    2. ANY HIGH violations exist                                               ║
+║                                                                               ║
+║  HIGH violations are NOT "fix later" items.                                   ║
+║  HIGH violations BLOCK compliance.                                            ║
+║                                                                               ║
+║  The ONLY path forward is:                                                    ║
+║    → FIX the violation, OR                                                    ║
+║    → DOWNGRADE to MEDIUM with documented justification + ADR                  ║
+║                                                                               ║
+║  NEVER mark COMPLIANT with open HIGH/CRITICAL violations.                     ║
+║  This is a HARD RULE. No exceptions.                                          ║
+║                                                                               ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+```
+
+### Compliance Determination Flow
+
+```
+START: Count violations by severity
+         │
+         ▼
+    ┌─────────────────┐
+    │ CRITICAL > 0 ?  │──YES──► HALT: NON-COMPLIANT
+    └────────┬────────┘         (Cannot proceed until fixed)
+             │ NO
+             ▼
+    ┌─────────────────┐
+    │   HIGH > 0 ?    │──YES──► HALT: NON-COMPLIANT
+    └────────┬────────┘         (Cannot proceed until fixed)
+             │ NO
+             ▼
+    ┌─────────────────┐
+    │  MEDIUM > 0 ?   │──YES──► COMPLIANT WITH NOTES
+    └────────┬────────┘         (Document in attestation)
+             │ NO
+             ▼
+         COMPLIANT
+         (Clean pass)
+```
+
+### Compliance Gate Verification
+
+| Severity | Count | Gate Status |
+|----------|-------|-------------|
+| CRITICAL | | [ ] 0 = PASS / [ ] >0 = BLOCKED |
+| HIGH | | [ ] 0 = PASS / [ ] >0 = BLOCKED |
+| MEDIUM | | [ ] Documented |
+| LOW | | [ ] N/A |
+
+**Gate Result**: [ ] PASS / [ ] BLOCKED
+
+---
+
 ## Final Constitutional Verdict
 
 | Criterion | Status |
@@ -231,6 +258,6 @@ _Reference: `templates/doctrine/PROCESS_DOCTRINE.md`_
 | Template Version | 1.1.0 |
 | Authority | CONSTITUTIONAL |
 | Required By | CONSTITUTION.md |
-| References | HUB_COMPLIANCE.md, ERD_CONSTITUTION.md, PROCESS_DOCTRINE.md, ENFORCEMENT_RULES.md |
-| Enforcement | See `templates/doctrine/ENFORCEMENT_RULES.md` |
+| References | HUB_COMPLIANCE.md, ERD_CONSTITUTION.md, PROCESS_DOCTRINE.md, TEMPLATE_IMMUTABILITY.md |
 | Change Protocol | ADR + HUMAN APPROVAL REQUIRED |
+| Change Log | v1.1.0: Added COMPLIANCE GATE zero-tolerance enforcement |
