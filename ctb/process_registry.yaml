@@ -1,12 +1,32 @@
 # Process Registry
 # CTB + Altitude Process Definitions
+# Authority: imo-creator doctrine v1.4.0
+# Hub: barton-storage
+
+# --- Doctrine References ---
+doctrine:
+  canonical: "doctrine/REPO_DOMAIN_SPEC.md"
+  hub_prd: "docs/prd/PRD_BARTON_STORAGE_HUB.md"
+  erd_discipline: "docs/erd/ERD_DISCIPLINE.md"
+
+# --- Process Definitions ---
 
 site_scoring_pipeline:
   altitude_layer: "20k"
-  doctrine_reference: "Barton Doctrine - Systematic Elimination"
+  pass_type: "COMPUTE"
+  doctrine_reference: "doctrine/REPO_DOMAIN_SPEC.md"
+  prd_reference: "docs/prd/PRD_PASS1_STRUCTURE_HUB.md"
+  erd_reference: "docs/erd/ERD_SubHub1_Market.md"
   api_endpoint: "/api/score"
   neon_table: "site_candidate"
   process_logging: true
+  constants_consumed:
+    - "demographics_data"
+    - "market_signals"
+    - "census_tract_data"
+  variables_produced:
+    - "site_score"
+    - "viability_flag"
   steps:
     - name: "saturation_calculation"
       type: "processor"
@@ -26,10 +46,19 @@ site_scoring_pipeline:
 
 saturation_pipeline:
   altitude_layer: "20k"
-  doctrine_reference: "Saturation Analysis - 6 sqft per person"
+  pass_type: "COMPUTE"
+  doctrine_reference: "doctrine/REPO_DOMAIN_SPEC.md"
+  prd_reference: "docs/prd/PRD_PASS1_STRUCTURE_HUB.md"
+  erd_reference: "docs/erd/ERD_SubHub1_Market.md"
   api_endpoint: "/api/saturation"
   neon_table: "saturation_matrix"
   process_logging: true
+  constants_consumed:
+    - "population_data"
+    - "existing_supply_sqft"
+  variables_produced:
+    - "saturation_ratio"
+    - "supply_gap"
   steps:
     - name: "calculate_saturation"
       type: "processor"
@@ -37,10 +66,20 @@ saturation_pipeline:
 
 parcel_screening_pipeline:
   altitude_layer: "20k"
-  doctrine_reference: "Parcel Viability Analysis"
+  pass_type: "COMPUTE"
+  doctrine_reference: "doctrine/REPO_DOMAIN_SPEC.md"
+  prd_reference: "docs/prd/PRD_PASS2_UNDERWRITING_HUB.md"
+  erd_reference: "docs/erd/ERD_SubHub4_Parcel.md"
   api_endpoint: "/api/parcels"
   neon_table: "parcel_screening"
   process_logging: true
+  constants_consumed:
+    - "parcel_geometry"
+    - "zoning_code"
+    - "flood_zone_data"
+  variables_produced:
+    - "parcel_viability_score"
+    - "screening_verdict"
   steps:
     - name: "screen_parcel"
       type: "processor"
@@ -48,10 +87,19 @@ parcel_screening_pipeline:
 
 county_scoring_pipeline:
   altitude_layer: "30k"
-  doctrine_reference: "County Rules Analysis"
+  pass_type: "COMPUTE"
+  doctrine_reference: "doctrine/REPO_DOMAIN_SPEC.md"
+  prd_reference: "docs/prd/PRD_PASS2_UNDERWRITING_HUB.md"
+  erd_reference: "docs/erd/ERD_SubHub2_CountyCard.md"
   api_endpoint: "/api/county"
   neon_table: "county_score"
   process_logging: true
+  constants_consumed:
+    - "county_permit_rules"
+    - "jurisdiction_data"
+  variables_produced:
+    - "county_difficulty_score"
+    - "permit_timeline_estimate"
   steps:
     - name: "county_difficulty"
       type: "processor"
@@ -59,10 +107,18 @@ county_scoring_pipeline:
 
 final_elimination_pipeline:
   altitude_layer: "20k"
-  doctrine_reference: "Final Elimination Process"
+  pass_type: "GOVERN"
+  doctrine_reference: "doctrine/REPO_DOMAIN_SPEC.md"
+  prd_reference: "docs/prd/PRD_BARTON_STORAGE_HUB.md"
+  erd_reference: "docs/erd/ERD_SubHub5_DealGate.md"
   api_endpoint: "/api/elimination"
   neon_table: "site_candidate"
   process_logging: true
+  constants_consumed:
+    - "all_computed_scores"
+  variables_produced:
+    - "go_nogo_verdict"
+    - "elimination_reason"
   steps:
     - name: "validate_final_score"
       type: "validator"

@@ -124,7 +124,7 @@ _Reference: `templates/doctrine/PROCESS_DOCTRINE.md`_
 |-------|--------|
 | Process declaration exists | [x] YES / [ ] NO |
 | References governing PRD | [x] YES / [ ] NO |
-| References governing ERD | [ ] YES / [x] NO (gap noted) |
+| References governing ERD | [x] YES / [ ] NO |
 | No new constants introduced | [x] YES / [ ] NO |
 | No new variables introduced | [x] YES / [ ] NO |
 | Pass sequence matches PRD/ERD | [x] YES / [ ] NO |
@@ -132,7 +132,7 @@ _Reference: `templates/doctrine/PROCESS_DOCTRINE.md`_
 
 **Process Verdict**: [x] COMPLIANT / [ ] NON-COMPLIANT
 
-**Note**: ERD references missing from process_registry.yaml (documentation gap, not violation)
+**Note**: All process definitions now include explicit PRD and ERD file path references
 
 ---
 
@@ -162,10 +162,9 @@ _Reference: `templates/doctrine/PROCESS_DOCTRINE.md`_
 
 | # | Gap | Category | Severity | Recommended Action |
 |---|-----|----------|----------|-------------------|
-| 1 | process_registry.yaml missing ERD references | Documentation | LOW | Add ERD file paths |
-| 2 | Pass sequence not explicit IMO format | Documentation | LOW | Optional refactor |
-| 3 | Sub-Hub 5 tables marked as "Future" | Implementation | LOW | Implement when ready |
-| 4 | pass1_runs deprecated but still referenced | Cleanup | LOW | Remove in future migration |
+| 1 | ~~process_registry.yaml missing ERD references~~ | ~~Documentation~~ | ~~LOW~~ | RESOLVED (2026-01-29) |
+| 2 | Sub-Hub 5 tables marked as "Future" | Implementation | LOW | Implement when ready |
+| 3 | pass1_runs deprecated but still referenced | Cleanup | LOW | Remove in future migration |
 
 ---
 
