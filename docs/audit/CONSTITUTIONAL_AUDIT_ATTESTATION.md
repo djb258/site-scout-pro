@@ -13,6 +13,46 @@ It references existing checklists — it does not duplicate them.
 
 ---
 
+## Enforcement Rules
+
+> **CRITICAL: These rules are NON-NEGOTIABLE**
+
+### Failure Indicators
+
+| Symbol | Meaning | Action Required |
+|--------|---------|-----------------|
+| [x] PASS | Item verified and compliant | None |
+| 🚨 FAIL | Item failed verification | **MUST FIX before ship** |
+| [ ] N/A | Not applicable to this hub | Document why |
+
+### Enforcement Policy
+
+1. **NO FALSE PASSES**: You CANNOT mark an item as `[x] PASS` unless it has been verified and is actually compliant. Marking a failing item as passed is a **doctrine violation**.
+
+2. **FAILURES BLOCK SHIP**: Any item marked `🚨 FAIL` blocks the hub from shipping. The hub is **NON-COMPLIANT** until all failures are resolved.
+
+3. **PARTIAL IS FAIL**: If an item is partially complete, it is `🚨 FAIL`, not PASS. There is no "partial pass."
+
+4. **DOCUMENT FAILURES**: Every `🚨 FAIL` must have a corresponding entry in the Violations table with:
+   - Violation description
+   - Severity (CRITICAL/HIGH/MEDIUM)
+   - Required remediation action
+   - Target resolution date
+
+5. **RE-AUDIT AFTER FIX**: After fixing a failure, the item must be re-audited before changing status to PASS.
+
+### Severity Escalation
+
+| Severity | Meaning | Ship Without? |
+|----------|---------|---------------|
+| **CRITICAL** | Blocks all progress | 🚨 **NEVER** |
+| **HIGH** | Must fix before prod | Only with ADR exception |
+| **MEDIUM** | Should fix soon | Yes, but document why |
+
+**If you cannot honestly mark an item as PASS, mark it as 🚨 FAIL and fix it.**
+
+---
+
 ## Repo Metadata
 
 | Field | Value |

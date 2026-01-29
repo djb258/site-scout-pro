@@ -3,6 +3,30 @@
 This checklist must be completed before any hub can ship.
 No exceptions. No partial compliance.
 
+---
+
+## Enforcement Rules
+
+> **See: [ENFORCEMENT_RULES.md](../ENFORCEMENT_RULES.md) for complete enforcement policy**
+
+### Quick Reference
+
+| Symbol | Meaning | Can Ship? |
+|--------|---------|-----------|
+| `[x]` | Verified compliant | YES |
+| `[ ]` | NOT compliant or NOT verified | 🚨 **NO** |
+
+### Critical Rules
+
+1. **NO FALSE PASSES** — Do not check a box unless the item is actually verified and compliant
+2. **UNCHECKED = BLOCKED** — Any unchecked CRITICAL item blocks ship
+3. **PARTIAL = FAIL** — If 3/4 items pass, the section is `🚨 FAIL`, not partial pass
+4. **FIX THEN CHECK** — Fix the issue first, verify the fix, then mark the checkbox
+
+**If you cannot honestly check the box, leave it unchecked and document the failure.**
+
+---
+
 ## Conformance
 
 | Field | Value |
