@@ -130,6 +130,7 @@ Defines CTB (Christmas Tree Backbone) and CC (Canonical Chain). All other docume
 | [`DBA_ENFORCEMENT_DOCTRINE.md`](doctrine/DBA_ENFORCEMENT_DOCTRINE.md) | Database change rules, Type A/B classification |
 | [`TEMPLATE_IMMUTABILITY.md`](doctrine/TEMPLATE_IMMUTABILITY.md) | Immutability rules, AI prohibition clause |
 | [`DOCUMENTATION_ERD_DOCTRINE.md`](doctrine/DOCUMENTATION_ERD_DOCTRINE.md) | ERD standard, column dictionary requirements |
+| [`ENFORCEMENT_RULES.md`](doctrine/ENFORCEMENT_RULES.md) | **Zero-tolerance enforcement for audits and checklists** |
 
 **Key topics covered:**
 - Canonical Chain (CC) layers: CC-01 (Sovereign), CC-02 (Hub), CC-03 (Context), CC-04 (Process)
@@ -211,7 +212,8 @@ templates/
 │   ├── REPO_REFACTOR_PROTOCOL.md       # Structure requirements
 │   ├── DBA_ENFORCEMENT_DOCTRINE.md     # DBA rules
 │   ├── TEMPLATE_IMMUTABILITY.md        # Immutability rules
-│   └── DOCUMENTATION_ERD_DOCTRINE.md   # ERD standard
+│   ├── DOCUMENTATION_ERD_DOCTRINE.md   # ERD standard
+│   └── ENFORCEMENT_RULES.md            # Zero-tolerance audit/checklist rules
 │
 ├── claude/                             # LOCKED — AI CANNOT MODIFY
 │   ├── APPLY_DOCTRINE.prompt.md        # Doctrine execution

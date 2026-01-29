@@ -8,6 +8,40 @@ No exceptions. No partial compliance.
 **This checklist MUST be referenced by an attestation document.**
 See: `templates/audit/CONSTITUTIONAL_AUDIT_ATTESTATION.md`
 
+---
+
+## Zero-Tolerance Enforcement
+
+> **CRITICAL: These rules are NON-NEGOTIABLE. Violations are doctrine breaches.**
+
+### Status Indicators
+
+| Symbol | Meaning | Can Ship? |
+|--------|---------|-----------|
+| `[x]` | Verified and compliant | YES |
+| `[ ]` | NOT verified or NOT compliant | 🚨 **NO** |
+
+### Enforcement Rules
+
+1. **NO FALSE PASSES** — Do NOT check a box unless the item is actually verified and compliant
+2. **UNCHECKED = BLOCKED** — Any unchecked CRITICAL item blocks ship
+3. **PARTIAL = FAIL** — If 3/4 items pass, the section is 🚨 FAIL, not "partial"
+4. **FIX THEN CHECK** — Fix the issue first, verify the fix, then mark the checkbox
+5. **RE-AUDIT ON CHANGE** — Any code change requires re-verification of affected items
+
+### Severity Rules
+
+| Priority | Meaning | Ship Without? |
+|----------|---------|---------------|
+| **CRITICAL** | Blocks ship | 🚨 **NEVER** |
+| **HIGH** | Strongly recommended | Only with ADR exception |
+| **MEDIUM** | Nice to have | Yes, but document why |
+
+> **If you cannot honestly check the box, leave it unchecked and document the failure.**
+> **Compliance is binary: PASS or FAIL. There is no "mostly compliant."**
+
+---
+
 ## Conformance
 
 | Field | Value |

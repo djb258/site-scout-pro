@@ -2,7 +2,7 @@
 
 **Status**: TEMPLATE
 **Authority**: CONSTITUTIONAL
-**Version**: 1.0.0
+**Version**: 1.1.0
 
 ---
 
@@ -13,6 +13,42 @@ It references existing checklists — it does not duplicate them.
 
 **Every constitutional audit MUST produce this attestation.**
 **Audits without an attestation are NON-AUTHORITATIVE.**
+
+---
+
+## Zero-Tolerance Enforcement
+
+> **CRITICAL: These rules are NON-NEGOTIABLE. No exceptions.**
+
+### Status Indicators
+
+| Symbol | Meaning | Can Ship? |
+|--------|---------|-----------|
+| `[x] PASS` | Verified compliant | YES |
+| `🚨 FAIL` | Failed verification | **NO — MUST FIX** |
+| `[ ] N/A` | Not applicable | Document why |
+
+### Enforcement Rules
+
+1. **NO FALSE PASSES**: You CANNOT mark `[x] PASS` unless the item has been verified AND is actually compliant. Marking a failing item as passed is a **DOCTRINE VIOLATION**.
+
+2. **FAILURES BLOCK SHIP**: Any item marked `🚨 FAIL` means the hub is **NON-COMPLIANT** and **CANNOT SHIP** until resolved.
+
+3. **PARTIAL = FAIL**: If 3/4 items pass, the status is `🚨 FAIL`, not "partial pass." There is no partial compliance.
+
+4. **DOCUMENT ALL FAILURES**: Every `🚨 FAIL` MUST have an entry in the Violations table with severity and remediation action.
+
+5. **RE-AUDIT AFTER FIX**: After fixing a failure, re-verify before changing status to PASS.
+
+### Severity Escalation
+
+| Severity | Meaning | Ship Without? |
+|----------|---------|---------------|
+| **CRITICAL** | Blocks all progress | 🚨 **NEVER** |
+| **HIGH** | Must fix before prod | Only with ADR exception |
+| **MEDIUM** | Should fix soon | Yes, but document |
+
+> **If you cannot honestly mark an item as PASS, mark it as 🚨 FAIL and fix it.**
 
 ---
 
@@ -192,8 +228,9 @@ _Reference: `templates/doctrine/PROCESS_DOCTRINE.md`_
 
 | Field | Value |
 |-------|-------|
-| Template Version | 1.0.0 |
+| Template Version | 1.1.0 |
 | Authority | CONSTITUTIONAL |
 | Required By | CONSTITUTION.md |
-| References | HUB_COMPLIANCE.md, ERD_CONSTITUTION.md, PROCESS_DOCTRINE.md |
+| References | HUB_COMPLIANCE.md, ERD_CONSTITUTION.md, PROCESS_DOCTRINE.md, ENFORCEMENT_RULES.md |
+| Enforcement | See `templates/doctrine/ENFORCEMENT_RULES.md` |
 | Change Protocol | ADR + HUMAN APPROVAL REQUIRED |
