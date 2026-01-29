@@ -11,6 +11,36 @@ This is a **child repo** that CONFORMS to imo-creator doctrine. All templates, s
 
 ---
 
+## PARENT-CHILD RELATIONSHIP
+
+```
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                         DATA FLOW DIRECTION                                   ║
+╠══════════════════════════════════════════════════════════════════════════════╣
+║                                                                               ║
+║   imo-creator (PARENT)  ───PULL ONLY───►  barton-storage (CHILD)             ║
+║                                                                               ║
+║   • Parent is SOURCE OF TRUTH for all doctrine and templates                 ║
+║   • Child PULLS updates from parent                                          ║
+║   • Child NEVER pushes changes to parent                                     ║
+║   • Doctrine changes MUST originate in parent repo                           ║
+║                                                                               ║
+║   LOCAL COPY: imo_creator/templates/                                         ║
+║   This folder is a READ-ONLY copy of parent templates.                       ║
+║   Update by: git fetch imo-creator master && checkout templates              ║
+║                                                                               ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+```
+
+| Direction | Allowed | Action |
+|-----------|---------|--------|
+| Parent → Child | ✅ YES | Pull template updates |
+| Child → Parent | 🚨 **NEVER** | Do not push doctrine changes upstream |
+
+**If you need to change doctrine**: Make the change in imo-creator first, then pull to child repos.
+
+---
+
 ## CANONICAL REFERENCE
 
 This repo conforms to imo-creator templates at the following versions:
@@ -123,15 +153,24 @@ All tools in this hub are registered with ADRs:
 
 ## WHAT CLAUDE CODE CANNOT DO
 
-| Action | Prohibited |
-|--------|------------|
-| Modify `templates/` folder | ❌ NO (doctrine source) |
-| Modify `BARTON_STORAGE_SYSTEM_CONSTITUTION.md` | ❌ NO (business law) |
-| Create forbidden folders | ❌ NO (CTB violation) |
-| Add tools without ADR | ❌ NO (tool doctrine) |
-| Use LLM as primary decision maker | ❌ NO (LLM is tail) |
-| DROP Neon tables without approval | ❌ NO (DBA doctrine) |
-| Push to main without PR | ❌ NO (governance) |
+| Action | Prohibited | Reason |
+|--------|------------|--------|
+| Modify `imo_creator/templates/` folder | ❌ NO | Doctrine source - pull only from parent |
+| Push changes to imo-creator repo | 🚨 **NEVER** | Child cannot modify parent |
+| Modify `BARTON_STORAGE_SYSTEM_CONSTITUTION.md` | ❌ NO | Business law - human only |
+| Create forbidden folders | ❌ NO | CTB violation |
+| Add tools without ADR | ❌ NO | Tool doctrine |
+| Use LLM as primary decision maker | ❌ NO | LLM is tail, not head |
+| DROP Neon tables without approval | ❌ NO | DBA doctrine |
+| Push to main without PR | ❌ NO | Governance |
+
+**CRITICAL**: The `imo_creator/` folder is a LOCAL COPY of the parent repo's templates. To update it:
+1. Fetch from parent: `git fetch imo-creator master`
+2. Checkout templates: `git checkout imo-creator/master -- templates/`
+3. Move to correct location: `mv templates/* imo_creator/templates/`
+4. Commit as "sync from upstream"
+
+**NEVER create changes in this repo and push them to imo-creator.**
 
 ---
 
