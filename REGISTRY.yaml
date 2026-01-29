@@ -1,0 +1,62 @@
+# REGISTRY.yaml — Hub Component Registry
+# Authority: imo-creator
+# CC Layer: CC-02
+
+doctrine_version: "1.4.0"
+ctb_version: "1.1.0"
+
+# CC-01: Sovereign Reference
+sovereign_ref: "barton-family-office"
+
+# CC-02: Hub Declaration
+hub:
+  id: "barton-storage"
+  name: "Barton Storage System"
+  purpose: "Self-storage investment analysis and deal screening pipeline"
+  ctb_placement:
+    trunk: "barton-family-office"
+    branch: "investments"
+    leaf: "storage"
+  prd: "docs/prd/PRD_BARTON_STORAGE_HUB.md"
+  imo:
+    ingress:
+      - "ui-dashboard"
+      - "api-intake"
+    middle:
+      - "pass0-signals"
+      - "pass1-market"
+      - "pass15-rent-recon"
+      - "pass2-county-card"
+      - "pass3-calculators"
+      - "pass4-parcel"
+      - "pass5-deal-gate"
+    egress:
+      - "obsidian-export"
+      - "report-generator"
+  status: ACTIVE
+
+# CC-03: Contexts (Sub-Hubs)
+contexts:
+  - id: "pass0-signals"
+    name: "Pass 0 Signal Radar"
+    prd: "docs/prd/PRD_PASS0_RADAR_HUB.md"
+    type: "sub-hub"
+  - id: "pass1-market"
+    name: "Pass 1 Market Structure"
+    prd: "docs/prd/PRD_PASS1_STRUCTURE_HUB.md"
+    type: "sub-hub"
+  - id: "pass15-rent-recon"
+    name: "Pass 1.5 Rent Reconciliation"
+    prd: "docs/prd/PRD_PASS15_RENT_RECON_HUB.md"
+    type: "sub-hub"
+  - id: "pass2-county-card"
+    name: "Pass 2 Underwriting"
+    prd: "docs/prd/PRD_PASS2_UNDERWRITING_HUB.md"
+    type: "sub-hub"
+  - id: "pass3-calculators"
+    name: "Pass 3 Design & Feasibility"
+    prd: "docs/prd/PRD_PASS3_DESIGN_HUB.md"
+    type: "sub-hub"
+
+# CC-04: Process Log (PIDs minted at runtime)
+process_log: []

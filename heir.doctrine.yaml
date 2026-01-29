@@ -108,10 +108,25 @@ build:
 
 # --- Traceability ---
 traceability:
-  prd: "docs/prd/PRD_BARTON_STORAGE.md"
+  prd: "docs/prd/PRD_BARTON_STORAGE_HUB.md"
   adrs:
-    - "docs/adr/ADR-001-supabase-selection.md"
-    - "docs/adr/ADR-002-pass-pipeline-design.md"
+    - "docs/adr/ADR-001-census-api.md"
+    - "docs/adr/ADR-002-google-places-api.md"
+    - "docs/adr/ADR-003-scoring-engine.md"
+    - "docs/adr/ADR-004-zoning-regrid-api.md"
+    - "docs/adr/ADR-005-retell-ai.md"
+    - "docs/adr/ADR-006-feasibility-engine.md"
+    - "docs/adr/ADR-007-verdict-engine.md"
+    - "docs/adr/ADR-008-google-trends-api.md"
+    - "docs/adr/ADR-009-firecrawl.md"
+    - "docs/adr/ADR-010-unit-mix-optimizer.md"
+    - "docs/adr/ADR-011-build-cost-calculator.md"
+    - "docs/adr/ADR-012-irr-calculator.md"
+    - "docs/adr/ADR-013-master-failure-log.md"
+    - "docs/adr/ADR-014-fema-flood-api.md"
+    - "docs/adr/ADR-015-usgs-dem-api.md"
+    - "docs/adr/ADR-016-neon-database.md"
+    - "docs/adr/ADR-017-supabase-integration.md"
     - "docs/adr/ADR-018-hub1-pass1-orchestrator-v1-1.md"
     - "docs/adr/ADR-019-supply-gap-ui-panel.md"
     - "docs/adr/ADR-020-hub15-remediation-worker.md"

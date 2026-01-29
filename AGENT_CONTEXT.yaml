@@ -1,0 +1,120 @@
+# AGENT_CONTEXT.yaml — Machine-Readable Agent Instructions
+# Authority: imo-creator
+# Hub: barton-storage
+
+doctrine:
+  version: "1.4.0"
+  source: "imo_creator/templates/doctrine/"
+  files:
+    - CANONICAL_ARCHITECTURE_DOCTRINE.md
+    - ALTITUDE_DESCENT_MODEL.md
+    - HUB_SPOKE_ARCHITECTURE.md
+    - REPO_REFACTOR_PROTOCOL.md
+    - PRD_CONSTITUTION.md
+    - ERD_CONSTITUTION.md
+    - PROCESS_DOCTRINE.md
+
+read_first:
+  - REGISTRY.yaml
+  - DOCTRINE.md
+  - doctrine/REPO_DOMAIN_SPEC.md
+  - docs/prd/PRD_BARTON_STORAGE_HUB.md
+
+structure:
+  folders:
+    src/sys: "System infrastructure: env loaders, bootstraps, config"
+    src/data: "Data layer: schemas, queries, migrations, repositories"
+    src/app: "Application logic: modules, services, workflows"
+    src/ai: "AI components: agents, routers, prompts"
+    src/ui: "User interface: pages, components, layouts, styles"
+
+cc_layers:
+  CC-01:
+    name: "Sovereign"
+    legal:
+      - "boundary declaration"
+    identity: "barton-family-office"
+  CC-02:
+    name: "Hub"
+    legal:
+      - "PRD"
+      - "CTB placement"
+      - "IMO definition"
+    identity: "barton-storage"
+  CC-03:
+    name: "Context"
+    legal:
+      - "ADR"
+      - "process flows"
+      - "spokes"
+  CC-04:
+    name: "Process"
+    legal:
+      - "code"
+      - "tests"
+      - "config"
+
+descent_rule: "No artifact at CC-N until CC-(N-1) gate passes."
+
+file_placement_rule: |
+  Every file MUST map to exactly one CTB branch.
+  If it does not fit → DELETE IT.
+  No exceptions.
+
+forbidden:
+  folders:
+    - utils
+    - helpers
+    - common
+    - shared
+    - lib
+    - misc
+  actions:
+    - "Logic in spokes"
+    - "Spoke-to-spoke communication"
+    - "Code without PRD"
+    - "Code without ADR"
+    - "PID reuse"
+    - "Rogue folders in src/"
+
+permissions:
+  may:
+    - "Read all files"
+    - "Execute approved prompts"
+    - "Create artifacts at CC-04"
+    - "Query databases (read)"
+    - "Run builds and tests"
+  may_not:
+    - "Modify doctrine templates"
+    - "Skip descent gates"
+    - "Proceed despite violations"
+    - "Modify BARTON_STORAGE_SYSTEM_CONSTITUTION.md"
+    - "DROP database tables without approval"
+    - "Push to main without PR"
+  must:
+    - "Halt and report if violations exist"
+    - "Follow CTB placement rules"
+    - "Reference PRD before code changes"
+
+escalation:
+  on_doctrine_insufficient: "Create ADR proposal, halt, await human"
+  on_violation_detected: "Log to Master Error Log, halt, report"
+  on_uncertain: "Ask. Do not guess."
+
+hub_context:
+  domain: "Self-storage investment analysis"
+  passes:
+    - pass0: "Signal radar, ZIP scoring"
+    - pass1: "Market structure, demographics"
+    - pass15: "Rent reconciliation"
+    - pass2: "Underwriting, jurisdiction"
+    - pass3: "Design, feasibility"
+    - pass4: "Parcel screening"
+    - pass5: "Deal gate, Go/No-Go"
+  databases:
+    - name: "Neon"
+      type: "PostgreSQL"
+      access: "read/write"
+    - name: "Supabase"
+      type: "PostgreSQL + Auth"
+      access: "read/write"
