@@ -5,7 +5,7 @@ from fastapi import APIRouter, HTTPException
 from backend.schemas.parcels import ParcelRequest, ParcelResponse
 from backend.db.connection import get_db_connection
 from backend.core.parcel_screening import screen_parcel
-from backend.utils.process_logger import log_process_step
+from backend.core.process_logger import log_process_step
 from backend.config.settings import GLOBAL_CONFIG
 import logging
 

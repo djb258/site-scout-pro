@@ -6,8 +6,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from backend.db.connection import init_db_pool, close_db_pool
 from backend.api import screening, saturation, scoring, financials, parcels
-from backend.utils.error_handler import setup_error_handlers
-from backend.utils.logger import setup_logging
+from backend.core.error_handler import setup_error_handlers
+from backend.core.logger import setup_logging
 from backend.config.settings import load_global_config, GLOBAL_CONFIG
 from backend.pipeline.process_registry import load_process_registry, PROCESS_REGISTRY
 from backend.config.constants import API_PREFIX, API_TITLE, API_VERSION

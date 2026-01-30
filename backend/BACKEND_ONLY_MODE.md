@@ -29,7 +29,7 @@ You must operate EXCLUSIVELY inside:
 - `/backend/models`
 - `/backend/schemas`
 - `/backend/services`
-- `/backend/utils`
+- `/backend/core`
 - `/backend/pipeline`
 - `/backend/config`
 - `/backend/renderer`

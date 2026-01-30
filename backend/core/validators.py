@@ -3,7 +3,7 @@ Input validation functions.
 """
 from typing import Optional
 from backend.config.constants import SUPPORTED_STATES
-from backend.utils.errors import ValidationError
+from backend.core.errors import ValidationError
 
 
 def validate_state(state: str) -> None:

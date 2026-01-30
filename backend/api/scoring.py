@@ -10,7 +10,7 @@ from backend.core.calculations import (
     calculate_financial_score,
     calculate_final_score
 )
-from backend.utils.process_logger import log_process_step
+from backend.core.process_logger import log_process_step
 from backend.config.settings import GLOBAL_CONFIG
 import logging
 

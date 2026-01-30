@@ -7,9 +7,9 @@ from backend.schemas.common import ErrorResponse
 from backend.db.connection import get_db_connection
 from backend.services.census_service import get_population_data
 from backend.services.uhaul_service import get_uhaul_index
-from backend.utils.response import success_response, error_response
-from backend.utils.process_logger import log_process_step
-from backend.utils.errors import ValidationError, DatabaseError
+from backend.core.response import success_response, error_response
+from backend.core.process_logger import log_process_step
+from backend.core.errors import ValidationError, DatabaseError
 from backend.config.settings import GLOBAL_CONFIG
 import logging
 

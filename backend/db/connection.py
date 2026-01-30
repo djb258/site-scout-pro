@@ -5,7 +5,7 @@ import asyncpg
 import os
 from typing import Optional
 from contextlib import asynccontextmanager
-from backend.utils.logger import setup_logging
+from backend.core.logger import setup_logging
 from backend.config.constants import (
     DB_POOL_MIN_SIZE,
     DB_POOL_MAX_SIZE,

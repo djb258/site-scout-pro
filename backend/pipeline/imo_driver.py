@@ -5,7 +5,7 @@ from typing import Dict, Any, List, Optional
 import logging
 from backend.config.settings import GLOBAL_CONFIG
 from backend.db.connection import get_db_connection
-from backend.utils.process_logger import log_process_step, log_error
+from backend.core.process_logger import log_process_step, log_error
 
 logger = logging.getLogger(__name__)
 

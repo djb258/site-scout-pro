@@ -5,7 +5,7 @@ from fastapi import APIRouter, HTTPException
 from backend.schemas.financials import FinancialRequest, FinancialResponse
 from backend.db.connection import get_db_connection
 from backend.core.calculations import calculate_financial_score
-from backend.utils.process_logger import log_process_step
+from backend.core.process_logger import log_process_step
 from backend.config.settings import GLOBAL_CONFIG
 import logging
 

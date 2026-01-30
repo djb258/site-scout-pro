@@ -5,7 +5,7 @@ from fastapi import APIRouter, HTTPException
 from backend.schemas.saturation import SaturationRequest, SaturationResponse
 from backend.db.connection import get_db_connection
 from backend.core.saturation import calculate_saturation
-from backend.utils.process_logger import log_process_step
+from backend.core.process_logger import log_process_step
 from backend.config.settings import GLOBAL_CONFIG
 import logging
 
