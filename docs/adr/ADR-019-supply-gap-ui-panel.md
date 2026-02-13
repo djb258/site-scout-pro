@@ -1,5 +1,47 @@
 # ADR: Supply Gap UI Panel
 
+## Conformance
+
+| Field | Value |
+|-------|-------|
+| Doctrine Version | 2.0.0 |
+| CTB Version | 2.0.0 |
+| CC Layer | CC-04 |
+| Governing Hub | barton-storage (CC-02) |
+
+## Owning Hub
+
+| Field | Value |
+|-------|-------|
+| Hub ID | barton-storage |
+| Hub Name | Barton Storage System |
+| CC Layer | CC-02 |
+
+## CC Layer Scope
+
+| Layer | Relevance |
+|-------|-----------|
+| CC-01 Sovereign | Governed by barton-family-office |
+| CC-02 Hub | barton-storage |
+| CC-03 Context | pass1-market |
+| CC-04 Process | Supply Gap UI Panel implementation |
+
+## IMO Layer Scope
+
+| Layer | Impact |
+|-------|--------|
+| Ingress | Yes |
+| Middle | No |
+| Egress | No |
+
+## Constant vs Variable
+
+| Type | Name | Description |
+|------|------|-------------|
+| CONST (Input) | Supply data | Consumed by Supply Gap UI Panel |
+| VAR (Output) | Visual gap display | Produced by Supply Gap UI Panel |
+
+
 > **Status:** [x] Accepted
 > **Date:** 2024-12-18
 > **Freeze Tag:** `pass1hub_supply_gap_panel@v1.0.0` ✅ FROZEN
@@ -136,3 +178,24 @@ Remove the Supply Gap Panel card from `Pass1Hub.tsx`. No data migration required
 pass1hub_supply_gap_panel@v1.0.0 ✅ FROZEN
 DO NOT MODIFY visual layout or data sources without new ADR
 ```
+
+
+---
+
+## PID Impact
+
+| Pass | Impact |
+|------|--------|
+| Pass 0 | No |
+| Pass 1 | Yes |
+| Pass 1.5 | No |
+| Pass 2 | No |
+| Pass 3 | No |
+
+## Approval
+
+| Role | Name | Date | Status |
+|------|------|------|--------|
+| Author | AI Agent | 2026-02-13 | DRAFTED |
+| Reviewer | --- | --- | PENDING |
+| Sovereign | barton-family-office | --- | PENDING |

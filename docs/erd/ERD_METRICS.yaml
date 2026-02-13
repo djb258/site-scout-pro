@@ -1,0 +1,399 @@
+# ERD Metrics - Runtime Data Snapshot
+# ===============================================================================
+#
+# PURPOSE: Current state of ERD tables for operational decision-making
+# AUTHORITY: CC-04 (Process/Runtime)
+# UPDATE FREQUENCY: Before any work session, minimum daily
+#
+# THIS FILE IS AUTO-UPDATED. Manual edits will be overwritten.
+#
+# ===============================================================================
+
+# ---------------------------------------------------------------------------------
+# SYNC METADATA
+# ---------------------------------------------------------------------------------
+sync:
+  last_updated: 2026-01-30T00:00:00Z
+  updated_by: claude-code
+  source: doppler://neon/barton-storage
+  next_sync_due: 2026-01-31T00:00:00Z
+
+  # Sync configuration
+  frequency: daily
+  stale_after_hours: 24
+  auto_sync_on_session: true
+
+# ---------------------------------------------------------------------------------
+# HUB IDENTITY
+# ---------------------------------------------------------------------------------
+hub:
+  hub_id: barton-storage
+  hub_name: Barton Storage System
+  sovereign_id: barton-family-office
+  erd_version: "1.0.0"
+
+# ---------------------------------------------------------------------------------
+# TABLE METRICS
+# ---------------------------------------------------------------------------------
+# Tables defined in docs/ERD.md and docs/erd/*.md
+
+tables:
+  # === CORE ZONE & RUN MANAGEMENT ===
+  target_zones:
+    total_records: 0
+    created_last_24h: 0
+    updated_last_24h: 0
+
+  runs:
+    total_records: 6
+    created_last_24h: 0
+    updated_last_24h: 0
+
+  stage_log:
+    total_records: 3
+    created_last_24h: 0
+    updated_last_24h: 0
+
+  zip_results:
+    total_records: 11116
+    created_last_24h: 0
+    updated_last_24h: 0
+
+  # === MASTER DATA ===
+  zips_master:
+    total_records: 41551
+    created_last_24h: 0
+    updated_last_24h: 0
+
+  zone_zips:
+    total_records: 0
+    created_last_24h: 0
+    updated_last_24h: 0
+
+  # === SCREENING PIPELINE ===
+  layer_1_geography:
+    total_records: 2053
+    created_last_24h: 0
+    updated_last_24h: 0
+
+  layer_2_demographics:
+    total_records: 2053
+    created_last_24h: 0
+    updated_last_24h: 0
+
+  layer_3_counties:
+    total_records: 74
+    created_last_24h: 0
+    updated_last_24h: 0
+
+  county_scoring:
+    total_records: 74
+    created_last_24h: 0
+    updated_last_24h: 0
+
+  # === SUPPLY DATA ===
+  storage_facilities:
+    total_records: 2351
+    created_last_24h: 0
+    updated_last_24h: 0
+
+  pricing_data:
+    total_records: 0
+    created_last_24h: 0
+    updated_last_24h: 0
+
+  # === DEMAND DRIVERS ===
+  housing_communities:
+    total_records: 6698
+    created_last_24h: 0
+    updated_last_24h: 0
+
+  demand_anchors:
+    total_records: 2666
+    created_last_24h: 0
+    updated_last_24h: 0
+
+  universities:
+    total_records: 767
+    created_last_24h: 0
+    updated_last_24h: 0
+
+  military_bases:
+    total_records: 21
+    created_last_24h: 0
+    updated_last_24h: 0
+
+  distribution_centers:
+    total_records: 1224
+    created_last_24h: 0
+    updated_last_24h: 0
+
+  # === GROWTH INDICATORS ===
+  mfg_announcements:
+    total_records: 0
+    created_last_24h: 0
+    updated_last_24h: 0
+
+  stip_projects:
+    total_records: 0
+    created_last_24h: 0
+    updated_last_24h: 0
+
+  migration_data:
+    total_records: 2720
+    created_last_24h: 0
+    updated_last_24h: 0
+
+  employment_data:
+    total_records: 74
+    created_last_24h: 0
+    updated_last_24h: 0
+
+  # === REGULATORY ===
+  zoning_cache:
+    total_records: 0
+    created_last_24h: 0
+    updated_last_24h: 0
+
+  jurisdiction_cards:
+    total_records: 7
+    created_last_24h: 0
+    updated_last_24h: 0
+
+  jurisdiction_documents:
+    total_records: 0
+    created_last_24h: 0
+    updated_last_24h: 0
+
+  # === PERMIT & HOUSING PIPELINE ===
+  permits_raw:
+    total_records: 11
+    created_last_24h: 0
+    updated_last_24h: 0
+
+  housing_pipeline:
+    total_records: 20
+    created_last_24h: 0
+    updated_last_24h: 0
+
+  inspections_raw:
+    total_records: 13
+    created_last_24h: 0
+    updated_last_24h: 0
+
+  # === MARKET MODEL ===
+  market_demographics:
+    total_records: 3
+    created_last_24h: 0
+    updated_last_24h: 0
+
+  market_analysis:
+    total_records: 3
+    created_last_24h: 0
+    updated_last_24h: 0
+
+  market_projections:
+    total_records: 3
+    created_last_24h: 0
+    updated_last_24h: 0
+
+  # === FEASIBILITY ===
+  build_constants:
+    total_records: 15
+    created_last_24h: 0
+    updated_last_24h: 0
+
+  land_cost_benchmarks:
+    total_records: 7
+    created_last_24h: 0
+    updated_last_24h: 0
+
+  reverse_feasibility:
+    total_records: 0
+    created_last_24h: 0
+    updated_last_24h: 0
+
+  feasibility_analysis:
+    total_records: 3
+    created_last_24h: 0
+    updated_last_24h: 0
+
+  feasibility_scenarios:
+    total_records: 9
+    created_last_24h: 0
+    updated_last_24h: 0
+
+  # === MONITORING ===
+  economic_catalysts:
+    total_records: 11
+    created_last_24h: 0
+    updated_last_24h: 0
+
+  infrastructure_projects:
+    total_records: 6
+    created_last_24h: 0
+    updated_last_24h: 0
+
+  # === SCORING ===
+  scoring_weights:
+    total_records: 3
+    created_last_24h: 0
+    updated_last_24h: 0
+
+  market_scores:
+    total_records: 3
+    created_last_24h: 0
+    updated_last_24h: 0
+
+  # === RATE INTELLIGENCE ===
+  rate_observations:
+    total_records: 167
+    created_last_24h: 0
+    updated_last_24h: 0
+
+  facility_rate_summary:
+    total_records: 16
+    created_last_24h: 0
+    updated_last_24h: 0
+
+  market_rate_benchmarks:
+    total_records: 3
+    created_last_24h: 0
+    updated_last_24h: 0
+
+  # === REPORTS ===
+  report_templates:
+    total_records: 4
+    created_last_24h: 0
+    updated_last_24h: 0
+
+  generated_reports:
+    total_records: 2
+    created_last_24h: 0
+    updated_last_24h: 0
+
+  # === SYSTEM TABLES ===
+  api_cache:
+    total_records: 2655
+    created_last_24h: 0
+    updated_last_24h: 0
+
+  data_dictionary:
+    total_records: 157
+    created_last_24h: 0
+    updated_last_24h: 0
+
+  # === ADDITIONAL TABLES FROM DB ===
+  campgrounds:
+    total_records: 1030
+    created_last_24h: 0
+    updated_last_24h: 0
+
+  deep_dive_wv_eastern:
+    total_records: 155
+    created_last_24h: 0
+    updated_last_24h: 0
+
+  jurisdictions:
+    total_records: 56
+    created_last_24h: 0
+    updated_last_24h: 0
+
+  industrial_momentum:
+    total_records: 8
+    created_last_24h: 0
+    updated_last_24h: 0
+
+# ---------------------------------------------------------------------------------
+# AGGREGATE METRICS
+# ---------------------------------------------------------------------------------
+aggregates:
+  total_records_all_tables: 90000
+  total_zips: 41551
+  surviving_zips: 2053
+  total_counties_analyzed: 74
+  total_storage_facilities: 2351
+  total_jurisdiction_cards: 7
+  total_rate_observations: 167
+  total_economic_catalysts: 11
+  pipeline_analysis_count: 3
+  total_demand_anchors: 11376  # housing_communities + demand_anchors + universities + military + distribution + campgrounds
+  total_zip_results: 11116
+
+# ---------------------------------------------------------------------------------
+# FILTER/EXCLUSION METRICS
+# ---------------------------------------------------------------------------------
+filters:
+  zip_exclusion:
+    total_excluded: 39498
+    exclusion_reasons:
+      - reason: "distance_exceeded"
+        count: 0
+      - reason: "density_too_high"
+        count: 0
+      - reason: "population_too_low"
+        count: 0
+      - reason: "income_too_low"
+        count: 0
+      - reason: "poverty_too_high"
+        count: 0
+
+  exclusion_rate_percent: 95.06
+
+# ---------------------------------------------------------------------------------
+# DATA QUALITY METRICS
+# ---------------------------------------------------------------------------------
+data_quality:
+  null_rate_percent: 0
+  duplicate_rate_percent: 0
+  last_quality_check: 2026-01-30T00:00:00Z
+  quality_status: PASS
+
+# ---------------------------------------------------------------------------------
+# SYNC QUERIES (Reference)
+# ---------------------------------------------------------------------------------
+queries:
+  total_records: |
+    SELECT COUNT(*) FROM {table_name};
+
+  created_last_24h: |
+    SELECT COUNT(*) FROM {table_name}
+    WHERE created_at > NOW() - INTERVAL '24 hours';
+
+  updated_last_24h: |
+    SELECT COUNT(*) FROM {table_name}
+    WHERE updated_at > NOW() - INTERVAL '24 hours';
+
+  aggregate_all_tables: |
+    SELECT
+      SUM(reltuples::bigint) AS total_records
+    FROM pg_class
+    WHERE relnamespace = (SELECT oid FROM pg_namespace WHERE nspname = 'public')
+      AND relkind = 'r';
+
+  zip_survival_rate: |
+    SELECT
+      (SELECT COUNT(*) FROM layer_1_geography WHERE passed = true)::float /
+      (SELECT COUNT(*) FROM zips_master)::float * 100 AS survival_rate;
+
+# ---------------------------------------------------------------------------------
+# ALERTS / THRESHOLDS
+# ---------------------------------------------------------------------------------
+thresholds:
+  min_zips_master: 40000
+  max_exclusion_rate: 95
+  max_null_rate: 5
+  min_jurisdiction_cards: 5
+  min_rate_observations: 100
+
+alerts: []
+
+# ===============================================================================
+# DOCUMENT CONTROL
+# ===============================================================================
+document_control:
+  template_version: "1.0.0"
+  template_source: "imo-creator/templates/erd/ERD_METRICS.yaml.template"
+  created: 2026-01-30
+  authority: CC-04
+  change_protocol: "Auto-updated by sync process"

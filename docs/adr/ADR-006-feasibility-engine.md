@@ -1,5 +1,47 @@
 # ADR-006: Feasibility Engine
 
+## Conformance
+
+| Field | Value |
+|-------|-------|
+| Doctrine Version | 2.0.0 |
+| CTB Version | 2.0.0 |
+| CC Layer | CC-04 |
+| Governing Hub | barton-storage (CC-02) |
+
+## Owning Hub
+
+| Field | Value |
+|-------|-------|
+| Hub ID | barton-storage |
+| Hub Name | Barton Storage System |
+| CC Layer | CC-02 |
+
+## CC Layer Scope
+
+| Layer | Relevance |
+|-------|-----------|
+| CC-01 Sovereign | Governed by barton-family-office |
+| CC-02 Hub | barton-storage |
+| CC-03 Context | pass3-design |
+| CC-04 Process | Feasibility Engine implementation |
+
+## IMO Layer Scope
+
+| Layer | Impact |
+|-------|--------|
+| Ingress | No |
+| Middle | Yes |
+| Egress | No |
+
+## Constant vs Variable
+
+| Type | Name | Description |
+|------|------|-------------|
+| CONST (Input) | Market rates, costs, site data | Consumed by Feasibility Engine |
+| VAR (Output) | NOI, DSCR, IRR | Produced by Feasibility Engine |
+
+
 **Status:** Accepted
 **Date:** 2025-12-17
 **Deciders:** Barton Enterprises Engineering Team
@@ -167,3 +209,24 @@ function checkFeasibilityFatalFlaws(result: FeasibilityResult): FatalFlaw[] {
 - BARTON_STORAGE_DOCTRINE.md
 - Feasibility spoke implementation
 - ADR-007 (Verdict Engine)
+
+
+---
+
+## PID Impact
+
+| Pass | Impact |
+|------|--------|
+| Pass 0 | No |
+| Pass 1 | No |
+| Pass 1.5 | No |
+| Pass 2 | No |
+| Pass 3 | Yes |
+
+## Approval
+
+| Role | Name | Date | Status |
+|------|------|------|--------|
+| Author | AI Agent | 2026-02-13 | DRAFTED |
+| Reviewer | --- | --- | PENDING |
+| Sovereign | barton-family-office | --- | PENDING |

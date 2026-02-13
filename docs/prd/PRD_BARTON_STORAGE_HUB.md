@@ -4,9 +4,22 @@
 
 | Field | Value |
 |-------|-------|
-| **Doctrine Version** | 1.4.0 |
-| **CTB Version** | 1.1.0 |
+| **Doctrine Version** | 2.0.0 |
+| **CTB Version** | 2.0.0 |
 | **CC Layer** | CC-02 |
+| **Governing Hub** | barton-storage (CC-02) |
+| **CTB Governance** | templates/config/CTB_GOVERNANCE.md |
+
+---
+
+## HSS — Hub-and-Spoke Set Up
+
+| Field | Value |
+|-------|-------|
+| HSS Source | HUB_DESIGN_DECLARATION.yaml |
+| HSS Status | DRAFT |
+| Hub Name | Barton Storage System |
+| Hub ID | barton-storage |
 
 ---
 
@@ -239,7 +252,34 @@ This hub screens self-storage investment opportunities through a progressive pas
 
 | Artifact | Reference |
 |----------|-----------|
-| Canonical Doctrine | CANONICAL_ARCHITECTURE_DOCTRINE.md |
-| Hub/Spoke Geometry | CANONICAL_ARCHITECTURE_DOCTRINE.md §3 |
+| Canonical Doctrine | ARCHITECTURE.md v2.0.0 |
+| Hub/Spoke Geometry | ARCHITECTURE.md Part IV |
 | Registry | REGISTRY.yaml |
 | Domain Spec | doctrine/REPO_DOMAIN_SPEC.md |
+| Governing OSAM | docs/semantic/OSAM_BARTON_STORAGE.md |
+| OSAM Version | DRAFT |
+| Governing ERD | docs/erd/ERD_SubHub*.md |
+| Governing Process | docs/process/ |
+
+---
+
+## OSAM Compliance Declaration
+
+| Field | Value |
+|-------|-------|
+| Governing OSAM | docs/semantic/OSAM_BARTON_STORAGE.md |
+| OSAM Version | DRAFT |
+| All tables declared in OSAM | [ ] Verified |
+| No undeclared joins | [ ] Verified |
+
+---
+
+## Document Control
+
+| Field | Value |
+|-------|-------|
+| Created | 2026-01-25 |
+| Last Modified | 2026-02-13 |
+| Version | 2.0.0 |
+| Status | ACTIVE |
+| Authority | barton-family-office (CC-01) |

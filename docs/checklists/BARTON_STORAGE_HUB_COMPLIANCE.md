@@ -31,9 +31,10 @@ No exceptions. No partial compliance.
 
 | Field | Value |
 |-------|-------|
-| **Doctrine Version** | 1.4.0 |
-| **CTB Version** | 1.1.0 |
+| **Doctrine Version** | 2.0.0 |
+| **CTB Version** | 2.0.0 |
 | **CC Layer** | CC-02 |
+| **Hub Name** | Barton Storage System |
 | **Hub ID** | barton-storage |
 | **Sovereign ID** | barton-family-office |
 
@@ -46,6 +47,103 @@ No exceptions. No partial compliance.
 | **CRITICAL** | Blocks ship | NO — must be checked |
 | **HIGH** | Strongly recommended | Only with ADR exception |
 | **MEDIUM** | Nice to have | Yes, but document why |
+
+---
+
+# PART A — CONSTITUTIONAL VALIDITY
+
+These sections verify the hub satisfies the Transformation Law.
+Failure in Part A invalidates the hub regardless of Part B status.
+
+**Section Anchors**: SS A.1 through SS A.7
+
+---
+
+## SS A.1 — Constitutional Validity (CONST -> VAR)
+
+| # | Check | Status | Evidence |
+|---|-------|--------|----------|
+| A.1.1 | Constitution exists and is LOCKED | [ ] | BARTON_STORAGE_SYSTEM_CONSTITUTION.md |
+| A.1.2 | Constants (inputs) are declared | [ ] | See PRD Section 5 |
+| A.1.3 | Variables (outputs) are declared | [ ] | See PRD Section 6 |
+| A.1.4 | CONST -> VAR transformation is defined | [ ] | See PRD Section 3 |
+
+**Validity Test**: Complete this statement:
+
+> "This hub transforms _________________ (constants) into _________________ (variables)."
+
+If this statement cannot be completed, the hub is invalid.
+
+---
+
+## SS A.2 — PRD Compliance (Behavioral Proof)
+
+| # | Check | Status | Evidence |
+|---|-------|--------|----------|
+| A.2.1 | PRD exists and follows v2.0.0 template | [ ] | docs/prd/PRD_BARTON_STORAGE_HUB.md |
+| A.2.2 | HSS section is present in PRD | [ ] | HSS section |
+| A.2.3 | All 15 sections present | [ ] | Sections 1-15 |
+| A.2.4 | OSAM Compliance Declaration present | [ ] | OSAM section in PRD |
+
+---
+
+## SS A.3 — ERD Compliance (Structural Proof)
+
+| # | Check | Status | Evidence |
+|---|-------|--------|----------|
+| A.3.1 | ERD exists for each sub-hub | [ ] | docs/erd/ERD_SubHub*.md |
+| A.3.2 | Mermaid companion files exist | [ ] | docs/erd/*.mermaid |
+| A.3.3 | Tables trace to PRD constants | [ ] | Pressure Test Q1 |
+| A.3.4 | Tables produce PRD variables | [ ] | Pressure Test Q2 |
+
+---
+
+## SS A.4 — ERD Pressure Test
+
+| # | Check | Status | Evidence |
+|---|-------|--------|----------|
+| A.4.1 | Q1: Every table traces to a PRD constant | [ ] | |
+| A.4.2 | Q2: Every table produces a PRD variable | [ ] | |
+| A.4.3 | Q3: Every table has pass ownership | [ ] | |
+| A.4.4 | Q4: Every table has lineage mechanism | [ ] | |
+
+---
+
+## SS A.5 — ERD Upstream Flow Test
+
+| # | Check | Status | Evidence |
+|---|-------|--------|----------|
+| A.5.1 | All FKs resolve to valid PKs | [ ] | |
+| A.5.2 | No orphaned references | [ ] | |
+| A.5.3 | Cross-hub joins are declared | [ ] | |
+
+---
+
+## SS A.6 — OSAM Compliance (Semantic Access Map)
+
+| # | Check | Status | Evidence |
+|---|-------|--------|----------|
+| A.6.1 | OSAM exists | [ ] | docs/semantic/OSAM_BARTON_STORAGE.md |
+| A.6.2 | Universal join key declared | [ ] | sovereign_id |
+| A.6.3 | All tables classified | [ ] | OSAM table classification |
+| A.6.4 | No undeclared joins in ERDs | [ ] | |
+
+---
+
+## SS A.7 — Process Compliance (Execution Declaration)
+
+| # | Check | Status | Evidence |
+|---|-------|--------|----------|
+| A.7.1 | Process declarations exist for each pass | [ ] | docs/process/ |
+| A.7.2 | CAPTURE/COMPUTE/GOVERN sequences declared | [ ] | |
+| A.7.3 | Governing PRD/ERD references present | [ ] | |
+
+---
+
+# PART B — OPERATIONAL COMPLIANCE
+
+These sections verify the hub is ready to ship.
+Part B assumes Part A passes.
 
 ---
 
@@ -231,26 +329,12 @@ No exceptions. No partial compliance.
 
 ---
 
-## Compliance Summary
-
-**Before shipping, count your checks:**
-
-| Priority | Must Have | Your Count |
-|----------|-----------|------------|
-| CRITICAL | ALL checked | 35 / 35 |
-| HIGH | Most checked (ADR for exceptions) | 22 / 25 |
-| MEDIUM | Optional | 2 / 3 |
-
-**All CRITICAL items are checked. Hub is compliant for ship.**
-
----
-
 ## Traceability Reference
 
 | Artifact | Reference |
 |----------|-----------|
-| Canonical Doctrine | CANONICAL_ARCHITECTURE_DOCTRINE.md v1.4.0 |
-| Hub/Spoke Doctrine | CANONICAL_ARCHITECTURE_DOCTRINE.md §3 |
+| Canonical Doctrine | ARCHITECTURE.md v2.0.0 |
+| Hub/Spoke Doctrine | ARCHITECTURE.md Part IV |
 | IMO_CONTROL.json | ./IMO_CONTROL.json |
 | heir.doctrine.yaml | ./heir.doctrine.yaml |
 | doppler.yaml | ./doppler.yaml |
@@ -258,11 +342,26 @@ No exceptions. No partial compliance.
 
 ---
 
+## Compliance Gate Verification
+
+| Gate | Requirement | Status |
+|------|-------------|--------|
+| Part A — All CRITICAL items checked | Zero unchecked CRITICAL items in Part A | [ ] |
+| Part B — All CRITICAL items checked | Zero unchecked CRITICAL items in Part B | [ ] |
+| Zero-tolerance enforcement | No forbidden folders, no doctrine violations | [ ] |
+
+## AI Agent Acknowledgment
+
+I, the AI agent, confirm:
+- [ ] I have read and understood the governing doctrine (v2.0.0)
+- [ ] I have not fabricated any compliance evidence
+- [ ] All unchecked items are genuinely incomplete
+
 ## Document Control
 
 | Field | Value |
 |-------|-------|
 | Created | 2026-01-25 |
-| Last Modified | 2026-01-25 |
-| Validated By | Claude Code |
-| Status | COMPLIANT |
+| Last Modified | 2026-02-13 |
+| Version | 2.0.0 |
+| Status | IN REVIEW |

@@ -1,5 +1,47 @@
 # ADR-014: FEMA Flood API
 
+## Conformance
+
+| Field | Value |
+|-------|-------|
+| Doctrine Version | 2.0.0 |
+| CTB Version | 2.0.0 |
+| CC Layer | CC-04 |
+| Governing Hub | barton-storage (CC-02) |
+
+## Owning Hub
+
+| Field | Value |
+|-------|-------|
+| Hub ID | barton-storage |
+| Hub Name | Barton Storage System |
+| CC Layer | CC-02 |
+
+## CC Layer Scope
+
+| Layer | Relevance |
+|-------|-----------|
+| CC-01 Sovereign | Governed by barton-family-office |
+| CC-02 Hub | barton-storage |
+| CC-03 Context | pass2-underwriting |
+| CC-04 Process | FEMA Flood API implementation |
+
+## IMO Layer Scope
+
+| Layer | Impact |
+|-------|--------|
+| Ingress | Yes |
+| Middle | Yes |
+| Egress | No |
+
+## Constant vs Variable
+
+| Type | Name | Description |
+|------|------|-------------|
+| CONST (Input) | Coordinates | Consumed by FEMA Flood API |
+| VAR (Output) | Flood zone classification | Produced by FEMA Flood API |
+
+
 **Status:** Accepted
 **Date:** 2025-12-17
 **Deciders:** Barton Enterprises Engineering Team
@@ -120,3 +162,24 @@ function isHighRiskZone(zone: string): boolean {
 - PRD_PASS2_UNDERWRITING_HUB.md
 - CivilConstraints spoke implementation
 - BARTON_STORAGE_DOCTRINE.md (Kill Switches)
+
+
+---
+
+## PID Impact
+
+| Pass | Impact |
+|------|--------|
+| Pass 0 | No |
+| Pass 1 | No |
+| Pass 1.5 | No |
+| Pass 2 | Yes |
+| Pass 3 | No |
+
+## Approval
+
+| Role | Name | Date | Status |
+|------|------|------|--------|
+| Author | AI Agent | 2026-02-13 | DRAFTED |
+| Reviewer | --- | --- | PENDING |
+| Sovereign | barton-family-office | --- | PENDING |

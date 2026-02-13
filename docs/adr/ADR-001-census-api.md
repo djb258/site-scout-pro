@@ -1,5 +1,47 @@
 # ADR-001: Census API Integration
 
+## Conformance
+
+| Field | Value |
+|-------|-------|
+| Doctrine Version | 2.0.0 |
+| CTB Version | 2.0.0 |
+| CC Layer | CC-04 |
+| Governing Hub | barton-storage (CC-02) |
+
+## Owning Hub
+
+| Field | Value |
+|-------|-------|
+| Hub ID | barton-storage |
+| Hub Name | Barton Storage System |
+| CC Layer | CC-02 |
+
+## CC Layer Scope
+
+| Layer | Relevance |
+|-------|-----------|
+| CC-01 Sovereign | Governed by barton-family-office |
+| CC-02 Hub | barton-storage |
+| CC-03 Context | pass1-market |
+| CC-04 Process | Census API implementation |
+
+## IMO Layer Scope
+
+| Layer | Impact |
+|-------|--------|
+| Ingress | Yes |
+| Middle | Yes |
+| Egress | No |
+
+## Constant vs Variable
+
+| Type | Name | Description |
+|------|------|-------------|
+| CONST (Input) | ZIP code, FIPS code | Consumed by Census API |
+| VAR (Output) | Population, income, housing units | Produced by Census API |
+
+
 **Status:** Accepted
 **Date:** 2025-12-17
 **Deciders:** Barton Enterprises Engineering Team
@@ -75,3 +117,24 @@ async function fetchCensusData(zipCode: string, state: string): Promise<CensusRe
 
 - PRD_PASS1_STRUCTURE_HUB.md
 - ZipHydration spoke implementation
+
+
+---
+
+## PID Impact
+
+| Pass | Impact |
+|------|--------|
+| Pass 0 | No |
+| Pass 1 | Yes |
+| Pass 1.5 | No |
+| Pass 2 | No |
+| Pass 3 | No |
+
+## Approval
+
+| Role | Name | Date | Status |
+|------|------|------|--------|
+| Author | AI Agent | 2026-02-13 | DRAFTED |
+| Reviewer | --- | --- | PENDING |
+| Sovereign | barton-family-office | --- | PENDING |

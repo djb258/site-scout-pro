@@ -1,6 +1,6 @@
 # ERD: Sub-Hub 3 — Calculators / Underwriting
 
-> **Authority:** IMO_CONTROL.json (CONSTITUTIONAL)  
+> **Authority:** IMO_CONTROL.json (CONSTITUTIONAL)
 > **CC Layer:** CC-03 (Context Artifacts)
 
 ## Ownership Declaration
@@ -69,3 +69,64 @@ Calculators include:
 - Rent benchmarking
 - Fusion model scoring
 - Verdict generation
+
+---
+
+## Pressure Test
+
+### Q1: Does every table trace to a PRD constant?
+
+| Table | PRD Constant | Traced? |
+|-------|-------------|---------|
+| `calculators_state` | Demographics + Competitor rents + Zoning data (user-configurable inputs) | [x] |
+| `pass2_results` | Demographics + Competitor rents + Zoning data (composite analysis) | [x] |
+| `pass2_runs` | (System orchestration metadata) | [x] |
+| `rent_band_staging` | Competitor rents (rent band calculation inputs) | [x] |
+
+### Q2: Does every table produce a PRD variable?
+
+| Table | PRD Variable | Produces? |
+|-------|-------------|-----------|
+| `calculators_state` | Feasibility verdicts (calculator configuration state) | [x] |
+| `pass2_results` | Feasibility verdicts (financial viability assessments) | [x] |
+| `pass2_runs` | (Run tracking — supports lineage) | [x] |
+| `rent_band_staging` | Reconciled rents (rent band staging for feasibility) | [x] |
+
+### Q3: Does every table have pass ownership?
+
+| Table | Owning Pass | Declared? |
+|-------|------------|-----------|
+| `calculators_state` | Pass 3 (COMPUTE) | [x] |
+| `pass2_results` | Pass 3 (COMPUTE) | [x] |
+| `pass2_runs` | Pass 3 (COMPUTE) | [x] |
+| `rent_band_staging` | Pass 3 (COMPUTE) | [x] |
+
+### Q4: Does every table have a lineage mechanism?
+
+| Table | Lineage Field | Present? |
+|-------|--------------|----------|
+| `calculators_state` | id (UUID) | [x] |
+| `pass2_results` | id (UUID), zip_run_id FK | [x] |
+| `pass2_runs` | id (UUID), pass1_id FK, created_at | [x] |
+| `rent_band_staging` | id (UUID), site_intake_id FK | [x] |
+
+## OSAM Alignment
+
+| Check | Status |
+|-------|--------|
+| All tables declared in OSAM | [ ] |
+| No undeclared joins exist | [ ] |
+| Join key is sovereign_id | [ ] |
+
+---
+
+## Document Control
+
+| Field | Value |
+|-------|-------|
+| Created | 2026-01-25 |
+| Last Modified | 2026-02-13 |
+| Doctrine Version | 2.0.0 |
+| Status | ACTIVE |
+| Governing PRD | docs/prd/PRD_PASS3_DESIGN_HUB.md |
+| Authority | barton-storage (CC-02) |

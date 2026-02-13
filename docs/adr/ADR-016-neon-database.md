@@ -1,5 +1,47 @@
 # ADR-016: Neon PostgreSQL Database
 
+## Conformance
+
+| Field | Value |
+|-------|-------|
+| Doctrine Version | 2.0.0 |
+| CTB Version | 2.0.0 |
+| CC Layer | CC-04 |
+| Governing Hub | barton-storage (CC-02) |
+
+## Owning Hub
+
+| Field | Value |
+|-------|-------|
+| Hub ID | barton-storage |
+| Hub Name | Barton Storage System |
+| CC Layer | CC-02 |
+
+## CC Layer Scope
+
+| Layer | Relevance |
+|-------|-----------|
+| CC-01 Sovereign | Governed by barton-family-office |
+| CC-02 Hub | barton-storage |
+| CC-03 Context | All contexts |
+| CC-04 Process | Neon Database implementation |
+
+## IMO Layer Scope
+
+| Layer | Impact |
+|-------|--------|
+| Ingress | No |
+| Middle | Yes |
+| Egress | Yes |
+
+## Constant vs Variable
+
+| Type | Name | Description |
+|------|------|-------------|
+| CONST (Input) | Structured records | Consumed by Neon Database |
+| VAR (Output) | Persisted vault data | Produced by Neon Database |
+
+
 **Status:** Accepted
 **Date:** 2025-12-17
 **Deciders:** Barton Enterprises Engineering Team
@@ -186,3 +228,24 @@ try {
 - backend/db/schema.sql
 - ADR-013-master-failure-log.md
 - PRD_DATA_LAYER_HUB.md
+
+
+---
+
+## PID Impact
+
+| Pass | Impact |
+|------|--------|
+| Pass 0 | Yes |
+| Pass 1 | Yes |
+| Pass 1.5 | Yes |
+| Pass 2 | Yes |
+| Pass 3 | Yes |
+
+## Approval
+
+| Role | Name | Date | Status |
+|------|------|------|--------|
+| Author | AI Agent | 2026-02-13 | DRAFTED |
+| Reviewer | --- | --- | PENDING |
+| Sovereign | barton-family-office | --- | PENDING |

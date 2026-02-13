@@ -1,6 +1,6 @@
 # ERD: Sub-Hub 5 — Deal Gate
 
-> **Authority:** IMO_CONTROL.json (CONSTITUTIONAL)  
+> **Authority:** IMO_CONTROL.json (CONSTITUTIONAL)
 > **CC Layer:** CC-03 (Context Artifacts)
 
 ## Ownership Declaration
@@ -59,3 +59,56 @@ Only Sub-Hub 5 may:
 3. Trigger async vault writes
 
 This is the "last gate" before data becomes permanent record.
+
+---
+
+## Pressure Test
+
+### Q1: Does every table trace to a PRD constant?
+
+| Table | PRD Constant | Traced? |
+|-------|-------------|---------|
+| `deal_decisions` (Future) | All upstream constants (composite of Pass 0-4 outputs) | [ ] |
+| `vault_push_queue` (Future) | All upstream constants (promotion queue for vault writes) | [ ] |
+
+### Q2: Does every table produce a PRD variable?
+
+| Table | PRD Variable | Produces? |
+|-------|-------------|-----------|
+| `deal_decisions` (Future) | Deal recommendations (Go/No-Go investment decisions) | [ ] |
+| `vault_push_queue` (Future) | Deal recommendations (vault promotion records) | [ ] |
+
+### Q3: Does every table have pass ownership?
+
+| Table | Owning Pass | Declared? |
+|-------|------------|-----------|
+| `deal_decisions` (Future) | Pass 5 (GOVERN) | [ ] |
+| `vault_push_queue` (Future) | Pass 5 (GOVERN) | [ ] |
+
+### Q4: Does every table have a lineage mechanism?
+
+| Table | Lineage Field | Present? |
+|-------|--------------|----------|
+| `deal_decisions` (Future) | TBD (pending table creation) | [ ] |
+| `vault_push_queue` (Future) | TBD (pending table creation) | [ ] |
+
+## OSAM Alignment
+
+| Check | Status |
+|-------|--------|
+| All tables declared in OSAM | [ ] |
+| No undeclared joins exist | [ ] |
+| Join key is sovereign_id | [ ] |
+
+---
+
+## Document Control
+
+| Field | Value |
+|-------|-------|
+| Created | 2026-01-25 |
+| Last Modified | 2026-02-13 |
+| Doctrine Version | 2.0.0 |
+| Status | ACTIVE |
+| Governing PRD | Pending (Pass 5 PRD not yet created) |
+| Authority | barton-storage (CC-02) |

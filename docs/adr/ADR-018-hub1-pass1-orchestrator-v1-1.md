@@ -1,5 +1,47 @@
 # ADR: Hub 1 Pass 1 Orchestrator v1.1
 
+## Conformance
+
+| Field | Value |
+|-------|-------|
+| Doctrine Version | 2.0.0 |
+| CTB Version | 2.0.0 |
+| CC Layer | CC-04 |
+| Governing Hub | barton-storage (CC-02) |
+
+## Owning Hub
+
+| Field | Value |
+|-------|-------|
+| Hub ID | barton-storage |
+| Hub Name | Barton Storage System |
+| CC Layer | CC-02 |
+
+## CC Layer Scope
+
+| Layer | Relevance |
+|-------|-----------|
+| CC-01 Sovereign | Governed by barton-family-office |
+| CC-02 Hub | barton-storage |
+| CC-03 Context | pass1-market |
+| CC-04 Process | Pass 1 Orchestrator v1.1 implementation |
+
+## IMO Layer Scope
+
+| Layer | Impact |
+|-------|--------|
+| Ingress | No |
+| Middle | Yes |
+| Egress | No |
+
+## Constant vs Variable
+
+| Type | Name | Description |
+|------|------|-------------|
+| CONST (Input) | ZIP code input | Consumed by Pass 1 Orchestrator v1.1 |
+| VAR (Output) | Orchestrated pass output | Produced by Pass 1 Orchestrator v1.1 |
+
+
 > **Status:** [x] Accepted
 > **Date:** 2024-12-18
 > **Freeze Tag:** `hub1_pass1_orchestrator_v1_1@v1.1.0` ✅ FROZEN
@@ -149,3 +191,24 @@ Revert to calling `hub1_pass1_orchestrator` (v1.0.0) directly. No data migration
 hub1_pass1_orchestrator_v1_1@v1.1.0 ✅ FROZEN
 DO NOT MODIFY — downstream depends on this shape
 ```
+
+
+---
+
+## PID Impact
+
+| Pass | Impact |
+|------|--------|
+| Pass 0 | No |
+| Pass 1 | Yes |
+| Pass 1.5 | No |
+| Pass 2 | No |
+| Pass 3 | No |
+
+## Approval
+
+| Role | Name | Date | Status |
+|------|------|------|--------|
+| Author | AI Agent | 2026-02-13 | DRAFTED |
+| Reviewer | --- | --- | PENDING |
+| Sovereign | barton-family-office | --- | PENDING |

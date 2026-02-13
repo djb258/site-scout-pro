@@ -1,5 +1,47 @@
 # ADR-007: Verdict Engine
 
+## Conformance
+
+| Field | Value |
+|-------|-------|
+| Doctrine Version | 2.0.0 |
+| CTB Version | 2.0.0 |
+| CC Layer | CC-04 |
+| Governing Hub | barton-storage (CC-02) |
+
+## Owning Hub
+
+| Field | Value |
+|-------|-------|
+| Hub ID | barton-storage |
+| Hub Name | Barton Storage System |
+| CC Layer | CC-02 |
+
+## CC Layer Scope
+
+| Layer | Relevance |
+|-------|-----------|
+| CC-01 Sovereign | Governed by barton-family-office |
+| CC-02 Hub | barton-storage |
+| CC-03 Context | pass2-underwriting, pass3-design |
+| CC-04 Process | Verdict Engine implementation |
+
+## IMO Layer Scope
+
+| Layer | Impact |
+|-------|--------|
+| Ingress | No |
+| Middle | Yes |
+| Egress | Yes |
+
+## Constant vs Variable
+
+| Type | Name | Description |
+|------|------|-------------|
+| CONST (Input) | Scores, thresholds | Consumed by Verdict Engine |
+| VAR (Output) | GO/NO_GO/MAYBE verdict | Produced by Verdict Engine |
+
+
 **Status:** Accepted
 **Date:** 2025-12-17
 **Deciders:** Barton Enterprises Engineering Team
@@ -162,3 +204,24 @@ All overrides logged to `engine_logs` with justification.
 - BARTON_STORAGE_DOCTRINE.md
 - ADR-006 (Feasibility Engine)
 - Verdict spoke implementation
+
+
+---
+
+## PID Impact
+
+| Pass | Impact |
+|------|--------|
+| Pass 0 | No |
+| Pass 1 | No |
+| Pass 1.5 | No |
+| Pass 2 | Yes |
+| Pass 3 | Yes |
+
+## Approval
+
+| Role | Name | Date | Status |
+|------|------|------|--------|
+| Author | AI Agent | 2026-02-13 | DRAFTED |
+| Reviewer | --- | --- | PENDING |
+| Sovereign | barton-family-office | --- | PENDING |

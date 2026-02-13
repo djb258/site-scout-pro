@@ -1,5 +1,47 @@
 # ADR-020: Hub 1.5 Remediation Worker
 
+## Conformance
+
+| Field | Value |
+|-------|-------|
+| Doctrine Version | 2.0.0 |
+| CTB Version | 2.0.0 |
+| CC Layer | CC-04 |
+| Governing Hub | barton-storage (CC-02) |
+
+## Owning Hub
+
+| Field | Value |
+|-------|-------|
+| Hub ID | barton-storage |
+| Hub Name | Barton Storage System |
+| CC Layer | CC-02 |
+
+## CC Layer Scope
+
+| Layer | Relevance |
+|-------|-----------|
+| CC-01 Sovereign | Governed by barton-family-office |
+| CC-02 Hub | barton-storage |
+| CC-03 Context | pass15-rent-recon |
+| CC-04 Process | Hub 1.5 Remediation Worker implementation |
+
+## IMO Layer Scope
+
+| Layer | Impact |
+|-------|--------|
+| Ingress | No |
+| Middle | Yes |
+| Egress | No |
+
+## Constant vs Variable
+
+| Type | Name | Description |
+|------|------|-------------|
+| CONST (Input) | Gap queue items | Consumed by Hub 1.5 Remediation Worker |
+| VAR (Output) | Resolved rate data | Produced by Hub 1.5 Remediation Worker |
+
+
 **Status:** Accepted  
 **Date:** 2025-12-18  
 **Author:** System Architect  
@@ -179,3 +221,24 @@ The following are explicitly **out of scope** for Hub 1.5:
 | Version | Date | Changes |
 |---------|------|---------|
 | v0.1.0 | 2025-12-18 | Initial shell architecture |
+
+
+---
+
+## PID Impact
+
+| Pass | Impact |
+|------|--------|
+| Pass 0 | No |
+| Pass 1 | No |
+| Pass 1.5 | Yes |
+| Pass 2 | No |
+| Pass 3 | No |
+
+## Approval
+
+| Role | Name | Date | Status |
+|------|------|------|--------|
+| Author | AI Agent | 2026-02-13 | DRAFTED |
+| Reviewer | --- | --- | PENDING |
+| Sovereign | barton-family-office | --- | PENDING |

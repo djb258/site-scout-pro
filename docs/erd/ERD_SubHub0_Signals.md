@@ -1,6 +1,6 @@
 # ERD: Sub-Hub 0 — Signals/Smoke Radar
 
-> **Authority:** IMO_CONTROL.json (CONSTITUTIONAL)  
+> **Authority:** IMO_CONTROL.json (CONSTITUTIONAL)
 > **CC Layer:** CC-03 (Context Artifacts)
 
 ## Ownership Declaration
@@ -63,7 +63,72 @@ See: [ERD_SubHub0_Signals.mermaid](./ERD_SubHub0_Signals.mermaid)
 ## Immutability Enforcement
 
 ```sql
-CREATE TRIGGER trg_pass0_signals_immutable 
-BEFORE UPDATE OR DELETE ON pass0_signals 
+CREATE TRIGGER trg_pass0_signals_immutable
+BEFORE UPDATE OR DELETE ON pass0_signals
 FOR EACH ROW EXECUTE FUNCTION prevent_signal_mutation();
 ```
+
+---
+
+## Pressure Test
+
+### Q1: Does every table trace to a PRD constant?
+
+| Table | PRD Constant | Traced? |
+|-------|-------------|---------|
+| `pass0_signals` | Market signals (Google Trends, permits, news) | [x] |
+| `pass0_narrative_pins` | Market signals (news, narrative sources) | [x] |
+| `pass0_run_log` | (System orchestration metadata) | [x] |
+| `pass0_url_queue` | Market signals (news URLs, source URLs) | [x] |
+| `hub0_event_log` | (System event tracking) | [x] |
+
+### Q2: Does every table produce a PRD variable?
+
+| Table | PRD Variable | Produces? |
+|-------|-------------|-----------|
+| `pass0_signals` | Signal scores (ZIP-level momentum scores) | [x] |
+| `pass0_narrative_pins` | Signal scores (geographic narrative signals) | [x] |
+| `pass0_run_log` | (Run tracking — supports lineage) | [x] |
+| `pass0_url_queue` | (URL queue — supports signal ingestion) | [x] |
+| `hub0_event_log` | (Event log — supports observability) | [x] |
+
+### Q3: Does every table have pass ownership?
+
+| Table | Owning Pass | Declared? |
+|-------|------------|-----------|
+| `pass0_signals` | Pass 0 (CAPTURE) | [x] |
+| `pass0_narrative_pins` | Pass 0 (CAPTURE) | [x] |
+| `pass0_run_log` | Pass 0 (CAPTURE) | [x] |
+| `pass0_url_queue` | Pass 0 (CAPTURE) | [x] |
+| `hub0_event_log` | Pass 0 (CAPTURE) | [x] |
+
+### Q4: Does every table have a lineage mechanism?
+
+| Table | Lineage Field | Present? |
+|-------|--------------|----------|
+| `pass0_signals` | signal_id (UUID), sovereign_id FK, zip_code FK | [x] |
+| `pass0_narrative_pins` | id (UUID), run_id FK to pass0_run_log | [x] |
+| `pass0_run_log` | id (UUID), created_at | [x] |
+| `pass0_url_queue` | id (UUID) | [x] |
+| `hub0_event_log` | id (UUID), created_at | [x] |
+
+## OSAM Alignment
+
+| Check | Status |
+|-------|--------|
+| All tables declared in OSAM | [ ] |
+| No undeclared joins exist | [ ] |
+| Join key is sovereign_id | [ ] |
+
+---
+
+## Document Control
+
+| Field | Value |
+|-------|-------|
+| Created | 2026-01-25 |
+| Last Modified | 2026-02-13 |
+| Doctrine Version | 2.0.0 |
+| Status | ACTIVE |
+| Governing PRD | docs/prd/PRD_PASS0_RADAR_HUB.md |
+| Authority | barton-storage (CC-02) |

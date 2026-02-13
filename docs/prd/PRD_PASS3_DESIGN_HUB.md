@@ -1,5 +1,29 @@
 # PRD — Pass-3 Design/Calculator Hub
 
+## Conformance
+
+| Field | Value |
+|-------|-------|
+| Doctrine Version | 2.0.0 |
+| CTB Version | 2.0.0 |
+| CC Layer | CC-03 |
+| Governing Hub | barton-storage (CC-02) |
+| CTB Governance | templates/config/CTB_GOVERNANCE.md |
+
+---
+
+## HSS — Hub-and-Spoke Set Up
+
+| Field | Value |
+|-------|-------|
+| HSS Source | HUB_DESIGN_DECLARATION.yaml |
+| HSS Status | DRAFT |
+| Hub Name | Barton Storage System |
+| Hub ID | barton-storage |
+| Context ID | pass3-design |
+
+---
+
 ## 1. Overview
 
 - **System Name:** Storage Site Scout (Barton Storage Application)
@@ -2298,3 +2322,38 @@ ORDER BY created_at DESC;
 |------|------|------|
 | Owner | Barton Enterprises | 2025-12-17 |
 | Reviewer | | |
+
+---
+
+## Traceability
+
+| Artifact | Reference |
+|----------|-----------|
+| Governing PRD | docs/prd/PRD_BARTON_STORAGE_HUB.md |
+| Governing OSAM | docs/semantic/OSAM_BARTON_STORAGE.md |
+| OSAM Version | DRAFT |
+| Governing ERD | docs/erd/ERD_SubHub3_Calculators.md |
+| Governing Process | docs/process/PROCESS_PASS3_DESIGN.md |
+
+---
+
+## OSAM Compliance Declaration
+
+| Field | Value |
+|-------|-------|
+| Governing OSAM | docs/semantic/OSAM_BARTON_STORAGE.md |
+| OSAM Version | DRAFT |
+| All tables declared in OSAM | [ ] Verified |
+| No undeclared joins | [ ] Verified |
+
+---
+
+## Document Control
+
+| Field | Value |
+|-------|-------|
+| Created | 2025-12-17 |
+| Last Modified | 2026-02-13 |
+| Version | 2.0.0 |
+| Status | ACTIVE |
+| Authority | barton-family-office (CC-01) |
