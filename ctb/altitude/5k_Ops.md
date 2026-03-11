@@ -2,10 +2,10 @@
 
 ## Input Flow
 
-1. **Frontend (Lovable.dev)** submits candidate data
-2. **API Layer** receives request
+1. **Frontend (Figma UI → CF Workers/Pages)** submits candidate data
+2. **API Layer** receives request (CF Workers)
 3. **Validation** via Pydantic schemas
-4. **Neon Insertion** creates candidate record
+4. **CF D1 Insertion** creates candidate record (working), Neon (vault/archive)
 5. **Status**: Set to 'pending'
 
 ## Processing Flow
@@ -53,7 +53,7 @@ pending → screening → saturation → scoring → completed
 
 ## Database Operations
 
-- **Connection Pool**: Managed via asyncpg
+- **Connection Pool**: CF D1 bindings (working), asyncpg (Neon vault)
 - **Transactions**: All writes in transactions
 - **Retries**: Automatic retry on connection errors
 - **Health Checks**: Periodic connection validation
@@ -67,7 +67,7 @@ pending → screening → saturation → scoring → completed
 
 ## Deployment
 
-- **Environment Variables**: Neon connection string
+- **Environment Variables**: CF D1/KV bindings (working), Neon connection string (vault)
 - **Startup**: Initialize connection pool
 - **Shutdown**: Graceful pool closure
 - **Health Endpoint**: `/health` for monitoring

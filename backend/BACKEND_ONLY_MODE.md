@@ -94,7 +94,7 @@ You may implement or modify:
 - ❌ Client-side routing
 - ❌ Client services
 - ❌ Payload assemblers
-- ❌ Supabase UI helpers
+- ❌ CF Workers UI helpers
 - ❌ Anything user-facing
 - ❌ Frontend state management
 - ❌ UI components
@@ -104,12 +104,13 @@ You may implement or modify:
 
 ## 🧱 BACKEND CONTEXT
 
-- **Framework**: FastAPI (async)
-- **Database**: Neon (Postgres)
-- **Connection**: asyncpg
+- **Framework**: FastAPI (async) + CF Workers
+- **Database**: CF D1/KV (working) + Neon PostgreSQL (vault/archive)
+- **Connection**: CF D1 bindings (working), asyncpg (Neon vault)
 - **Process Engine**: IMO-Creator
 - **Doctrine**: Enforced via Global Config + CTB + Altitude
-- **Front-end**: Lovable.dev (OFF-LIMITS)
+- **File Storage**: CF R2
+- **Front-end**: Figma UI → CF Workers/Pages (OFF-LIMITS)
 
 ## 🔧 ENFORCEMENT CHECK
 

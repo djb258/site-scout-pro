@@ -1,5 +1,6 @@
 -- Storage Site Scouting Database Schema
--- Neon PostgreSQL
+-- Neon PostgreSQL (VAULT/ARCHIVE ONLY)
+-- BAR-104: Working database is CF D1/KV. This schema targets Neon vault.
 
 -- Main candidate table
 CREATE TABLE IF NOT EXISTS site_candidate (

@@ -59,6 +59,6 @@ Before applying ANY code change:
 ## Context
 
 - Backend: FastAPI + asyncpg + Neon
-- Frontend: Lovable.dev (OFF-LIMITS)
+- Frontend: Figma UI → CF Workers/Pages (OFF-LIMITS)
 - Doctrine: CTB + Altitude + Global Config
 

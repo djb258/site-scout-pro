@@ -3,12 +3,10 @@
 # Hub: barton-storage
 
 doctrine:
-  version: "1.4.0"
+  version: "2.0.0"
   source: "imo_creator/templates/doctrine/"
   files:
-    - CANONICAL_ARCHITECTURE_DOCTRINE.md
-    - ALTITUDE_DESCENT_MODEL.md
-    - HUB_SPOKE_ARCHITECTURE.md
+    - ARCHITECTURE.md
     - REPO_REFACTOR_PROTOCOL.md
     - PRD_CONSTITUTION.md
     - ERD_CONSTITUTION.md
@@ -112,9 +110,19 @@ hub_context:
     - pass4: "Parcel screening"
     - pass5: "Deal gate, Go/No-Go"
   databases:
+    - name: "CF D1"
+      type: "SQLite (Cloudflare)"
+      access: "read/write"
+      note: "Working database"
+    - name: "CF KV"
+      type: "Key-Value (Cloudflare)"
+      access: "read/write"
+      note: "Working state"
     - name: "Neon"
       type: "PostgreSQL"
       access: "read/write"
-    - name: "Supabase"
-      type: "PostgreSQL + Auth"
+      note: "Vault/archive ONLY"
+    - name: "CF R2"
+      type: "Object Storage (Cloudflare)"
       access: "read/write"
+      note: "File storage"

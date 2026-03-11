@@ -32,7 +32,7 @@
             "type": "spoke",
             "description": "Fetch ZIP metadata from census data.",
             "doctrine_id": "SS.01.01",
-            "tools": ["census_api", "lovable_db"],
+            "tools": ["census_api", "cf_d1"],
             "failures": [
               {
                 "code": "ZIP_NOT_FOUND",
@@ -325,22 +325,22 @@
       {
         "name": "DATA_LAYER_HUB",
         "type": "domain",
-        "description": "Database and persistence layer - Supabase, Neon, Firebase.",
+        "description": "Database and persistence layer - CF D1/KV (working), Neon (vault), CF R2 (files).",
         "doctrine_id": "SS.03.00",
         "weight": 0.20,
         "subHubs": [
           {
-            "name": "SUPABASE_ADAPTER",
+            "name": "CF_D1_ADAPTER",
             "type": "component",
-            "description": "Supabase/Lovable.DB adapter for pass1_runs, pass2_runs, staging.",
+            "description": "CF D1/KV adapter for pass1_runs, pass2_runs, staging (working database).",
             "doctrine_id": "SS.03.01",
-            "tools": ["supabase_client"],
+            "tools": ["cf_d1_client", "cf_kv_client"],
             "failures": [
               {
-                "code": "SUPABASE_CONNECTION_FAILED",
+                "code": "CF_D1_CONNECTION_FAILED",
                 "severity": "critical",
-                "description": "Cannot connect to Supabase",
-                "remediation": "Check credentials, verify service status",
+                "description": "Cannot connect to CF D1",
+                "remediation": "Check bindings, verify Worker configuration",
                 "autoRepairEnabled": true
               }
             ]
@@ -362,17 +362,17 @@
             ]
           },
           {
-            "name": "FIREBASE_REALTIME",
+            "name": "CF_R2_STORAGE",
             "type": "component",
-            "description": "Firebase for SPVPET realtime working memory.",
+            "description": "CF R2 for file/object storage.",
             "doctrine_id": "SS.03.03",
-            "tools": ["firebase_client"],
+            "tools": ["cf_r2_client"],
             "failures": [
               {
-                "code": "FIREBASE_AUTH_FAILED",
+                "code": "CF_R2_ACCESS_FAILED",
                 "severity": "critical",
-                "description": "Firebase authentication failed",
-                "remediation": "Check credentials, verify project ID",
+                "description": "Cannot access CF R2 bucket",
+                "remediation": "Check bindings, verify bucket configuration",
                 "autoRepairEnabled": false
               }
             ]
@@ -469,8 +469,8 @@
     },
     "databaseException": {
       "enabled": true,
-      "description": "Database operations use direct connections (Lovable adapter, pg client)",
-      "services": ["neon", "supabase", "firebase_firestore"]
+      "description": "Database operations use direct connections (CF D1 bindings, pg client for Neon vault)",
+      "services": ["cf_d1", "cf_kv", "neon", "cf_r2"]
     }
   },
 

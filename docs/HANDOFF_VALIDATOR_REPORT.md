@@ -263,7 +263,7 @@ if (!validation.ok && !skip_validation) {
 }
 ```
 
-### 3. UI Integration (Lovable)
+### 3. UI Integration (Figma UI → CF Workers/Pages)
 
 ```jsx
 // Disable Pass-2 button unless validation.ok === true
@@ -400,7 +400,7 @@ All validation results are JSON-serializable for API responses.
 
 | Priority | TODO | Notes |
 |----------|------|-------|
-| HIGH | Add UI validation display | Show blockers/warnings in Lovable |
+| HIGH | Add UI validation display | Show blockers/warnings in Figma UI |
 | HIGH | Run migrations for pass2_runs columns | validation_passed, validation_score |
 | MEDIUM | Add pre-flight validation endpoint | GET /validate-pass1/:id |
 | MEDIUM | Add validation metrics dashboard | Track failure rates |
@@ -428,7 +428,7 @@ All validation results are JSON-serializable for API responses.
 curl -X POST \
   -H "Content-Type: application/json" \
   -d '{"pass1_id": "test-123"}' \
-  https://your-project.supabase.co/functions/v1/start_pass2
+  https://your-project.workers.dev/functions/v1/start_pass2
 ```
 
 ---

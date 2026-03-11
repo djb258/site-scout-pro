@@ -302,13 +302,13 @@ function auditDatabaseConfig(config: any, rootDir: string): AuditResult[] {
     });
   }
 
-  // Check Lovable adapter
-  const adapterPath = path.join(rootDir, 'src', 'shared', 'adapters', 'LovableAdapter.ts');
+  // Check CF D1 adapter
+  const adapterPath = path.join(rootDir, 'src', 'shared', 'adapters', 'CFD1Adapter.ts');
   results.push({
     category: 'Database',
-    item: 'Lovable Adapter',
+    item: 'CF D1 Adapter',
     status: fileExists(adapterPath) ? 'PASS' : 'FAIL',
-    message: fileExists(adapterPath) ? 'LovableAdapter.ts exists' : 'Adapter NOT FOUND',
+    message: fileExists(adapterPath) ? 'CFD1Adapter.ts exists' : 'Adapter NOT FOUND',
   });
 
   return results;

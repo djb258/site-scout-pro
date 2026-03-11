@@ -283,7 +283,7 @@ ALTER TABLE vault ADD COLUMN IF NOT EXISTS developable_acres DECIMAL(6,3);
 
 ### Cloudflare Workers Compatibility
 - All imports are static (no dynamic imports)
-- All DB access via `@lovable/cloud-db`
+- All DB access via CF D1 bindings (working) and Neon client (vault)
 - No Node.js-specific APIs used
 - All spoke outputs are JSON-serializable
 
@@ -312,7 +312,7 @@ Civil constraints can trigger fatal flaws:
 The Pass-2 Underwriting Hub is now complete with civil engineering analysis integrated throughout the pipeline. The civil_constraints spoke provides early-stage site feasibility signals that flow into financial projections and final verdict determination. All spokes are shell implementations ready for production data source integration.
 
 **Next Steps:**
-1. Run Supabase migrations for new columns
+1. Run CF D1 migrations for new working columns, Neon vault migrations for archive columns
 2. Test end-to-end with sample opportunity
 3. Integrate first external data sources (DEM, zoning API)
-4. Build UI components for civil constraint display
+4. Build UI components for civil constraint display (Figma UI → CF Workers/Pages)

@@ -149,7 +149,7 @@ verify_jwt = false
 
 # ================================================================
 # Pass 2 — Jurisdiction Card Worker System (v1.0.0)
-# Supabase stages → Neon vault via explicit promotion ONLY
+# CF D1 stages → Neon vault via explicit promotion ONLY
 # ================================================================
 
 [functions.collectJurisdictionCard]
@@ -163,7 +163,7 @@ verify_jwt = false
 
 # ================================================================
 # CCA Recon Flow — County Capability Assessment
-# Claude thinks. Neon remembers. Lovable orchestrates.
+# Claude thinks. Neon archives. CF Workers orchestrate.
 # ================================================================
 
 [functions.cca_dispatch_recon]

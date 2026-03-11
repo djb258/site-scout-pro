@@ -6,11 +6,12 @@ Fully asynchronous FastAPI + asyncpg backend for Storage Site Scouting & Process
 
 ## Architecture
 
-- **Framework**: FastAPI (fully async)
-- **Database**: Neon PostgreSQL via asyncpg
+- **Framework**: FastAPI (async) + CF Workers (compute + hosting)
+- **Database**: CF D1/KV (working) + Neon PostgreSQL (vault/archive)
 - **Architecture**: CTB (Christmas Tree Backbone) + Altitude model
 - **Pattern**: Fully asynchronous throughout
-- **Frontend**: Lovable.dev (React/TypeScript) - see frontend files in `src/`
+- **Frontend**: Figma UI (design) → CF Workers/Pages (hosting)
+- **File Storage**: CF R2
 
 ## Setup
 
@@ -57,7 +58,7 @@ pytest tests/
 
 - `/ctb` - CTB documentation and Altitude files
 - `/backend` - Main application code (FastAPI) - **BACKEND-ONLY MODE**
-- `/src` - Frontend code (React/TypeScript via Lovable.dev) - **OFF-LIMITS**
+- `/src` - Frontend code (React/TypeScript via Figma UI) - **OFF-LIMITS**
 - `/tests` - Test files
 - `/config` - Global configuration (IMO-Creator)
 - `/imo_creator` - IMO-Creator integration
@@ -73,7 +74,7 @@ See `backend/BACKEND_ONLY_MODE.md` for complete rules.
 
 ## Frontend
 
-The frontend is built with Lovable.dev using React, TypeScript, and Tailwind CSS. To run the frontend:
+The frontend is designed in Figma UI and built with React, TypeScript, and Tailwind CSS, hosted on CF Workers/Pages. To run the frontend locally:
 
 ```bash
 npm install

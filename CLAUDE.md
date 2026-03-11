@@ -47,14 +47,18 @@ This repo conforms to imo-creator templates at the following versions:
 
 | Template | imo-creator Path | Version |
 |----------|------------------|---------|
-| Doctrine | templates/doctrine/CANONICAL_ARCHITECTURE_DOCTRINE.md | 1.4.0 |
-| Hub-Spoke | templates/doctrine/HUB_SPOKE_ARCHITECTURE.md | 1.1.0 |
-| Descent | templates/doctrine/ALTITUDE_DESCENT_MODEL.md | 1.1.0 |
+| Architecture (unified) | templates/doctrine/ARCHITECTURE.md | 2.0.0 |
+| Doctrine (redirect) | templates/doctrine/CANONICAL_ARCHITECTURE_DOCTRINE.md | REDIRECT → ARCHITECTURE.md |
+| Hub-Spoke (redirect) | templates/doctrine/HUB_SPOKE_ARCHITECTURE.md | REDIRECT → ARCHITECTURE.md Part IV |
+| Descent (redirect) | templates/doctrine/ALTITUDE_DESCENT_MODEL.md | REDIRECT → ARCHITECTURE.md Part VI |
 | Tools | templates/integrations/TOOLS.md | 1.1.0 |
-| PRD | templates/prd/PRD_HUB.md | 1.0.0 |
+| PRD | templates/prd/PRD_HUB.md | 2.0.0 |
 | ADR | templates/adr/ADR.md | 1.0.0 |
-| Checklist | templates/checklists/HUB_COMPLIANCE.md | 1.0.0 |
+| Checklist | templates/checklists/HUB_COMPLIANCE.md | 2.0.0 |
 | Snap-On Toolbox | templates/SNAP_ON_TOOLBOX.yaml | 1.0.0 |
+| OSAM | templates/semantic/OSAM.md | 1.0.0 |
+| CTB Governance | templates/config/CTB_GOVERNANCE.md | 1.0.0 |
+| Manifest | templates/TEMPLATES_MANIFEST.yaml | 2.0.0 |
 
 **If imo-creator updates a template version, this repo must update or be NON-COMPLIANT.**
 
@@ -68,6 +72,8 @@ This repo conforms to imo-creator templates at the following versions:
 | `heir.doctrine.yaml` | HEIR compliance configuration | ACTIVE |
 | `doppler.yaml` | Secrets management config | ACTIVE |
 | `BARTON_STORAGE_SYSTEM_CONSTITUTION.md` | Business doctrine | LOCKED |
+| `HUB_DESIGN_DECLARATION.yaml` | Hub-and-Spoke Setup (HSS) declaration | PENDING |
+| `doctrine/REPO_DOMAIN_SPEC.md` | Repository domain specification | PENDING |
 
 ---
 
@@ -118,8 +124,10 @@ All tools in this hub are registered with ADRs:
 | IRR Calculator | ADR-012 | Financial returns | INTERNAL |
 | FEMA Flood API | ADR-014 | Flood zone data | FREE |
 | USGS DEM API | ADR-015 | Elevation data | FREE |
-| Neon Database | ADR-016 | PostgreSQL storage | CHEAP |
-| Supabase | ADR-017 | Auth + realtime | CHEAP |
+| Neon Database | ADR-016 | PostgreSQL vault/archive | CHEAP |
+| CF D1/KV | — | Working database + state (BAR-100) | CHEAP |
+| CF R2 | — | File storage (BAR-100) | CHEAP |
+| CF Workers | — | Compute + hosting (BAR-100) | CHEAP |
 
 ---
 
@@ -146,8 +154,8 @@ All tools in this hub are registered with ADRs:
 | Create new components/pages/hooks | ✅ YES |
 | Add new ADRs | ✅ YES (follow template) |
 | Run builds and tests | ✅ YES |
-| Query Neon database (read) | ✅ YES |
-| Query Supabase (read) | ✅ YES |
+| Query Neon vault (read) | ✅ YES |
+| Query CF D1/KV (read) | ✅ YES |
 
 ---
 
@@ -202,7 +210,7 @@ If you detect drift from imo-creator templates:
 | Field | Value |
 |-------|-------|
 | Created | 2026-01-25 |
-| Last Modified | 2026-01-25 |
-| Doctrine Version | 1.4.0 |
+| Last Modified | 2026-02-12 |
+| Doctrine Version | 2.0.0 |
 | Status | ACTIVE |
 | Authority | barton-family-office (CC-01) |

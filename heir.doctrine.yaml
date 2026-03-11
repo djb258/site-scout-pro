@@ -1,11 +1,11 @@
 # HEIR Doctrine Configuration
 # Hub: Barton Storage System
-# Reference: CANONICAL_ARCHITECTURE_DOCTRINE.md v1.4.0
+# Reference: ARCHITECTURE.md v2.0.0
 
 # --- Conformance ---
 conformance:
-  doctrine_version: "1.4.0"
-  ctb_version: "1.1.0"
+  doctrine_version: "2.0.0"
+  ctb_version: "2.0.0"
   schema_version: "HEIR/2.0"
 
 # --- Sovereign Declaration (CC-01) ---
@@ -38,7 +38,7 @@ imo:
         description: "React UI for pass pipeline interaction"
       - name: "api-intake"
         type: "I"
-        description: "Supabase Edge Functions for data ingestion"
+        description: "CF Workers for data ingestion"
   middle:
     description: "Pass 0-5 pipeline, scoring engine, jurisdiction resolver, market analysis"
     owns_logic: true
@@ -63,12 +63,22 @@ imo:
 
 # --- Services (Abstract) ---
 services:
-  - name: "supabase"
+  - name: "cf-d1"
     port: "443"
     type: "database"
+    note: "Cloudflare D1 — working database"
+  - name: "cf-kv"
+    port: "443"
+    type: "key-value"
+    note: "Cloudflare KV — working state"
   - name: "neon"
     port: "5432"
     type: "database"
+    note: "Neon PostgreSQL — vault/archive ONLY"
+  - name: "cf-r2"
+    port: "443"
+    type: "object-storage"
+    note: "Cloudflare R2 — file storage"
   - name: "retell"
     port: "443"
     type: "ai-voice"
@@ -77,12 +87,17 @@ services:
 environment:
   secrets_provider: "doppler"
   variables:
-    - key: "SUPABASE_URL"
-      source: "${DOPPLER:SUPABASE_URL}"
-    - key: "SUPABASE_ANON_KEY"
-      source: "${DOPPLER:SUPABASE_ANON_KEY}"
+    - key: "CF_ACCOUNT_ID"
+      source: "${DOPPLER:CF_ACCOUNT_ID}"
+    - key: "CF_D1_DATABASE_ID"
+      source: "${DOPPLER:CF_D1_DATABASE_ID}"
+    - key: "CF_KV_NAMESPACE_ID"
+      source: "${DOPPLER:CF_KV_NAMESPACE_ID}"
+    - key: "CF_R2_BUCKET"
+      source: "${DOPPLER:CF_R2_BUCKET}"
     - key: "NEON_DATABASE_URL"
       source: "${DOPPLER:NEON_DATABASE_URL}"
+      note: "Vault/archive connection ONLY"
     - key: "RETELL_API_KEY"
       source: "${DOPPLER:RETELL_API_KEY}"
 

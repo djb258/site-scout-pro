@@ -457,20 +457,30 @@ retell:
       - "What is the admin fee?"
 
 # ============================================================================
-# SUPABASE CONFIGURATION
+# CLOUDFLARE CONFIGURATION (WORKING DATABASE + COMPUTE + STORAGE)
 # ============================================================================
-supabase:
-  url: "${SUPABASE_URL}"
-  anon_key: "${SUPABASE_ANON_KEY}"
-  service_role_key: "${SUPABASE_SERVICE_ROLE_KEY}"
+cloudflare:
+  account_id: "${CF_ACCOUNT_ID}"
+  d1:
+    database_id: "${CF_D1_DATABASE_ID}"
+    note: "Working database (SQLite)"
+  kv:
+    namespace_id: "${CF_KV_NAMESPACE_ID}"
+    note: "Working state"
+  r2:
+    bucket: "${CF_R2_BUCKET}"
+    note: "File/object storage"
+  workers:
+    note: "Compute + hosting"
 
 # ============================================================================
-# NEON DATABASE CONFIGURATION
+# NEON DATABASE CONFIGURATION (VAULT/ARCHIVE ONLY)
 # ============================================================================
 neon:
   connection_string: "${NEON_CONNECTION_STRING}"
   database_url: "${NEON_DATABASE_URL}"
   pool_size: 10
+  note: "Vault/archive ONLY — not working database"
 
 # ============================================================================
 # EXTERNAL API KEYS
@@ -611,7 +621,7 @@ ctb_doctrine:
 
   # Required doctrine acronyms
   acronyms:
-    IMO: "Input-Middle-Output"
+    IMO: "Ingress-Middle-Egress"
     CTB: "Christmas Tree Backbone"
     HEIR: "Hierarchy, Enforcement, Integration, Reporting"
     ORBT: "Operate, Repair, Build, Train"

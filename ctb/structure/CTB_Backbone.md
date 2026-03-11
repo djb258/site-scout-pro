@@ -24,19 +24,21 @@ The CTB model provides the structural foundation for the Storage Site Scouting &
 2. **Data-Driven**: All scoring based on quantifiable metrics (population, saturation, financials)
 3. **Modular**: Each layer operates independently with clear interfaces
 4. **Async-First**: Fully asynchronous architecture for scalability
-5. **Neon-Powered**: Permanent vault for all candidate data and scoring results
+5. **CF D1/KV + Neon**: CF D1/KV for working data, Neon vault for permanent archive
 
 ## Component Map
 
-- **Backend**: FastAPI + asyncpg async engine
-- **Database**: Neon PostgreSQL (permanent vault)
-- **Frontend**: Lovable.dev (thin presentation layer)
+- **Backend**: CF Workers (compute + hosting)
+- **Database**: CF D1/KV (working) + Neon PostgreSQL (vault/archive)
+- **Frontend**: Figma UI (design) → CF Workers/Pages (hosting)
 - **Scoring Engine**: Modular calculation modules
 - **Process Logging**: Full audit trail
+- **File Storage**: CF R2
 
 ## Integration Points
 
-- Neon Database: All persistent storage
+- CF D1/KV: Working database for active pipeline data
+- Neon Database: Vault/archive for permanent storage
 - External Services: Census, U-Haul, Rent, DOT, Geospatial
 - API Endpoints: RESTful interface for frontend
 - Process Logging: Complete audit trail

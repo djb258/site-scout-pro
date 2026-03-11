@@ -21,8 +21,8 @@ The system uses the **Barton Storage Doctrine**, a strict set of operational rul
 
 The application is built to interface with:
 
-- **Lovable.dev UI** — Frontend interface
-- **Neon database** — Persistent vault storage
+- **Figma UI** → CF Workers/Pages — Frontend interface
+- **CF D1/KV** — Working database | **Neon** — Vault/archive ONLY
 - **Pass-0 / Pass-1 / Pass-1.5 / Pass-2 / Pass-3 engine** — Evaluation pipeline
 - **Cloud agents** — Enrichment and data fetch
 
@@ -332,7 +332,7 @@ RADAR    STRUCTURE   RENT      UNDER-    DESIGN/
 
 ## 12. EDGE FUNCTIONS
 
-Edge functions provide serverless entry points for Lovable.dev and Cloudflare Workers.
+Edge functions provide serverless entry points via CF Workers.
 
 | Endpoint | File | Orchestrator | Purpose |
 |----------|------|--------------|---------|
@@ -430,7 +430,7 @@ The Master Failure Logger supports two output sinks:
 | Sink | Activation | Purpose |
 |------|------------|---------|
 | Console | ALWAYS ON | Immediate visibility in logs |
-| Supabase | Environment-controlled | Persistent database storage |
+| CF D1 | Environment-controlled | Persistent database storage |
 
 ### Environment-Based Kill Switch
 
@@ -442,9 +442,9 @@ The Master Failure Logger supports two output sinks:
 | Pass 2 | ON | ON (when configured) |
 | Pass 3 | ON | ON (when configured) |
 
-**Pass 0 Failure Logging:** Pass 0 runs in Lovable.dev edge environment where Supabase credentials are intentionally unavailable. Pass 0 failures are logged to console only. This is correct behavior—Pass 0 failures appear in edge function logs but are not persisted to database.
+**Pass 0 Failure Logging:** Pass 0 runs in CF Workers edge environment where database credentials may be intentionally unavailable. Pass 0 failures are logged to console only. This is correct behavior -- Pass 0 failures appear in edge function logs but are not persisted to database.
 
-**Kill Switch Trigger:** If `SUPABASE_URL` or `SUPABASE_ANON_KEY` are missing:
+**Kill Switch Trigger:** If CF D1 bindings or Neon vault credentials are missing:
 - Database sink is DISABLED (silent degradation)
 - Console sink remains ACTIVE
 - Warning logged to console
@@ -457,10 +457,10 @@ The Master Failure Logger supports two output sinks:
 
 | Layer | Database | Purpose |
 |-------|----------|---------|
-| Scratchpad | Supabase | Real-time UI, in-progress data |
+| Working | CF D1/KV | Real-time UI, in-progress data |
 | Vault | Neon PostgreSQL | Permanent storage, audit trail |
-| Auth | Supabase | User authentication |
-| Logs | Both | Engine logs, failure tracking |
+| Files | CF R2 | File/object storage |
+| Logs | CF D1 + Neon | Engine logs, failure tracking |
 
 ### Data Flow
 
@@ -469,8 +469,8 @@ Pipeline Execution
     │
     ▼
 ┌─────────────────┐
-│   Supabase      │  ◄── In-progress runs, real-time updates
-│  (Scratchpad)   │
+│   CF D1/KV      │  ◄── In-progress runs, real-time updates
+│   (Working)     │
 └────────┬────────┘
          │
          │  Pass completes successfully

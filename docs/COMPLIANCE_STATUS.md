@@ -33,7 +33,7 @@
 | Claude Code | APPLY_DOCTRINE.prompt.md |
 | Pre-commit | scripts/hooks/pre-commit |
 | CI | .github/workflows/doctrine-enforcement.yml |
-| Lovable.dev | LOVABLE_CONTROL.json |
+| CF Workers/Pages | CF_WORKERS_CONTROL.json |
 
 ---
 
@@ -42,7 +42,7 @@
 | File | Purpose |
 |------|---------|
 | IMO_CONTROL.json | Primary control plane |
-| LOVABLE_CONTROL.json | UI ingestion validator |
+| CF_WORKERS_CONTROL.json | UI ingestion validator |
 
 ---
 
