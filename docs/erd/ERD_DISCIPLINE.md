@@ -115,3 +115,16 @@ The system is compliant when:
 - ✅ ERDs match actual database schema
 - ✅ No ambiguous ownership
 - ✅ CI guards are active (future)
+
+---
+
+## Document Control
+
+| Field | Value |
+|-------|-------|
+| Created | 2026-01-25 |
+| Last Modified | 2026-02-12 |
+| Doctrine Version | 2.0.0 |
+| Status | ACTIVE |
+| Governing PRD | docs/prd/PRD_BARTON_STORAGE_HUB.md |
+| Authority | barton-storage (CC-02) |

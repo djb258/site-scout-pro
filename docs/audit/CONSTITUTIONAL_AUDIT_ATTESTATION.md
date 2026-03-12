@@ -69,7 +69,7 @@ It references existing checklists — it does not duplicate them.
 | Doctrine | Version | Compliant |
 |----------|---------|-----------|
 | CONSTITUTION.md | N/A (child repo) | [x] YES / [ ] NO |
-| CANONICAL_ARCHITECTURE_DOCTRINE.md | 1.4.0 | [x] YES / [ ] NO |
+| ARCHITECTURE.md | 2.0.0 | [x] YES / [ ] NO |
 | PRD_CONSTITUTION.md | 1.0.0 | [x] YES / [ ] NO |
 | ERD_CONSTITUTION.md | 1.0.0 | [x] YES / [ ] NO |
 | PROCESS_DOCTRINE.md | 1.0.0 | [x] YES / [ ] NO |

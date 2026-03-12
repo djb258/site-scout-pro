@@ -405,39 +405,7 @@ function auditEdgeFunctions(config: any, rootDir: string): AuditResult[] {
     });
   }
 
-  // Check supabase/functions (try both snake_case and camelCase)
-  const supabaseFuncsPath = path.join(rootDir, 'supabase', 'functions');
-  for (const func of requiredFunctions) {
-    const funcPath = path.join(supabaseFuncsPath, func.name, 'index.ts');
-    const alternatePaths = func.alternates.map(alt => path.join(supabaseFuncsPath, alt, 'index.ts'));
-
-    const primaryExists = fileExists(funcPath);
-    const alternateExists = alternatePaths.some(p => fileExists(p));
-    const foundAlternate = func.alternates.find((alt, i) => fileExists(alternatePaths[i]));
-
-    if (primaryExists) {
-      results.push({
-        category: 'Edge Functions',
-        item: `supabase/functions/${func.name}`,
-        status: 'PASS',
-        message: 'Exists',
-      });
-    } else if (alternateExists) {
-      results.push({
-        category: 'Edge Functions',
-        item: `supabase/functions/${func.name}`,
-        status: 'PASS',
-        message: `Exists as ${foundAlternate}`,
-      });
-    } else {
-      results.push({
-        category: 'Edge Functions',
-        item: `supabase/functions/${func.name}`,
-        status: 'WARN',
-        message: 'Not found',
-      });
-    }
-  }
+  // RETIRED (BAR-111): supabase/functions checks removed — migrating to CF Workers
 
   return results;
 }

@@ -9,7 +9,8 @@ import {
   TableRow,
 } from "@/ui/components/ui/table";
 import { MapPin, ChevronRight, Warehouse } from "lucide-react";
-import { type ZipDataState, getStateBadgeProps } from "@/app/utils_legacy/zipStateClassifier";
+import type { ZipDataState } from "@/app/services/zip-state-classifier";
+import { getStateBadgeProps } from "@/ui/components/zip-state-badge";
 
 export interface SvaZip {
   id: string;

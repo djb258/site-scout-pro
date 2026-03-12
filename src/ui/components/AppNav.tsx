@@ -1,6 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
 import { Database, Radio, Layers, Compass, Hammer, Map, DollarSign, Building2, BookOpen, PlusCircle, MapPin, Scale, Store } from "lucide-react";
-import { cn } from "@/app/utils";
+import { cn } from "@/ui/styling";
 
 const navLinks = [
   { to: "/discover", label: "Discover", icon: BookOpen },

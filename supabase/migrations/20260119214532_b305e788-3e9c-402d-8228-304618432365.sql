@@ -1,1 +1,0 @@
-ALTER TABLE sovereign_id_zips ADD COLUMN population integer DEFAULT NULL;

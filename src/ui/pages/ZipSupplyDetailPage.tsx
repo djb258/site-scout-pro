@@ -8,7 +8,7 @@ import { AddFacilityModal } from "@/ui/components/supply/AddFacilityModal";
 import { supabase } from "@/data/integrations/supabase/client";
 import { ArrowLeft, MapPin, Users, Warehouse, Plus, FileText, AlertCircle, CheckCircle2, AlertTriangle } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/ui/components/ui/alert";
-import { classifyZipState, calculateDataAgeDays, type ZipDataState } from "@/app/utils_legacy/zipStateClassifier";
+import { classifyZipState, calculateDataAgeDays, type ZipDataState } from "@/app/services/zip-state-classifier";
 
 interface ZipDetail {
   zip_code: string;

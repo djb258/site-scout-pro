@@ -496,28 +496,6 @@ def get_external_api_credentials() -> Dict[str, Any]:
 
 
 # ============================================================================
-# SUPABASE/NEON CREDENTIALS
+# RETIRED (BAR-111): Supabase/Neon credential functions removed.
+# App migrating to CF Workers + D1. Use CF Worker bindings instead.
 # ============================================================================
-
-def get_supabase_credentials() -> Dict[str, Any]:
-    """Get Supabase credentials."""
-    global_config = load_global_config()
-    supabase = global_config.get("supabase", {})
-
-    return {
-        "url": os.getenv("SUPABASE_URL", supabase.get("url", "")),
-        "anon_key": os.getenv("SUPABASE_ANON_KEY", supabase.get("anon_key", "")),
-        "service_role_key": os.getenv("SUPABASE_SERVICE_ROLE_KEY", supabase.get("service_role_key", ""))
-    }
-
-
-def get_neon_credentials() -> Dict[str, Any]:
-    """Get Neon database credentials."""
-    global_config = load_global_config()
-    neon = global_config.get("neon", {})
-
-    return {
-        "connection_string": os.getenv("NEON_CONNECTION_STRING", neon.get("connection_string", "")),
-        "database_url": os.getenv("NEON_DATABASE_URL", neon.get("database_url", "")),
-        "pool_size": neon.get("pool_size", 10)
-    }

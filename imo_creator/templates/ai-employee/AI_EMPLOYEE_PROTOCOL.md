@@ -2,7 +2,7 @@
 
 **Status**: DRAFT
 **Authority**: OPERATIONAL
-**Version**: 1.1.0
+**Version**: 1.2.0
 **Change Protocol**: ADR + HUMAN APPROVAL REQUIRED
 
 ---
@@ -22,13 +22,13 @@ This protocol derives all authority from existing constitutional doctrine:
 | Source Document | Authority Inherited |
 |-----------------|---------------------|
 | `CONSTITUTION.md` | Transformation Law (CONST → VAR), Governance Direction |
-| `CANONICAL_ARCHITECTURE_DOCTRINE.md` | CC layers, CTB structure, Hub-Spoke geometry |
+| `ARCHITECTURE.md` | CC layers, CTB structure, Hub-Spoke geometry |
 | `AI_EMPLOYEE_OPERATING_CONTRACT.md` | Operator role, escalation rules, halt conditions |
 | `REPO_REFACTOR_PROTOCOL.md` | Remediation order, validation requirements |
 
 **This protocol does not define authority. It operationalizes authority defined elsewhere.**
 
-For definitions of Sovereign, CC layers, Governance Direction, and Territory ownership, see `CONSTITUTION.md` and `CANONICAL_ARCHITECTURE_DOCTRINE.md`.
+For definitions of Sovereign, CC layers, Governance Direction, and Territory ownership, see `CONSTITUTION.md` and `ARCHITECTURE.md`.
 
 ---
 
@@ -52,9 +52,9 @@ CHILD REPOS (Operating Territory)
 AI EMPLOYEE (This protocol)
 ```
 
-**Diagram does not confer authority.** For authoritative hierarchy, see `CANONICAL_ARCHITECTURE_DOCTRINE.md` §2 (Canonical Chain).
+**Diagram does not confer authority.** For authoritative hierarchy, see `ARCHITECTURE.md` Part III (Canonical Chain).
 
-**AI employees operate at CC-04.** Per `CANONICAL_ARCHITECTURE_DOCTRINE.md` §2.1, CC-04 is the Process layer: execution instances within a context. AI employees execute. They do not define, govern, or legislate.
+**AI employees operate at CC-04.** Per `ARCHITECTURE.md` Part III, CC-04 is the Process layer: execution instances within a context. AI employees execute. They do not define, govern, or legislate.
 
 ---
 
@@ -90,6 +90,196 @@ AI EMPLOYEE (This protocol)
 
 ---
 
+## Repository Detection Protocol (MANDATORY FIRST STEP)
+
+**Before any operation, you MUST determine repository type.**
+
+AI agents operate differently in parent vs child repositories. Incorrect detection leads to incorrect behavior.
+
+### Detection Method (Structural Markers)
+
+Use file/folder existence, NOT content parsing:
+
+```
+STEP 1: Does IMO_CONTROL.json exist at repo root?
+        │
+        ├─ YES → This is a CHILD repo (governed by imo-creator)
+        │        Your authority: OPERATIONAL
+        │        Your actions: May modify child artifacts
+        │
+        └─ NO → Continue to Step 2
+
+STEP 2: Does templates/doctrine/ directory exist?
+        │
+        ├─ YES → This is IMO-CREATOR (parent repo)
+        │        Your authority: READ-ONLY
+        │        Your actions: May read, may NOT modify doctrine
+        │
+        └─ NO → UNGOVERNED repo
+                 Action: HALT and request governance setup
+```
+
+### Detection Summary Table
+
+| Marker | Parent (imo-creator) | Child Repo |
+|--------|---------------------|------------|
+| `templates/doctrine/` directory | ✅ EXISTS | ❌ ABSENT |
+| `IMO_CONTROL.json` at root | ❌ ABSENT | ✅ EXISTS |
+| `TEMPLATES_MANIFEST.yaml` | ✅ EXISTS (authoritative) | ❌ ABSENT or synced copy |
+
+### Authority by Repository Type
+
+| Repository Type | Your Authority | Permitted Actions |
+|-----------------|---------------|-------------------|
+| **PARENT (imo-creator)** | READ-ONLY | Read doctrine, read templates, may NOT modify |
+| **CHILD** | OPERATIONAL | Read parent doctrine, modify child artifacts within gates |
+| **UNGOVERNED** | NONE | HALT immediately, request governance setup |
+
+### Reading Order by Repository Type
+
+**If PARENT (imo-creator):**
+```
+1. CONSTITUTION.md (repo root)
+2. templates/TEMPLATES_MANIFEST.yaml
+3. templates/IMO_SYSTEM_SPEC.md
+4. templates/doctrine/ARCHITECTURE.md
+5. Task-specific prompts in templates/claude/
+```
+
+**If CHILD:**
+```
+1. IMO_CONTROL.json (repo root)
+2. DOCTRINE.md (repo root - points to parent)
+3. REGISTRY.yaml (hub identity)
+4. docs/PRD.md (if exists)
+5. Parent doctrine as referenced
+```
+
+### Mandatory Detection Report
+
+After detection, you MUST output:
+
+```
+REPOSITORY DETECTION
+────────────────────
+Repository: [repo name]
+Type: [PARENT / CHILD / UNGOVERNED]
+
+Detection markers:
+  IMO_CONTROL.json at root: [YES / NO]
+  templates/doctrine/ exists: [YES / NO]
+
+Authority level: [READ-ONLY / OPERATIONAL / NONE]
+Reading order: [in_parent_repo / in_child_repo / N/A]
+
+Proceeding: [YES / HALTED - reason]
+```
+
+**Failure to run detection before operations is a PROTOCOL VIOLATION.**
+
+---
+
+## Metrics Sync Protocol (MANDATORY FOR CHILD REPOS)
+
+**After repository detection, if in a CHILD repo, you MUST sync ERD metrics.**
+
+Good decisions require current data. Stale metrics lead to bad decisions.
+
+### When to Sync Metrics
+
+| Trigger | Action |
+|---------|--------|
+| Session start | SYNC before any work |
+| Before data-dependent decisions | SYNC to get current counts |
+| After data modifications | SYNC to reflect changes |
+| Metrics older than 24 hours | SYNC (data is stale) |
+
+### Sync Process
+
+```
+STEP 1: Locate erd/ERD_METRICS.yaml
+        │
+        ├─ EXISTS → Check sync.last_updated
+        │           │
+        │           ├─ Older than sync.stale_after_hours → SYNC NOW
+        │           └─ Recent → May proceed (sync optional)
+        │
+        └─ MISSING → Create from template, then SYNC
+
+STEP 2: Connect to data source
+        │
+        └─ Use Doppler for connection strings
+           doppler run -- <sync_command>
+
+STEP 3: Run queries from ERD_METRICS.yaml queries section
+        │
+        └─ Update all table counts and aggregates
+
+STEP 4: Update sync metadata
+        │
+        ├─ sync.last_updated: [current timestamp]
+        ├─ sync.updated_by: [your agent name]
+        └─ sync.next_sync_due: [calculated from frequency]
+
+STEP 5: Check thresholds and report alerts
+```
+
+### Mandatory Sync Report
+
+After syncing, output:
+
+```
+METRICS SYNC COMPLETE
+─────────────────────
+Repository: [repo name]
+ERD Version: [version]
+Sync Time: [timestamp]
+Source: [database/connection]
+
+Key Metrics:
+  [metric_name]: [value]
+  [metric_name]: [value]
+  [metric_name]: [value]
+
+Alerts: [count] ([list if any])
+Status: CURRENT
+```
+
+### Sync Failure Protocol
+
+If sync fails:
+
+```
+METRICS SYNC FAILED
+───────────────────
+Repository: [repo name]
+Error: [error message]
+Last Known Good Sync: [timestamp]
+
+WARNING: Operating on stale data.
+Stale metrics age: [hours/days]
+
+Options:
+1. Fix connection and retry sync
+2. Proceed with WARNING (document stale data risk)
+3. HALT until sync succeeds
+
+Human decision required for options 2-3.
+```
+
+### Why This Matters
+
+| Without Metrics Sync | With Metrics Sync |
+|---------------------|-------------------|
+| "We have ~40k companies" (guess) | "We have 42,192 companies" (fact) |
+| Decisions based on stale data | Decisions based on current data |
+| Surprised by data changes | Aware of data changes |
+| No threshold alerts | Automatic threshold alerts |
+
+**Architectural note:** Metrics live in `erd/ERD_METRICS.yaml`, NOT in MD files. MD files are for architecture (CONST). Metrics are runtime data (VAR).
+
+---
+
 ## Task Acceptance Protocol
 
 Before accepting any task, AI employee MUST verify:
@@ -102,18 +292,53 @@ Is this task in imo-creator?
   └─ NO → Continue to Gate 2
 ```
 
-### Gate 2: Constitutional Validity
+### Gate 2: HSS Entry (Declaration Check)
+
+```
+HSS (Hub-and-Spoke Setup) requires a declaration before any hub work.
+
+Does the target hub have HUB_DESIGN_DECLARATION.yaml?
+  │
+  ├─ MISSING → Run HUB_DESIGN_DECLARATION_INTAKE.prompt.md
+  │            Generate DRAFT declaration
+  │            HALT and wait for human to complete
+  │            DO NOT proceed until status = CONFIRMED
+  │
+  ├─ DRAFT → HALT. Declaration incomplete.
+  │          Instruct human to complete and sign.
+  │
+  └─ CONFIRMED → Validate declaration fields
+                 If valid → Continue to Gate 3
+                 If invalid → HALT and list defects
+```
+
+**No PRD work without confirmed declaration. No inference. No bypass.**
+
+Reference: `templates/claude/HUB_DESIGN_DECLARATION_INTAKE.prompt.md`
+
+### Gate 3: Constitutional Validity
 
 ```
 Does the target hub have:
-  ├─ PRD with CONST → VAR declaration?
+  ├─ PRD with HSS (Hub-and-Spoke Set Up) section?
+  │     ├─ Idea/Need completed?
+  │     ├─ Hub Justification (CONST → VAR) completed?
+  │     ├─ Hub-Spoke Decision (IMPLEMENTED/DECLINED)?
+  │     ├─ Candidate Constants listed?
+  │     ├─ Candidate Variables listed?
+  │     └─ Candidate Tools (SNAP-ON only)?
+  ├─ PRD body (§§1-15) restates all decisions?
   ├─ ERD with structural proof?
   └─ Process declaration?
 
+If PRD missing HSS section → INVALID PRD
 If ANY missing → REJECT or REQUEST creation first
 ```
 
-### Gate 3: Task Traceability
+**PRD without completed HSS section = INVALID. No exceptions.**
+**PRD HSS section must match HUB_DESIGN_DECLARATION.yaml.**
+
+### Gate 4: Task Traceability
 
 ```
 Can this task be traced to:
@@ -124,7 +349,7 @@ Can this task be traced to:
 If NO → REJECT. Task has no constitutional basis.
 ```
 
-### Gate 4: Authority Level
+### Gate 5: Authority Level
 
 ```
 Does this task require:
@@ -143,6 +368,7 @@ TASK ACCEPTED
 ─────────────
 Territory: [child repo name]
 Hub: [HUB-ID]
+Declaration: [path to HUB_DESIGN_DECLARATION.yaml] — CONFIRMED
 Governing PRD: [path]
 Governing ERD: [path]
 Task traces to: [CONST] → [VAR]
@@ -159,9 +385,29 @@ If any gate fails, AI employee responds:
 ```
 TASK REJECTED
 ─────────────
-Failed Gate: [1|2|3|4]
+Failed Gate: [1|2|3|4|5]
 Reason: [specific reason]
 Resolution: [what human must do first]
+```
+
+### Gate 2 Rejection (Declaration Missing/Incomplete)
+
+When Gate 2 fails, use this specific format:
+
+```
+DECLARATION REQUIRED
+────────────────────
+Hub: [hub name]
+Declaration Status: MISSING | DRAFT | INVALID
+
+Resolution:
+1. Run HUB_DESIGN_DECLARATION_INTAKE.prompt.md
+2. Complete the generated YAML
+3. Change status to CONFIRMED
+4. Sign off on the declaration
+5. Resubmit task
+
+I CANNOT proceed without a confirmed declaration.
 ```
 
 **AI employee does not attempt workarounds. Rejection is final until resolution.**
@@ -307,9 +553,50 @@ Human intervention required.
 
 ## Completion Protocol
 
-### Task Completion Checklist
+### MANDATORY: Execute HUB_COMPLIANCE.md Before Completion
 
-Before declaring task complete, AI employee verifies:
+```
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                     YOU CANNOT DECLARE TASK COMPLETE                          ║
+║                  WITHOUT RUNNING HUB_COMPLIANCE.md CHECKLIST                  ║
+╠══════════════════════════════════════════════════════════════════════════════╣
+║                                                                               ║
+║  Per CONSTITUTION.md §Violation Zero Tolerance:                               ║
+║                                                                               ║
+║  BEFORE declaring any task complete, you MUST:                                ║
+║                                                                               ║
+║  1. Execute templates/checklists/HUB_COMPLIANCE.md                            ║
+║  2. Fill out EVERY section with actual counts                                 ║
+║  3. Complete the Compliance Gate Verification                                 ║
+║  4. Complete the AI Agent Acknowledgment                                      ║
+║                                                                               ║
+║  If CRITICAL unchecked > 0 or HIGH violations > 0:                            ║
+║     → Task is NOT complete                                                    ║
+║     → Status = NON-COMPLIANT                                                  ║
+║     → Fix violations before declaring complete                                ║
+║                                                                               ║
+║  "I finished the work" is NOT completion.                                     ║
+║  "Checklist passed" IS completion.                                            ║
+║                                                                               ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+```
+
+### Final Verification Sequence (MANDATORY)
+
+| Step | Action | Required |
+|------|--------|----------|
+| 1 | Execute `templates/checklists/HUB_COMPLIANCE.md` | YES |
+| 2 | Count CRITICAL items unchecked | YES |
+| 3 | Count HIGH violations | YES |
+| 4 | If counts > 0 → FIX before proceeding | YES |
+| 5 | Complete AI Agent Acknowledgment | YES |
+| 6 | Produce Completion Report (below) | YES |
+
+**Skipping this sequence is a PROTOCOL VIOLATION.**
+
+### Task Completion Checklist (Quick Verify)
+
+Before executing HUB_COMPLIANCE.md, quick-verify:
 
 | Check | Status |
 |-------|--------|
@@ -322,6 +609,8 @@ Before declaring task complete, AI employee verifies:
 | All tools in approved list | [ ] |
 | No constitutional violations | [ ] |
 | Attestation produced (if required) | [ ] |
+
+**This is a quick-verify, NOT a substitute for HUB_COMPLIANCE.md.**
 
 ### Completion Report
 
@@ -421,6 +710,48 @@ This repository CANNOT proceed until violations are resolved.
 ```
 
 **There is no "continue anyway" option for violations.**
+
+### Verification Depth (MANDATORY)
+
+```
+╔══════════════════════════════════════════════════════════════════════════════╗
+║              MD FILES = ARCHITECTURE | ERD_METRICS.yaml = DATA                ║
+╠══════════════════════════════════════════════════════════════════════════════╣
+║                                                                               ║
+║  MD files (CLAUDE.md, PRD.md, ERD.md) are ARCHITECTURAL documents.            ║
+║  They define STRUCTURE, RULES, RELATIONSHIPS — not counts or statistics.      ║
+║                                                                               ║
+║  DO NOT put data values (counts, statistics, metrics) in MD files.            ║
+║  DO put data values in erd/ERD_METRICS.yaml.                                  ║
+║                                                                               ║
+║  When verifying MD files, check:                                              ║
+║    □ Does the file exist?                                                     ║
+║    □ Is the structure correct?                                                ║
+║    □ Are references and paths valid?                                          ║
+║    □ Is hub identity consistent across files?                                 ║
+║                                                                               ║
+║  When verifying data accuracy, check:                                         ║
+║    □ Does erd/ERD_METRICS.yaml exist?                                         ║
+║    □ Has it been synced this session?                                         ║
+║    □ Is sync.last_updated within threshold?                                   ║
+║                                                                               ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+```
+
+**Separation of concerns:**
+```
+MD files (CONST - Architecture):
+  - CLAUDE.md → How repo works, rules, locked files
+  - PRD.md → What hub does, transformation logic
+  - ERD.md → Data structure, tables, relationships
+
+ERD_METRICS.yaml (VAR - Runtime Data):
+  - Record counts → 42,192 companies
+  - Statistics → 5.7% exclusion rate
+  - Timestamps → Last synced: 2026-01-30T14:32:00Z
+```
+
+**If you find data values in MD files, move them to ERD_METRICS.yaml.**
 
 ---
 

@@ -7,9 +7,9 @@
 | Field | Value |
 |-------|-------|
 | **Doctrine Version** | 1.2.0 |
-| **Authority** | Canonical Architecture Doctrine |
+| **Authority** | Architecture Doctrine |
 | **Status** | LOCKED |
-| **CTB Definition** | CANONICAL_ARCHITECTURE_DOCTRINE.md §1.3 |
+| **CTB Definition** | ARCHITECTURE.md Part II |
 
 ---
 
@@ -21,7 +21,7 @@ This protocol defines the mandatory structure for all repos operating under the 
 
 ## 1. Folder Structure (CTB-Enforced)
 
-**CTB branches are canonically defined in CANONICAL_ARCHITECTURE_DOCTRINE.md section 1.3.**
+**CTB branches are canonically defined in ARCHITECTURE.md Part II.**
 
 This section implements the canonical structure. Every repo MUST have this structure:
 
@@ -46,7 +46,7 @@ repo/
 
 ## 2. File Placement Rule
 
-**IMMUTABLE RULE (per Canonical Architecture Doctrine 1.3):**
+**IMMUTABLE RULE (per Architecture Doctrine Part II):**
 
 > Every file MUST map to exactly one CTB branch: `sys`, `data`, `app`, `ai`, `ui`.
 > 
@@ -137,12 +137,10 @@ Every repo MUST have machine-readable agent instructions:
 
 ```yaml
 doctrine:
-  version: "1.1.0"
+  version: "2.0.0"
   source: "imo-creator/templates/doctrine/"
   files:
-    - CANONICAL_ARCHITECTURE_DOCTRINE.md
-    - ALTITUDE_DESCENT_MODEL.md
-    - HUB_SPOKE_ARCHITECTURE.md
+    - ARCHITECTURE.md
     - REPO_REFACTOR_PROTOCOL.md
 
 read_first:
@@ -212,14 +210,77 @@ When refactoring an existing repo:
 1. Add CTB/IMO comments to code files
 2. Register in REGISTRY.yaml
 
-### Step 7: Validate
+### Step 7: Review and Update All MD Files (MANDATORY)
+
+**After refactor, all documentation must be verified and updated.**
+
+MD files are AI instructions. Stale or incorrect MD files cause AI agents to operate on bad information. This step is MANDATORY.
+
+#### Required MD File Review
+
+| File | Review For |
+|------|------------|
+| `CLAUDE.md` | Correct doctrine references, hub identity, locked files list |
+| `README.md` | Accurate project description, correct folder structure |
+| `docs/PRD.md` | Constants/Variables match actual implementation |
+| `docs/ADR-*.md` | Decisions still valid, references correct |
+| `DOCTRINE.md` | Points to correct imo-creator version |
+| `REGISTRY.yaml` | Hub ID, spokes, IMO definition all accurate |
+
+#### MD File Review Checklist
+
+| Check | Status |
+|-------|--------|
+| [ ] All file paths in MD files are correct (no references to moved/deleted files) |
+| [ ] All doctrine references point to correct imo-creator templates |
+| [ ] CLAUDE.md lists correct locked files for this repo |
+| [ ] README.md folder structure matches actual structure |
+| [ ] PRD constants and variables match what the system actually does |
+| [ ] No references to old structure remain |
+| [ ] Hub ID is consistent across all files |
+
+#### Why This Matters
+
+```
+PROBLEM: Refactored structure, but CLAUDE.md still references old paths
+RESULT:  AI agent reads wrong instructions, makes wrong decisions
+
+PROBLEM: PRD declares old constants, but system now uses different inputs
+RESULT:  AI agent validates against wrong spec, misses real violations
+
+PROBLEM: README shows old folder structure
+RESULT:  Humans and AI confused about where things live
+```
+
+**Documentation drift is a violation. MD files MUST match reality.**
+
+### Step 8: Validate Structure
 ```bash
 ./validators/ctb-structure-check.sh
 ./validators/cc-descent-check.sh
 ./validators/hub-spoke-check.sh
 ```
 
-### Step 8: Reference Doctrine
+### Step 9: Execute Compliance Checklist (MANDATORY)
+
+**You CANNOT declare refactor complete without this step.**
+
+Per CONSTITUTION.md §Violation Zero Tolerance:
+
+1. Execute `templates/checklists/HUB_COMPLIANCE.md` for the hub
+2. Fill out EVERY section with actual counts
+3. Complete the Compliance Gate Verification section
+4. Complete the AI Agent Acknowledgment (if you are an AI agent)
+
+| Outcome | Action |
+|---------|--------|
+| CRITICAL unchecked > 0 | STOP. Status = NON-COMPLIANT. Fix and re-run. |
+| HIGH violations > 0 | STOP. Status = NON-COMPLIANT. Fix and re-run. |
+| Both = 0 | MAY proceed to Step 10 |
+
+**"I created all the files" is NOT compliance. Checklist verification IS compliance.**
+
+### Step 10: Reference Doctrine
 1. Create `DOCTRINE.md` pointing to IMO-Creator
 2. Do NOT duplicate doctrine content
 
@@ -282,9 +343,7 @@ This repo conforms to CTB Doctrine v1.1.0.
 
 **Source of truth:**
 imo-creator/templates/doctrine/
-├── CANONICAL_ARCHITECTURE_DOCTRINE.md
-├── ALTITUDE_DESCENT_MODEL.md
-├── HUB_SPOKE_ARCHITECTURE.md
+├── ARCHITECTURE.md
 └── REPO_REFACTOR_PROTOCOL.md
 
 Do not duplicate. Reference and obey.
@@ -298,9 +357,9 @@ Do not duplicate. Reference and obey.
 
 | Artifact | Reference |
 |----------|-----------|
-| CC Layers | CANONICAL_ARCHITECTURE_DOCTRINE.md |
-| Descent Gates | ALTITUDE_DESCENT_MODEL.md |
-| Hub/Spoke Geometry | HUB_SPOKE_ARCHITECTURE.md |
+| CC Layers | ARCHITECTURE.md Part III |
+| Descent Gates | ARCHITECTURE.md Part VI |
+| Hub/Spoke Geometry | ARCHITECTURE.md Part IV |
 
 ---
 
@@ -351,7 +410,7 @@ VALID:   "Constitutional → PRD → Manifest → ERD → Process → Attest"
 | Field | Value |
 |-------|-------|
 | Created | 2026-01-08 |
-| Last Modified | 2026-01-08 |
-| Doctrine Version | 1.2.0 |
+| Last Modified | 2026-01-30 |
+| Doctrine Version | 1.3.0 |
 | Status | LOCKED |
 | Change Protocol | ADR-triggered only |

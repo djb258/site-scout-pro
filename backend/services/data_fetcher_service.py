@@ -1,3 +1,4 @@
+# TODO: BAR-111 — migrate psycopg2/Neon to CF Worker/D1
 """
 Unified Data Fetcher Service.
 Fetches all available data for a ZIP code from multiple APIs and stores in database.

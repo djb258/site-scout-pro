@@ -1,5 +1,5 @@
 import * as React from "react";
-import { cn } from "@/app/utils";
+import { cn } from "@/ui/styling";
 
 interface CircularProgressProps {
   value: number;

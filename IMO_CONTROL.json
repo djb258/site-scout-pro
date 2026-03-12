@@ -2,9 +2,10 @@
   "$schema": "https://imo-creator.dev/schemas/imo-control.json",
   "version": "1.0.0",
   "conformance": {
-    "doctrine_version": "1.4.0",
-    "ctb_version": "1.1.0",
-    "template_source": "imo-creator"
+    "doctrine_version": "2.0.0",
+    "ctb_version": "2.0.0",
+    "template_source": "imo-creator",
+    "architecture_ref": "templates/doctrine/ARCHITECTURE.md"
   },
   "sovereign": {
     "id": "barton-family-office",

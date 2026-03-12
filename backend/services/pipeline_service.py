@@ -1,3 +1,4 @@
+# TODO: BAR-111 — migrate psycopg2/Neon to CF Worker/D1
 """
 Screening Pipeline Service.
 Orchestrates the 9-stage screening process for any zone.

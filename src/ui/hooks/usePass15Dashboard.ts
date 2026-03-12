@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback } from 'react';
-import { supabase } from '@/data/integrations/supabase/client';
+// TODO: BAR-111 — rewrite to call CF Worker endpoint (was Supabase edge function hub15_get_dashboard)
+import { useState } from 'react';
 
 export interface QueueSummary {
   total: number;
@@ -95,53 +95,16 @@ interface UsePass15DashboardResult {
   lastUpdated: Date | null;
 }
 
-export function usePass15Dashboard(refreshInterval = 30000): UsePass15DashboardResult {
-  const [data, setData] = useState<Pass15DashboardData | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+export function usePass15Dashboard(_refreshInterval = 30000): UsePass15DashboardResult {
+  const [data] = useState<Pass15DashboardData | null>(null);
+  const [lastUpdated] = useState<Date | null>(null);
 
-  const fetchDashboard = useCallback(async () => {
-    try {
-      setIsLoading(true);
-      setError(null);
-
-      const { data: response, error: fetchError } = await supabase.functions.invoke('hub15_get_dashboard', {
-        body: { include_attempts: true, limit: 50 },
-      });
-
-      if (fetchError) {
-        throw new Error(fetchError.message);
-      }
-
-      if (response?.error) {
-        throw new Error(response.error);
-      }
-
-      setData(response);
-      setLastUpdated(new Date());
-    } catch (err) {
-      console.error('[usePass15Dashboard] Error fetching dashboard:', err);
-      setError(err instanceof Error ? err.message : 'Failed to fetch dashboard');
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchDashboard();
-
-    // Auto-refresh at specified interval
-    const intervalId = setInterval(fetchDashboard, refreshInterval);
-
-    return () => clearInterval(intervalId);
-  }, [fetchDashboard, refreshInterval]);
-
+  // TODO: BAR-111 — migrate to CF Worker endpoint
   return {
     data,
-    isLoading,
-    error,
-    refetch: fetchDashboard,
+    isLoading: false,
+    error: 'BAR-111: Supabase retired, awaiting CF Worker migration',
+    refetch: async () => {},
     lastUpdated,
   };
 }

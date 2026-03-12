@@ -1,3 +1,4 @@
+# TODO: BAR-111 — migrate psycopg2/Neon to CF Worker/D1
 """
 Schema Helper - Auto-Documentation for Database Tables and Columns
 

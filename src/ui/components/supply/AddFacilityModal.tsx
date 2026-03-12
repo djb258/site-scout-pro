@@ -18,7 +18,7 @@ import {
   SelectValue,
 } from "@/ui/components/ui/select";
 import { useToast } from "@/ui/hooks/use-toast";
-import { generateFacilityId, validateFacilityId } from "@/app/utils_legacy/facilityIdGenerator";
+import { generateFacilityId, validateFacilityId } from "@/app/services/facility-id-generator";
 import { supabase } from "@/data/integrations/supabase/client";
 import { Wand2, AlertCircle } from "lucide-react";
 

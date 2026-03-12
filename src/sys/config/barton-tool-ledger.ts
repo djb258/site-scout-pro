@@ -37,10 +37,10 @@ export interface PipelineLedger {
 export const BARTON_TOOL_LEDGER: PipelineLedger = {
   pass0: [
     { step: 1, name: "Source Fetcher", solution: "RSS Parser", type: "deterministic", locked: true },
-    { step: 2, name: "Content Parser", solution: "Lovable AI (Gemini)", type: "llm_tail", cost: 0.01 },
+    { step: 2, name: "Content Parser", solution: "Claude API (Sonnet)", type: "llm_tail", cost: 0.01 },
     { step: 3, name: "Geo Resolver", solution: "Geocoder API", type: "deterministic", locked: true },
     { step: 4, name: "ZIP Mapper", solution: "Neon zips_master", type: "deterministic", locked: true },
-    { step: 5, name: "Pin Emitter", solution: "Supabase insert", type: "deterministic", locked: true }
+    { step: 5, name: "Pin Emitter", solution: "D1 insert", type: "deterministic", locked: true }
   ],
   pass1: [
     { step: 1, name: "ZIP Hydration", solution: "Neon query", type: "deterministic", locked: true },
@@ -48,13 +48,13 @@ export const BARTON_TOOL_LEDGER: PipelineLedger = {
     { step: 3, name: "Census Snapshot", solution: "Aggregation query", type: "deterministic", locked: true },
     { step: 4, name: "Demand Proxy", solution: "6 SF/person formula", type: "deterministic", locked: true },
     { step: 5, name: "Supply Scan OSM", solution: "Overpass API", type: "deterministic", locked: true },
-    { step: 6, name: "Supply Scan AI", solution: "Lovable AI Search", type: "llm_tail", cost: 0.02 },
+    { step: 6, name: "Supply Scan AI", solution: "Claude API Search", type: "llm_tail", cost: 0.02 },
     { step: 7, name: "Scoring", solution: "Weighted matrix", type: "deterministic", locked: true }
   ],
   pass15: [
     { step: 1, name: "Gap Detection", solution: "DB query", type: "deterministic", locked: true, cost: 0 },
     { step: 2, name: "Tier 0 OSM", solution: "Overpass API", type: "deterministic", cost: 0 },
-    { step: 3, name: "Tier 1 AI Search", solution: "Lovable AI", type: "llm_tier", cost: 0.01 },
+    { step: 3, name: "Tier 1 AI Search", solution: "Claude API", type: "llm_tier", cost: 0.01 },
     { step: 4, name: "Tier 2 Web Scrape", solution: "Fetch + parse", type: "deterministic", cost: 0 },
     { step: 5, name: "Tier 3 AI Call", solution: "Retell AI", type: "llm_tail_expensive", cost: 0.50 }
   ],

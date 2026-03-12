@@ -1,0 +1,105 @@
+# HSS — HUB-AND-SPOKE SET UP
+# ======================================================================
+# This HSS declaration MUST be completed by a human before any PRD, ERD, or Process
+# can be created. AI agents may NOT infer or fill these fields.
+#
+# WORKFLOW:
+#   1. AI generates this file with status: DRAFT
+#   2. Human fills ALL placeholder fields
+#   3. Human changes status to CONFIRMED and signoff.status to SIGNED
+#   4. Human submits to AI for validation
+#   5. AI validates and proceeds to PRD governance
+#
+# GOVERNANCE:
+#   - This file gates PRD creation
+#   - PRD gates ERD creation
+#   - ERD gates Process creation
+#   - No downstream artifact may exist without this declaration
+#
+# ======================================================================
+
+hub_design_declaration:
+  # ---------------------------------------------------------------------------
+  # METADATA
+  # ---------------------------------------------------------------------------
+  status: DRAFT  # DRAFT | CONFIRMED | REJECTED
+  hub_name: "Barton Storage System"
+  hub_id: "barton-storage"
+  hub_type: HUB
+  created_by: "<FILL - human name>"
+  created_date: "<FILL - ISO date>"
+
+  # ---------------------------------------------------------------------------
+  # IDEA / NEED
+  # ---------------------------------------------------------------------------
+  idea_need:
+    problem_statement: "<WHY DOES THIS HUB EXIST? What specific problem requires this hub?>"
+    anti_goal: "<WHAT DOES THIS HUB EXPLICITLY NOT SOLVE? What is out of scope?>"
+
+  # ---------------------------------------------------------------------------
+  # HUB JUSTIFICATION (CONST -> VAR)
+  # ---------------------------------------------------------------------------
+  hub_justification:
+    const_to_var_transform: "<This hub transforms [CONSTANTS] into [VARIABLES]>"
+    success_criteria: "<WHAT PROVES THIS HUB WORKED?>"
+
+  # ---------------------------------------------------------------------------
+  # HUB-SPOKE DECISION
+  # ---------------------------------------------------------------------------
+  hub_spoke_decision:
+    implemented: false  # true | false
+    rationale: "<WHY SPOKES EXIST OR ARE DECLINED>"
+    spokes: []
+
+  # ---------------------------------------------------------------------------
+  # CANDIDATE CONSTANTS (INPUTS)
+  # ---------------------------------------------------------------------------
+  candidate_constants:
+    - name: "<CONSTANT NAME>"
+      source: "<WHERE IT COMES FROM>"
+      description: "<WHAT IT IS>"
+
+  # ---------------------------------------------------------------------------
+  # CANDIDATE VARIABLES (OUTPUTS)
+  # ---------------------------------------------------------------------------
+  candidate_variables:
+    - name: "<VARIABLE NAME>"
+      destination: "<WHERE IT GOES>"
+      description: "<WHAT IT IS>"
+
+  # ---------------------------------------------------------------------------
+  # SNAP-ON TOOLS
+  # ---------------------------------------------------------------------------
+  snap_on_tools: []
+
+  # ---------------------------------------------------------------------------
+  # DOWNSTREAM ARTIFACTS
+  # ---------------------------------------------------------------------------
+  downstream_artifacts:
+    prd_expected: true
+    erd_expected: true
+    process_expected: true
+
+  # ---------------------------------------------------------------------------
+  # SIGNOFF
+  # ---------------------------------------------------------------------------
+  signoff:
+    human_owner: "<NAME>"
+    ai_agent: "Claude Code"
+    confirmation_date: "<FILL WHEN status changes to CONFIRMED>"
+    status: UNSIGNED  # UNSIGNED | SIGNED
+
+# ======================================================================
+# VALIDATION RULES (AI ENFORCED)
+# ======================================================================
+#
+# AI will reject this declaration if:
+#   - status is not CONFIRMED
+#   - signoff.status is not SIGNED
+#   - Any field contains placeholder text (< or >)
+#   - hub_justification does not mention transformation
+#   - hub_spoke_decision.implemented is not explicit true/false
+#   - candidate_constants is empty
+#   - candidate_variables is empty
+#
+# ======================================================================

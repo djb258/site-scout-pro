@@ -1,3 +1,4 @@
+# TODO: BAR-111 — migrate psycopg2/Neon to CF Worker/D1
 """
 Zone Management Service.
 Handles creation and management of screening zones from any ZIP code.

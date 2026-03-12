@@ -1,3 +1,4 @@
+# TODO: BAR-111 — migrate psycopg2/Neon to CF Worker/D1
 """
 Async database connection pool management for Neon PostgreSQL.
 """
