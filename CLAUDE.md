@@ -8,36 +8,35 @@ This is a **child repo** that CONFORMS to imo-creator doctrine. All templates, s
 **Sovereign**: barton-family-office (CC-01)
 **Hub ID**: barton-storage
 **Purpose**: Self-storage investment analysis and deal screening pipeline
+**Doctrine Version**: 3.5.0
+
+---
+
+## THREE-TIER LOADING
+
+| Tier | Files | When |
+|------|-------|------|
+| **1 — Mandatory** | `IMO_CONTROL.json`, `CC_OPERATIONAL_DIGEST.md`, `CLAUDE.md` | Every session start |
+| **2 — On Demand** | `DOCTRINE.md`, `REGISTRY.yaml`, `doctrine/REPO_DOMAIN_SPEC.md`, `law/IMO_SYSTEM_SPEC.md` | When task requires |
+| **3 — Audit Only** | `law/AI_EMPLOYEE_OPERATING_CONTRACT.md`, `law/GUARDSPEC.md`, `law/ai-employee/AI_EMPLOYEE_PROTOCOL.md` | Audit/compliance checks |
 
 ---
 
 ## PARENT-CHILD RELATIONSHIP
 
 ```
-╔══════════════════════════════════════════════════════════════════════════════╗
-║                         DATA FLOW DIRECTION                                   ║
-╠══════════════════════════════════════════════════════════════════════════════╣
-║                                                                               ║
-║   imo-creator (PARENT)  ───PULL ONLY───►  barton-storage (CHILD)             ║
-║                                                                               ║
-║   • Parent is SOURCE OF TRUTH for all doctrine and templates                 ║
-║   • Child PULLS updates from parent                                          ║
-║   • Child NEVER pushes changes to parent                                     ║
-║   • Doctrine changes MUST originate in parent repo                           ║
-║                                                                               ║
-║   LOCAL COPY: imo_creator/templates/                                         ║
-║   This folder is a READ-ONLY copy of parent templates.                       ║
-║   Update by: git fetch imo-creator master && checkout templates              ║
-║                                                                               ║
-╚══════════════════════════════════════════════════════════════════════════════╝
+imo-creator (PARENT)  ───PULL ONLY───►  barton-storage (CHILD)
+
+• Parent is SOURCE OF TRUTH for all doctrine and templates
+• Child PULLS updates from parent
+• Child NEVER pushes changes to parent
+• Doctrine changes MUST originate in parent repo
 ```
 
 | Direction | Allowed | Action |
 |-----------|---------|--------|
-| Parent → Child | ✅ YES | Pull template updates |
-| Child → Parent | 🚨 **NEVER** | Do not push doctrine changes upstream |
-
-**If you need to change doctrine**: Make the change in imo-creator first, then pull to child repos.
+| Parent → Child | YES | Pull template updates |
+| Child → Parent | **NEVER** | Do not push doctrine changes upstream |
 
 ---
 
@@ -47,20 +46,16 @@ This repo conforms to imo-creator templates at the following versions:
 
 | Template | imo-creator Path | Version |
 |----------|------------------|---------|
-| Architecture (unified) | templates/doctrine/ARCHITECTURE.md | 2.0.0 |
-| Doctrine (redirect) | templates/doctrine/CANONICAL_ARCHITECTURE_DOCTRINE.md | REDIRECT → ARCHITECTURE.md |
-| Hub-Spoke (redirect) | templates/doctrine/HUB_SPOKE_ARCHITECTURE.md | REDIRECT → ARCHITECTURE.md Part IV |
-| Descent (redirect) | templates/doctrine/ALTITUDE_DESCENT_MODEL.md | REDIRECT → ARCHITECTURE.md Part VI |
+| Architecture | templates/doctrine/ARCHITECTURE.md | 2.1.0 |
+| Execution Surface | templates/doctrine/EXECUTION_SURFACE_LAW.md | 1.0.0 |
+| CTB Registry | templates/doctrine/CTB_REGISTRY_ENFORCEMENT.md | 1.5.0 |
+| Fail-Closed CI | templates/doctrine/FAIL_CLOSED_CI_CONTRACT.md | 1.1.0 |
 | Tools | templates/integrations/TOOLS.md | 1.1.0 |
-| PRD | templates/prd/PRD_HUB.md | 2.0.0 |
+| OSAM | templates/semantic/OSAM.md | 1.1.0 |
+| PRD | templates/prd/PRD_HUB.md | 1.0.0 |
 | ADR | templates/adr/ADR.md | 1.0.0 |
-| Checklist | templates/checklists/HUB_COMPLIANCE.md | 2.0.0 |
+| Checklist | templates/checklists/HUB_COMPLIANCE.md | 1.0.0 |
 | Snap-On Toolbox | templates/SNAP_ON_TOOLBOX.yaml | 1.0.0 |
-| OSAM | templates/semantic/OSAM.md | 1.0.0 |
-| CTB Governance | templates/config/CTB_GOVERNANCE.md | 1.0.0 |
-| Manifest | templates/TEMPLATES_MANIFEST.yaml | 2.0.0 |
-
-**If imo-creator updates a template version, this repo must update or be NON-COMPLIANT.**
 
 ---
 
@@ -69,22 +64,26 @@ This repo conforms to imo-creator templates at the following versions:
 | File | Purpose | Status |
 |------|---------|--------|
 | `IMO_CONTROL.json` | Structural governance contract | ACTIVE |
+| `REGISTRY.yaml` | Hub component registry | ACTIVE |
+| `DOCTRINE.md` | Doctrine conformance declaration | ACTIVE |
+| `CC_OPERATIONAL_DIGEST.md` | Operational rules digest | ACTIVE |
+| `STARTUP_PROTOCOL.md` | Session startup sequence | ACTIVE |
+| `DOCTRINE_CHECKPOINT.yaml` | Doctrine freshness tracking | ACTIVE |
+| `HUB_DESIGN_DECLARATION.yaml` | Hub-and-Spoke Setup declaration | DRAFT |
+| `CONSTANTS_VARIABLES_BLOCK.md` | Transformation Law compliance | ACTIVE |
+| `doctrine/REPO_DOMAIN_SPEC.md` | Repository domain specification | ACTIVE |
+| `BARTON_STORAGE_SYSTEM_CONSTITUTION.md` | Business doctrine | LOCKED |
 | `heir.doctrine.yaml` | HEIR compliance configuration | ACTIVE |
 | `doppler.yaml` | Secrets management config | ACTIVE |
-| `BARTON_STORAGE_SYSTEM_CONSTITUTION.md` | Business doctrine | LOCKED |
-| `HUB_DESIGN_DECLARATION.yaml` | Hub-and-Spoke Setup (HSS) declaration | PENDING |
-| `doctrine/REPO_DOMAIN_SPEC.md` | Repository domain specification | PENDING |
 
 ---
 
 ## CTB STRUCTURE
 
-This repo follows the Christmas Tree Backbone (CTB) structure:
-
 ```
 src/
 ├── sys/      ← System infrastructure (config, bootstraps, env)
-├── data/     ← Data layer (integrations, scrapers, repositories)
+├── data/     ← Data layer (schemas, queries, migrations, repositories)
 ├── app/      ← Application logic (services, workflows)
 ├── ai/       ← AI components (agents, prompts)
 └── ui/       ← User interface (components, pages, hooks)
@@ -106,8 +105,6 @@ src/
 
 ## TOOL LEDGER
 
-All tools in this hub are registered with ADRs:
-
 | Tool | ADR | Purpose | Tier |
 |------|-----|---------|------|
 | Census API | ADR-001 | Demographics data | FREE |
@@ -125,23 +122,23 @@ All tools in this hub are registered with ADRs:
 | FEMA Flood API | ADR-014 | Flood zone data | FREE |
 | USGS DEM API | ADR-015 | Elevation data | FREE |
 | Neon Database | ADR-016 | PostgreSQL vault/archive | CHEAP |
-| CF D1/KV | — | Working database + state (BAR-100) | CHEAP |
-| CF R2 | — | File storage (BAR-100) | CHEAP |
-| CF Workers | — | Compute + hosting (BAR-100) | CHEAP |
+| CF D1/KV | — | Working database + state | CHEAP |
+| CF R2 | — | File storage | CHEAP |
+| CF Workers | — | Compute + hosting | CHEAP |
 
 ---
 
 ## PASS PIPELINE
 
-| Pass | Purpose | PRD | Checklist |
-|------|---------|-----|-----------|
-| Pass 0 | Signal radar, ZIP scoring | PRD_PASS0_RADAR_HUB.md | PASS0_RADAR_HUB_COMPLIANCE.md |
-| Pass 1 | Market structure, demographics | PRD_PASS1_STRUCTURE_HUB.md | PASS1_STRUCTURE_HUB_COMPLIANCE.md |
-| Pass 1.5 | Rent reconciliation | PRD_PASS15_RENT_RECON_HUB.md | PASS15_RENT_RECON_HUB_COMPLIANCE.md |
-| Pass 2 | Underwriting, jurisdiction | PRD_PASS2_UNDERWRITING_HUB.md | PASS2_UNDERWRITING_HUB_COMPLIANCE.md |
-| Pass 3 | Design, feasibility | PRD_PASS3_DESIGN_HUB.md | PASS3_DESIGN_HUB_COMPLIANCE.md |
-| Pass 4 | Deal gate (pending) | — | — |
-| Pass 5 | Execution (pending) | — | — |
+| Pass | Purpose | PRD |
+|------|---------|-----|
+| Pass 0 | Signal radar, ZIP scoring | PRD_PASS0_RADAR_HUB.md |
+| Pass 1 | Market structure, demographics | PRD_PASS1_STRUCTURE_HUB.md |
+| Pass 1.5 | Rent reconciliation | PRD_PASS15_RENT_RECON_HUB.md |
+| Pass 2 | Underwriting, jurisdiction | PRD_PASS2_UNDERWRITING_HUB.md |
+| Pass 3 | Design, feasibility | PRD_PASS3_DESIGN_HUB.md |
+| Pass 4 | Parcel evaluation | (pending) |
+| Pass 5 | Deal gate | (pending) |
 
 ---
 
@@ -149,13 +146,13 @@ All tools in this hub are registered with ADRs:
 
 | Action | Permitted |
 |--------|-----------|
-| Read all files | ✅ YES |
-| Edit source code in CTB branches | ✅ YES |
-| Create new components/pages/hooks | ✅ YES |
-| Add new ADRs | ✅ YES (follow template) |
-| Run builds and tests | ✅ YES |
-| Query Neon vault (read) | ✅ YES |
-| Query CF D1/KV (read) | ✅ YES |
+| Read all files | YES |
+| Edit source code in CTB branches | YES |
+| Create new components/pages/hooks | YES |
+| Add new ADRs (follow template) | YES |
+| Run builds and tests | YES |
+| Query Neon vault (read) | YES |
+| Query CF D1/KV (read) | YES |
 
 ---
 
@@ -163,22 +160,14 @@ All tools in this hub are registered with ADRs:
 
 | Action | Prohibited | Reason |
 |--------|------------|--------|
-| Modify `imo_creator/templates/` folder | ❌ NO | Doctrine source - pull only from parent |
-| Push changes to imo-creator repo | 🚨 **NEVER** | Child cannot modify parent |
-| Modify `BARTON_STORAGE_SYSTEM_CONSTITUTION.md` | ❌ NO | Business law - human only |
-| Create forbidden folders | ❌ NO | CTB violation |
-| Add tools without ADR | ❌ NO | Tool doctrine |
-| Use LLM as primary decision maker | ❌ NO | LLM is tail, not head |
-| DROP Neon tables without approval | ❌ NO | DBA doctrine |
-| Push to main without PR | ❌ NO | Governance |
-
-**CRITICAL**: The `imo_creator/` folder is a LOCAL COPY of the parent repo's templates. To update it:
-1. Fetch from parent: `git fetch imo-creator master`
-2. Checkout templates: `git checkout imo-creator/master -- templates/`
-3. Move to correct location: `mv templates/* imo_creator/templates/`
-4. Commit as "sync from upstream"
-
-**NEVER create changes in this repo and push them to imo-creator.**
+| Modify locked doctrine files | NO | Doctrine source — pull only from parent |
+| Push changes to imo-creator repo | **NEVER** | Child cannot modify parent |
+| Modify `BARTON_STORAGE_SYSTEM_CONSTITUTION.md` | NO | Business law — human only |
+| Create forbidden folders | NO | CTB violation |
+| Add tools without ADR | NO | Tool doctrine |
+| Use LLM as primary decision maker | NO | LLM is tail, not head |
+| DROP tables without approval | NO | DBA doctrine |
+| Push to main without PR | NO | Governance |
 
 ---
 
@@ -210,7 +199,7 @@ If you detect drift from imo-creator templates:
 | Field | Value |
 |-------|-------|
 | Created | 2026-01-25 |
-| Last Modified | 2026-02-12 |
-| Doctrine Version | 2.0.0 |
+| Last Modified | 2026-03-14 |
+| Doctrine Version | 3.5.0 |
 | Status | ACTIVE |
 | Authority | barton-family-office (CC-01) |

@@ -1,10 +1,11 @@
 {
   "$schema": "https://imo-creator.dev/schemas/imo-control.json",
-  "version": "1.0.0",
+  "version": "3.5.0",
   "conformance": {
-    "doctrine_version": "2.0.0",
-    "ctb_version": "2.0.0",
+    "doctrine_version": "3.5.0",
+    "ctb_version": "3.5.0",
     "template_source": "imo-creator",
+    "upstream_commit": "4237f041a0af3577df602c97646725f0d89f20bd",
     "architecture_ref": "templates/doctrine/ARCHITECTURE.md"
   },
   "sovereign": {
@@ -23,26 +24,53 @@
       "leaf": "storage"
     }
   },
+  "lifecycle": {
+    "current_phase": "BUILD",
+    "phases": ["BOOTSTRAP", "BUILD", "HARDEN", "OPERATE"],
+    "bootstrap_date": "2026-01-25",
+    "last_sync": "2026-03-14"
+  },
+  "structure": {
+    "required_files": [
+      "IMO_CONTROL.json",
+      "REGISTRY.yaml",
+      "DOCTRINE.md",
+      "CLAUDE.md",
+      "CC_OPERATIONAL_DIGEST.md",
+      "STARTUP_PROTOCOL.md",
+      "doctrine/REPO_DOMAIN_SPEC.md"
+    ],
+    "required_directories": [
+      "doctrine",
+      "law",
+      "src"
+    ]
+  },
   "ctb_branches": {
     "sys": {
       "path": "src/sys",
-      "purpose": "System infrastructure: env loaders, bootstraps, config readers"
+      "purpose": "System infrastructure: env loaders, bootstraps, config readers",
+      "active": true
     },
     "data": {
       "path": "src/data",
-      "purpose": "Data layer: schemas, queries, migrations, repositories"
+      "purpose": "Data layer: schemas, queries, migrations, repositories",
+      "active": true
     },
     "app": {
       "path": "src/app",
-      "purpose": "Application logic: modules, services, workflows, business logic"
+      "purpose": "Application logic: modules, services, workflows, business logic",
+      "active": true
     },
     "ai": {
       "path": "src/ai",
-      "purpose": "AI components: agents, routers, prompts, LLM integrations"
+      "purpose": "AI components: agents, routers, prompts, LLM integrations",
+      "active": true
     },
     "ui": {
       "path": "src/ui",
-      "purpose": "User interface: pages, components, layouts, styles"
+      "purpose": "User interface: pages, components, layouts, styles",
+      "active": true
     }
   },
   "forbidden_folders": [
@@ -108,6 +136,24 @@
     "on_pr": [
       "doctrine_conformance_check",
       "compliance_checklist_check"
+    ]
+  },
+  "three_tier_loading": {
+    "tier_1_mandatory": [
+      "IMO_CONTROL.json",
+      "CC_OPERATIONAL_DIGEST.md",
+      "CLAUDE.md"
+    ],
+    "tier_2_on_demand": [
+      "DOCTRINE.md",
+      "REGISTRY.yaml",
+      "doctrine/REPO_DOMAIN_SPEC.md",
+      "law/IMO_SYSTEM_SPEC.md"
+    ],
+    "tier_3_audit_only": [
+      "law/AI_EMPLOYEE_OPERATING_CONTRACT.md",
+      "law/GUARDSPEC.md",
+      "law/ai-employee/AI_EMPLOYEE_PROTOCOL.md"
     ]
   }
 }

@@ -2,8 +2,8 @@
 # Authority: imo-creator
 # CC Layer: CC-02
 
-doctrine_version: "2.0.0"
-ctb_version: "2.0.0"
+doctrine_version: "3.5.0"
+ctb_version: "3.5.0"
 
 # CC-01: Sovereign Reference
 sovereign_ref: "barton-family-office"
@@ -13,6 +13,7 @@ hub:
   id: "barton-storage"
   name: "Barton Storage System"
   purpose: "Self-storage investment analysis and deal screening pipeline"
+  owner: "Dave Barton"
   ctb_placement:
     trunk: "barton-family-office"
     branch: "investments"
@@ -56,6 +57,14 @@ contexts:
   - id: "pass3-calculators"
     name: "Pass 3 Design & Feasibility"
     prd: "docs/prd/PRD_PASS3_DESIGN_HUB.md"
+    type: "sub-hub"
+  - id: "pass4-parcel"
+    name: "Pass 4 Parcel Evaluation"
+    prd: "docs/prd/PRD_PASS4_PARCEL_HUB.md"
+    type: "sub-hub"
+  - id: "pass5-deal-gate"
+    name: "Pass 5 Deal Gate"
+    prd: "docs/prd/PRD_PASS5_DEAL_GATE_HUB.md"
     type: "sub-hub"
 
 # CC-04: Process Log (PIDs minted at runtime)

@@ -6,7 +6,7 @@
 **Status**: ACTIVE
 **Authority**: barton-family-office (CC-01)
 **Hub**: barton-storage (CC-02)
-**Doctrine Version**: 2.0.0
+**Doctrine Version**: 3.5.0
 
 ---
 
@@ -211,6 +211,6 @@ This file contains BINDINGS ONLY -- mapping generic roles to domain-specific nam
 |-------|-------|
 | Created | 2026-01-29 |
 | Last Modified | 2026-02-12 |
-| Version | 2.0.0 |
+| Version | 3.5.0 |
 | Status | ACTIVE |
-| Parent Doctrine | IMO-Creator v2.0.0 |
+| Parent Doctrine | IMO-Creator v3.5.0 |
