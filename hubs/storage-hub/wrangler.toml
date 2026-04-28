@@ -1,0 +1,28 @@
+name = "storage-hub"
+main = "src/index.ts"
+compatibility_date = "2025-03-17"
+compatibility_flags = ["nodejs_compat"]
+workers_dev = true
+preview_urls = false
+
+[placement]
+mode = "smart"
+
+[observability.logs]
+enabled = true
+
+[[d1_databases]]
+binding = "STORAGE_OPS"
+database_name = "storage-ops"
+database_id = "7f4add57-9d58-4347-b3bb-d336a51d4044"
+migrations_dir = "migrations"
+
+[[d1_databases]]
+binding = "D1_GLOBAL"
+database_name = "d1-global"
+database_id = "5b902b59-5d65-4c7a-be7c-3763c132b585"
+
+# Remote follow-up required:
+# 1. Create the storage-ops D1 database.
+# 2. Replace STORAGE_OPS.database_id with the returned UUID.
+# 3. Run `npm install`, `wrangler d1 migrations apply STORAGE_OPS --remote`, and `wrangler deploy`.
